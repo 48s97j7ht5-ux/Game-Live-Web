@@ -3,62 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pixel Rig Test v2</title>
+<title>Pixel Rig Test v3</title>
 <style>
 :root{color-scheme:dark;--bg:#111218;--panel:#1b1d26;--line:#353948;--text:#f1f2f6;--muted:#a8adba}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,sans-serif}
-main{max-width:860px;margin:auto;padding:16px 12px 36px}h1{font-size:22px;margin:0 0 6px}p{margin:0 0 14px;color:var(--muted)}
-.controls,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}.controls{padding:12px;margin-bottom:12px}.row{display:grid;grid-template-columns:84px 1fr 48px;gap:10px;align-items:center;margin:8px 0}.views{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{padding:7px;min-width:0}.card h2{font-size:12px;line-height:1.2;margin:0 0 7px;color:var(--muted);min-height:29px}canvas{display:block;width:100%;height:auto;aspect-ratio:3/5;background:#d8d2c7;border-radius:8px;image-rendering:pixelated}.note{color:var(--muted);font-size:12px;margin-top:12px}.toggle{display:flex;gap:8px;align-items:center;margin-top:8px}@media(max-width:520px){main{padding:12px 9px 30px}.views{gap:5px}.card{padding:5px}.card h2{font-size:10px}.row{grid-template-columns:70px 1fr 42px}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,sans-serif}main{max-width:900px;margin:auto;padding:16px 12px 36px}h1{font-size:22px;margin:0 0 6px}p{margin:0 0 14px;color:var(--muted)}.controls,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}.controls{padding:12px;margin-bottom:12px}.row{display:grid;grid-template-columns:84px 1fr 48px;gap:10px;align-items:center;margin:8px 0}.views{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.card{padding:7px;min-width:0}.card h2{font-size:12px;line-height:1.2;margin:0 0 7px;color:var(--muted)}canvas{display:block;width:100%;height:auto;aspect-ratio:3/5;background:#d8d2c7;border-radius:8px;image-rendering:pixelated}.note{color:var(--muted);font-size:12px;margin-top:12px}.toggle{display:flex;gap:8px;align-items:center;margin-top:8px}@media(max-width:520px){main{padding:12px 9px 30px}.views{gap:6px}.card{padding:5px}.card h2{font-size:10px}.row{grid-template-columns:70px 1fr 42px}}
 </style>
 </head><body><main>
-<h1>Pixel Rig — колено v2</h1>
-<p>Одна и та же нога, три способа собрать сустав. Цель — не красота арта, а понять, какая геометрия переживает сильное сгибание без «отрезанной палки».</p>
+<h1>Pixel Rig — колено v3</h1>
+<p>Четыре способа собрать один сустав. Вариант 4 — настоящая маленькая сетка: вершины получают веса бедренной и голенной кости и деформируются между двумя трансформациями.</p>
 <section class="controls">
 <div class="row"><label>Колено</label><input id="knee" type="range" min="0" max="120" value="75"><output id="kneeOut">75°</output></div>
 <div class="row"><label>Бедро</label><input id="hip" type="range" min="-30" max="30" value="10"><output id="hipOut">10°</output></div>
 <div class="row"><label>Пиксель</label><input id="px" type="range" min="3" max="8" value="5"><output id="pxOut">5×</output></div>
-<div class="toggle"><input id="bones" type="checkbox"><label for="bones">показать pivot/кости</label></div>
+<div class="toggle"><input id="bones" type="checkbox"><label for="bones">показать pivot/кости и mesh</label></div>
 </section>
 <section class="views">
 <article class="card"><h2>1. Жёсткий стык</h2><canvas id="hard" width="180" height="300"></canvas></article>
 <article class="card"><h2>2. Округлённое перекрытие</h2><canvas id="round" width="180" height="300"></canvas></article>
-<article class="card"><h2>3. Локальная деформация</h2><canvas id="mesh" width="180" height="300"></canvas></article>
+<article class="card"><h2>3. Процедурная заплатка</h2><canvas id="patch" width="180" height="300"></canvas></article>
+<article class="card"><h2>4. Weighted mesh skinning</h2><canvas id="skinmesh" width="180" height="300"></canvas></article>
 </section>
-<div class="note">Вариант 3 не полноценный skinning: это минимальная процедурная «мягкая зона» вокруг колена. Если он уже заметно лучше первых двух, следующий шаг — заменить её настоящей сеткой с 6–10 вершинами и весами двух костей.</div>
+<div class="note">В mesh-варианте используется 10 вершин в пяти поперечных рядах. Верхние вершины почти полностью следуют бедру, нижние — голени, центральные смешивают обе кости. Это уже принцип настоящего 2D skinning, только намеренно крошечный.</div>
 <script>
 (()=>{
-const $=id=>document.getElementById(id), ui={knee:$('knee'),hip:$('hip'),px:$('px'),bones:$('bones')};
-const canvases=['hard','round','mesh'].map($), bg='#d8d2c7', outline='#875548', skin='#f2bd99', light='#ffd3af', shade='#d99578';
-const rad=d=>d*Math.PI/180, add=(a,b)=>({x:a.x+b.x,y:a.y+b.y}), vec=(a,l)=>({x:Math.sin(a)*l,y:Math.cos(a)*l});
-function poly(ctx,pts,fill,stroke=outline){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=1.15;ctx.strokeStyle=stroke;ctx.stroke()}
-function segmentShape(a,b,r1,r2,roundEnds=false){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,n={x:-dy/L,y:dx/L};const p1={x:a.x+n.x*r1,y:a.y+n.y*r1},p2={x:b.x+n.x*r2,y:b.y+n.y*r2},p3={x:b.x-n.x*r2,y:b.y-n.y*r2},p4={x:a.x-n.x*r1,y:a.y-n.y*r1};return {p1,p2,p3,p4,a,b,roundEnds}}
-function drawSegment(ctx,s,fill){ctx.beginPath();ctx.moveTo(s.p1.x,s.p1.y);ctx.lineTo(s.p2.x,s.p2.y);if(s.roundEnds)ctx.quadraticCurveTo(s.b.x+1.5,s.b.y+1.5,s.p3.x,s.p3.y);else ctx.lineTo(s.p3.x,s.p3.y);ctx.lineTo(s.p4.x,s.p4.y);if(s.roundEnds)ctx.quadraticCurveTo(s.a.x-1.5,s.a.y-1.5,s.p1.x,s.p1.y);else ctx.lineTo(s.p1.x,s.p1.y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=1.15;ctx.strokeStyle=outline;ctx.stroke()}
-function bone(ctx,a,b){ctx.strokeStyle='#ff3b63';ctx.fillStyle='#ff3b63';ctx.lineWidth=.55;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();[a,b].forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,1.15,0,Math.PI*2);ctx.fill()})}
-function renderOne(canvas,mode){const P=+ui.px.value,LW=60,LH=100,hi=document.createElement('canvas');hi.width=LW*P;hi.height=LH*P;const ctx=hi.getContext('2d');ctx.setTransform(P,0,0,P,0,0);ctx.fillStyle=bg;ctx.fillRect(0,0,LW,LH);
-const ha=rad(+ui.hip.value),ka=ha-rad(+ui.knee.value),H={x:27,y:13},K=add(H,vec(ha,36)),A=add(K,vec(ka,34));
-if(mode==='hard'){
- const lowerStart=add(K,vec(ka+Math.PI,-1));drawSegment(ctx,segmentShape(lowerStart,A,6.0,4.2,false),skin);
- const upperEnd=add(K,vec(ha,1));drawSegment(ctx,segmentShape(H,upperEnd,8.4,6.3,false),light);
-}else if(mode==='round'){
- const lowerStart=add(K,vec(ka+Math.PI,-4.2));drawSegment(ctx,segmentShape(lowerStart,A,6.5,4.2,true),skin);
- const upperEnd=add(K,vec(ha,4.0));drawSegment(ctx,segmentShape(H,upperEnd,8.4,7.0,true),light);
- ctx.save();ctx.translate(K.x,K.y);ctx.rotate(-ka);ctx.beginPath();ctx.ellipse(0,0,6.8,5.3,0,0,Math.PI*2);ctx.fillStyle=skin;ctx.fill();ctx.lineWidth=1.1;ctx.strokeStyle=outline;ctx.stroke();ctx.restore();
-}else{
- const lowerStart=add(K,vec(ka+Math.PI,-5.3));drawSegment(ctx,segmentShape(lowerStart,A,6.4,4.2,true),skin);
- const upperEnd=add(K,vec(ha,5.1));drawSegment(ctx,segmentShape(H,upperEnd,8.4,7.1,true),light);
- // Procedural soft bridge. Four outer points are derived from both bone directions, so the silhouette bends instead of stacking two caps.
- const u=vec(ha,1),l=vec(ka,1),un={x:-u.y,y:u.x},ln={x:-l.y,y:l.x};
- const bend=Math.min(1,Math.abs(+ui.knee.value)/100), front=6.3+1.2*bend,back=5.8-.5*bend;
- const p1={x:K.x+un.x*front+u.x*2.2,y:K.y+un.y*front+u.y*2.2};
- const p2={x:K.x+ln.x*front-l.x*1.8,y:K.y+ln.y*front-l.y*1.8};
- const p3={x:K.x-ln.x*back-l.x*1.2,y:K.y-ln.y*back-l.y*1.2};
- const p4={x:K.x-un.x*back+u.x*1.5,y:K.y-un.y*back+u.y*1.5};
- ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(K.x+un.x*7.6,K.y+un.y*7.6,p2.x,p2.y);ctx.lineTo(p3.x,p3.y);ctx.quadraticCurveTo(K.x-un.x*4.3,K.y-un.y*4.3,p4.x,p4.y);ctx.closePath();ctx.fillStyle=skin;ctx.fill();ctx.lineWidth=1.1;ctx.strokeStyle=outline;ctx.stroke();
- ctx.beginPath();ctx.moveTo(K.x-1.5,K.y-1);ctx.quadraticCurveTo(K.x+2.5,K.y+1,K.x+3.2*ln.x,K.y+3.2*ln.y);ctx.strokeStyle=shade;ctx.lineWidth=.8;ctx.stroke();
+const $=id=>document.getElementById(id),ui={knee:$('knee'),hip:$('hip'),px:$('px'),bones:$('bones')},bg='#d8d2c7',outline='#875548',skin='#f2bd99',light='#ffd3af',shade='#d99578';
+const rad=d=>d*Math.PI/180, vec=(a,l)=>({x:Math.sin(a)*l,y:Math.cos(a)*l}), add=(a,b)=>({x:a.x+b.x,y:a.y+b.y});
+function bonePoint(root,a,p){const c=Math.cos(a),s=Math.sin(a);return{x:root.x+p.x*c+p.y*s,y:root.y-p.x*s+p.y*c}}
+function blend(a,b,w){return{x:a.x*w+b.x*(1-w),y:a.y*w+b.y*(1-w)}}
+function seg(ctx,a,b,r1,r2,round=false,fill=skin){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,n={x:-dy/L,y:dx/L};const p=[{x:a.x+n.x*r1,y:a.y+n.y*r1},{x:b.x+n.x*r2,y:b.y+n.y*r2},{x:b.x-n.x*r2,y:b.y-n.y*r2},{x:a.x-n.x*r1,y:a.y-n.y*r1}];ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);ctx.lineTo(p[1].x,p[1].y);if(round)ctx.quadraticCurveTo(b.x,b.y,p[2].x,p[2].y);else ctx.lineTo(p[2].x,p[2].y);ctx.lineTo(p[3].x,p[3].y);if(round)ctx.quadraticCurveTo(a.x,a.y,p[0].x,p[0].y);else ctx.lineTo(p[0].x,p[0].y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=1.1;ctx.strokeStyle=outline;ctx.stroke()}
+function overlayBone(ctx,a,b){ctx.strokeStyle='#ff3b63';ctx.fillStyle='#ff3b63';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();[a,b].forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,1,0,Math.PI*2);ctx.fill()})}
+function render(canvas,mode){const P=+ui.px.value,LW=60,LH=100,hi=document.createElement('canvas');hi.width=LW*P;hi.height=LH*P;const c=hi.getContext('2d');c.setTransform(P,0,0,P,0,0);c.fillStyle=bg;c.fillRect(0,0,LW,LH);const ha=rad(+ui.hip.value),ka=ha-rad(+ui.knee.value),H={x:27,y:13},K=add(H,vec(ha,36)),A=add(K,vec(ka,34));
+if(mode==='hard'){seg(c,K,A,6,4.2,false,skin);seg(c,H,K,8.4,6.3,false,light)}
+if(mode==='round'){seg(c,add(K,vec(ka+Math.PI,-4)),A,6.5,4.2,true,skin);seg(c,H,add(K,vec(ha,4)),8.4,7,true,light);c.beginPath();c.arc(K.x,K.y,6.3,0,Math.PI*2);c.fillStyle=skin;c.fill();c.strokeStyle=outline;c.stroke()}
+if(mode==='patch'){seg(c,add(K,vec(ka+Math.PI,-5)),A,6.4,4.2,true,skin);seg(c,H,add(K,vec(ha,5)),8.4,7,true,light);const u=vec(ha,1),l=vec(ka,1),un={x:-u.y,y:u.x},ln={x:-l.y,y:l.x};const p1={x:K.x+un.x*6.8+u.x*2,y:K.y+un.y*6.8+u.y*2},p2={x:K.x+ln.x*6.8-l.x*2,y:K.y+ln.y*6.8-l.y*2},p3={x:K.x-ln.x*5-l.x,y:K.y-ln.y*5-l.y},p4={x:K.x-un.x*5+u.x,y:K.y-un.y*5+u.y};c.beginPath();c.moveTo(p1.x,p1.y);c.lineTo(p2.x,p2.y);c.lineTo(p3.x,p3.y);c.lineTo(p4.x,p4.y);c.closePath();c.fillStyle=skin;c.fill();c.strokeStyle=outline;c.stroke()}
+if(mode==='mesh'){
+  seg(c,H,add(K,vec(ha,-5)),8.4,7.0,true,light);seg(c,add(K,vec(ka,5)),A,6.3,4.2,true,skin);
+  const rows=[[-7,7,1],[-3.5,7.2,.78],[0,7.1,.5],[3.5,6.7,.22],[7,6.2,0]],verts=[];
+  for(const [y,r,w] of rows){for(const x of [-r,r]){const thighLocal={x,y};const shinLocal={x,y};const tp=bonePoint(K,ha,thighLocal),sp=bonePoint(K,ka,shinLocal);verts.push({...blend(tp,sp,w),w})}}
+  const tris=[[0,1,2],[1,3,2],[2,3,4],[3,5,4],[4,5,6],[5,7,6],[6,7,8],[7,9,8]];
+  for(const t of tris){c.beginPath();c.moveTo(verts[t[0]].x,verts[t[0]].y);c.lineTo(verts[t[1]].x,verts[t[1]].y);c.lineTo(verts[t[2]].x,verts[t[2]].y);c.closePath();c.fillStyle=skin;c.fill()}
+  c.beginPath();c.moveTo(verts[0].x,verts[0].y);for(const i of [2,4,6,8,9,7,5,3,1])c.lineTo(verts[i].x,verts[i].y);c.closePath();c.strokeStyle=outline;c.lineWidth=1.15;c.stroke();
+  const m=blend(verts[4],verts[5],.5);c.beginPath();c.moveTo(m.x-1.5,m.y-1);c.lineTo(m.x+2,m.y+.7);c.strokeStyle=shade;c.lineWidth=.75;c.stroke();
+  if(ui.bones.checked){c.strokeStyle='rgba(40,90,200,.75)';c.lineWidth=.35;for(const t of tris){c.beginPath();c.moveTo(verts[t[0]].x,verts[t[0]].y);c.lineTo(verts[t[1]].x,verts[t[1]].y);c.lineTo(verts[t[2]].x,verts[t[2]].y);c.closePath();c.stroke()}c.fillStyle='#2b63d9';verts.forEach(v=>{c.beginPath();c.arc(v.x,v.y,.7,0,Math.PI*2);c.fill()})}
 }
-if(ui.bones.checked){bone(ctx,H,K);bone(ctx,K,A)}
-const logical=document.createElement('canvas');logical.width=LW;logical.height=LH;const lc=logical.getContext('2d');lc.imageSmoothingEnabled=false;lc.drawImage(hi,0,0,LW,LH);const out=canvas.getContext('2d');out.imageSmoothingEnabled=false;out.clearRect(0,0,canvas.width,canvas.height);out.drawImage(logical,0,0,canvas.width,canvas.height)}
-function render(){kneeOut.textContent=ui.knee.value+'°';hipOut.textContent=ui.hip.value+'°';pxOut.textContent=ui.px.value+'×';renderOne(canvases[0],'hard');renderOne(canvases[1],'round');renderOne(canvases[2],'mesh')}
-Object.values(ui).forEach(x=>x.addEventListener('input',render));render();
+if(ui.bones.checked){overlayBone(c,H,K);overlayBone(c,K,A)}const logical=document.createElement('canvas');logical.width=LW;logical.height=LH;const lc=logical.getContext('2d');lc.imageSmoothingEnabled=false;lc.drawImage(hi,0,0,LW,LH);const out=canvas.getContext('2d');out.imageSmoothingEnabled=false;out.clearRect(0,0,canvas.width,canvas.height);out.drawImage(logical,0,0,canvas.width,canvas.height)}
+function all(){kneeOut.textContent=ui.knee.value+'°';hipOut.textContent=ui.hip.value+'°';pxOut.textContent=ui.px.value+'×';render($('hard'),'hard');render($('round'),'round');render($('patch'),'patch');render($('skinmesh'),'mesh')}
+Object.values(ui).forEach(x=>x.addEventListener('input',all));all();
 })();
 </script></main></body></html>
