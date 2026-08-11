@@ -1,167 +1,78 @@
-/* Character screen overrides */
-#me .me-stage{
-  min-height:0;
-}
+/* Character screen */
+#me .me-stage{position:relative;flex:1;min-height:0;overflow:hidden}
 
+/* Dedicated full-body frame: every anatomy part and clothing slot is positioned inside it. */
 #me .person{
   position:absolute;
   z-index:2;
   left:50%;
-  top:72px;
+  top:62px;
   bottom:8px;
   transform:translateX(-50%);
-  width:150px;
-  height:auto;
-  max-height:none;
+  width:164px;
+  min-height:360px;
 }
 
-#me .person-head{
-  position:absolute;
-  left:50%;
-  top:0;
-  transform:translateX(-50%);
-  width:54px;
-  height:62px;
-  border-radius:48% 48% 45% 45%;
-  background:#b8a18d;
-  border:2px solid #8f7a68;
-}
+#me .person-head{position:absolute;left:50%;top:0;transform:translateX(-50%);width:52px;height:11.5%;min-height:48px;max-height:62px;border-radius:48% 48% 45% 45%;background:#b8a18d;border:2px solid #8f7a68}
+#me .person-hair{position:absolute;z-index:3;left:50%;top:-2px;transform:translateX(-50%);width:61px;height:13%;min-height:54px;max-height:70px;background:#292b30;border-radius:50% 50% 40% 40%;clip-path:polygon(7% 0,93% 0,100% 58%,84% 72%,72% 58%,61% 92%,48% 65%,35% 92%,22% 60%,8% 74%,0 45%)}
+#me .person-neck{position:absolute;left:50%;top:10.5%;transform:translateX(-50%);width:21px;height:5.2%;background:#b8a18d}
+#me .person-torso{position:absolute;left:50%;top:14.5%;transform:translateX(-50%);width:88px;height:28%;background:#242a33;clip-path:polygon(18% 0,82% 0,100% 16%,88% 100%,12% 100%,0 16%)}
+#me .person-arm{position:absolute;top:15.5%;width:24px;height:32%;background:#b8a18d;border-radius:16px}
+#me .person-arm.l{left:9px;transform:rotate(3deg)}
+#me .person-arm.r{right:9px;transform:rotate(-3deg)}
+#me .person-hand{position:absolute;top:44.5%;width:25px;height:6.5%;min-height:25px;background:#b8a18d;border-radius:45% 45% 55% 55%}
+#me .person-hand.l{left:11px}
+#me .person-hand.r{right:11px}
+#me .person-hips{position:absolute;left:50%;top:40%;transform:translateX(-50%);width:76px;height:10%;background:#222833;border-radius:10px 10px 18px 18px}
+#me .person-leg{position:absolute;top:48%;bottom:4.2%;width:31px;background:#262d38;border-radius:7px 7px 10px 10px}
+#me .person-leg.l{left:44px}
+#me .person-leg.r{right:44px}
+#me .person-foot{position:absolute;bottom:0;width:43px;height:4.8%;min-height:18px;background:#262d38;border-radius:9px 14px 6px 6px}
+#me .person-foot.l{left:32px;transform:skewX(-7deg)}
+#me .person-foot.r{right:32px;transform:skewX(7deg)}
 
-#me .person-hair{
-  position:absolute;
-  z-index:3;
-  left:50%;
-  top:-3px;
-  transform:translateX(-50%);
-  width:62px;
-  height:70px;
-  background:#292b30;
-  border-radius:50% 50% 40% 40%;
-  clip-path:polygon(7% 0,93% 0,100% 58%,84% 72%,72% 58%,61% 92%,48% 65%,35% 92%,22% 60%,8% 74%,0 45%);
-}
+/* arrows stay on right side of stage */
+#me .layer-control{position:absolute;right:12px;left:auto;top:112px;z-index:10;display:none;flex-direction:column;gap:10px;pointer-events:auto}
+#me .layer-control.visible{display:flex}
+#me .layer-control button{width:44px;height:44px;border:1px solid #ffffff26;border-radius:13px;background:#12171ef2;font-size:19px;cursor:pointer;touch-action:manipulation}
+#me .layer-control button:active{transform:scale(.96);border-color:var(--accent);color:var(--accent)}
 
-#me .person-neck{
-  position:absolute;
-  left:50%;
-  top:58px;
-  transform:translateX(-50%);
-  width:22px;
-  height:25px;
-  background:#b8a18d;
-}
+/* slot overlay now lives INSIDE .person, so anchors follow the body frame */
+#me .clothing-slots{position:absolute;z-index:8;inset:0;display:none;pointer-events:none;overflow:visible}
+#me .clothing-slots.visible{display:block}
+#me .clothing-slot{position:absolute;width:50px;height:50px;padding:4px;border:1px solid #ffffff24;border-radius:11px;background:#11161dea;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:auto;box-shadow:0 5px 14px #0004}
+#me .clothing-slot.filled{border-color:#ffffff34;background:#171d25f2}
+#me .clothing-slot .item-icon{font-size:18px;line-height:1}
+#me .clothing-slot .item-name{margin-top:3px;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7px;color:#dce2e9}
+#me .clothing-slot.empty{border-style:dashed}
+#me .clothing-slot.empty .item-icon{font-size:14px;color:#66717f}
+#me .clothing-slot.empty .item-name{color:#727d8b}
 
-#me .person-torso{
-  position:absolute;
-  left:50%;
-  top:79px;
-  transform:translateX(-50%);
-  width:88px;
-  height:30%;
-  min-height:135px;
-  max-height:165px;
-  background:#242a33;
-  clip-path:polygon(18% 0,82% 0,100% 16%,88% 100%,12% 100%,0 16%);
-}
-
-#me .person-arm{
-  position:absolute;
-  top:86px;
-  width:24px;
-  height:34%;
-  min-height:150px;
-  max-height:188px;
-  background:#b8a18d;
-  border-radius:16px;
-}
-#me .person-arm.l{left:7px;transform:rotate(3deg)}
-#me .person-arm.r{right:7px;transform:rotate(-3deg)}
-
-#me .person-hand{
-  position:absolute;
-  top:40%;
-  width:25px;
-  height:32px;
-  background:#b8a18d;
-  border-radius:45% 45% 55% 55%;
-}
-#me .person-hand.l{left:9px}
-#me .person-hand.r{right:9px}
-
-#me .person-hips{
-  position:absolute;
-  left:50%;
-  top:39%;
-  transform:translateX(-50%);
-  width:76px;
-  height:46px;
-  background:#222833;
-  border-radius:10px 10px 18px 18px;
-}
-
-#me .person-leg{
-  position:absolute;
-  top:46%;
-  bottom:20px;
-  width:31px;
-  background:#262d38;
-  border-radius:7px 7px 10px 10px;
-}
-#me .person-leg.l{left:41px}
-#me .person-leg.r{right:41px}
-
-#me .person-foot{
-  position:absolute;
-  bottom:0;
-  width:41px;
-  height:20px;
-  background:#262d38;
-  border-radius:9px 14px 6px 6px;
-}
-#me .person-foot.l{left:31px;transform:skewX(-7deg)}
-#me .person-foot.r{right:31px;transform:skewX(7deg)}
-
-/* layer arrows stay on the right */
-#me .layer-control{
-  right:12px;
-  top:118px;
-  left:auto;
-  z-index:10;
-}
-
-/* Clothing cells are anchored to body zones rather than shown as a list */
-#me .clothing-slots{
-  position:absolute;
-  z-index:8;
-  inset:0;
-}
-
-#me .clothing-slot{
-  width:54px;
-  height:54px;
-}
-
-#me .clothing-slot.anchor-head-left{left:calc(50% - 126px);top:82px}
-#me .clothing-slot.anchor-head-right{right:calc(50% - 126px);top:82px}
-#me .clothing-slot.anchor-chest-left{left:calc(50% - 134px);top:175px}
-#me .clothing-slot.anchor-chest-right{right:calc(50% - 134px);top:175px}
-#me .clothing-slot.anchor-waist-left{left:calc(50% - 135px);top:300px}
-#me .clothing-slot.anchor-waist-right{right:calc(50% - 135px);top:300px}
-#me .clothing-slot.anchor-thigh-left{left:calc(50% - 129px);top:58%}
-#me .clothing-slot.anchor-thigh-right{right:calc(50% - 129px);top:58%}
-#me .clothing-slot.anchor-calf-left{left:calc(50% - 122px);top:75%}
-#me .clothing-slot.anchor-calf-right{right:calc(50% - 122px);top:75%}
-#me .clothing-slot.anchor-foot-left{left:calc(50% - 112px);bottom:8px}
-#me .clothing-slot.anchor-foot-right{right:calc(50% - 112px);bottom:8px}
+/* Anchors relative to the mannequin itself. Negative x places cells beside the body without detaching them from its vertical zones. */
+#me .clothing-slot.anchor-head-left{left:-48px;top:2%}
+#me .clothing-slot.anchor-head-right{right:-48px;top:2%}
+#me .clothing-slot.anchor-chest-left{left:-54px;top:19%}
+#me .clothing-slot.anchor-chest-right{right:-54px;top:19%}
+#me .clothing-slot.anchor-waist-left{left:-54px;top:37%}
+#me .clothing-slot.anchor-waist-right{right:-54px;top:37%}
+#me .clothing-slot.anchor-thigh-left{left:-49px;top:53%}
+#me .clothing-slot.anchor-thigh-right{right:-49px;top:53%}
+#me .clothing-slot.anchor-calf-left{left:-45px;top:72%}
+#me .clothing-slot.anchor-calf-right{right:-45px;top:72%}
+#me .clothing-slot.anchor-foot-left{left:-25px;bottom:0}
+#me .clothing-slot.anchor-foot-right{right:-25px;bottom:0}
 
 @media (max-height:760px){
-  #me .person{top:66px;width:138px}
-  #me .person-leg.l{left:38px}
-  #me .person-leg.r{right:38px}
-  #me .person-foot.l{left:28px}
-  #me .person-foot.r{right:28px}
-  #me .clothing-slot{width:48px;height:48px}
-  #me .clothing-slot.anchor-chest-left{left:calc(50% - 119px)}
-  #me .clothing-slot.anchor-chest-right{right:calc(50% - 119px)}
-  #me .clothing-slot.anchor-waist-left{left:calc(50% - 120px)}
-  #me .clothing-slot.anchor-waist-right{right:calc(50% - 120px)}
+  #me .person{top:58px;bottom:6px;width:148px;min-height:320px}
+  #me .person-torso{width:80px}
+  #me .person-hips{width:70px}
+  #me .person-leg{width:28px}
+  #me .person-leg.l{left:40px}
+  #me .person-leg.r{right:40px}
+  #me .person-foot{width:39px}
+  #me .person-foot.l{left:29px}
+  #me .person-foot.r{right:29px}
+  #me .clothing-slot{width:46px;height:46px}
+  #me .clothing-slot.anchor-chest-left,#me .clothing-slot.anchor-waist-left{left:-47px}
+  #me .clothing-slot.anchor-chest-right,#me .clothing-slot.anchor-waist-right{right:-47px}
 }
