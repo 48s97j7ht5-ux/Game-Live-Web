@@ -45,6 +45,13 @@ function say(text){
   say.t=setTimeout(()=>toast.classList.remove('show'),1400);
 }
 
+function setClothingMode(enabled){
+  layerControl.classList.toggle('visible',enabled);
+  clothingSlots.classList.toggle('visible',enabled);
+  document.querySelectorAll('.round-action').forEach(item=>item.classList.toggle('active',enabled && item.dataset.view==='clothes'));
+  if(enabled) renderLayer();
+}
+
 function renderLayer(){
   const layer=clothingLayers[clothingLayerIndex];
   layerName.textContent=layer.name;
@@ -102,22 +109,28 @@ document.querySelectorAll('.ios-app').forEach(button=>{
   button.onclick=()=>say(button.id==='navigator'?'Навигатор: пока открыт только твой дом':button.dataset.name+' — приложение появится позже');
 });
 
-document.querySelectorAll('.me-tabs button').forEach(button=>{
+document.querySelectorAll('.me-tabs button').forEach((button,index)=>{
   button.onclick=()=>{
     document.querySelectorAll('.me-tabs button').forEach(item=>item.classList.remove('active'));
     button.classList.add('active');
     document.querySelector('#meDetail').textContent=button.dataset.detail;
+    setClothingMode(index===1);
   };
 });
 
 document.querySelectorAll('.round-action').forEach(button=>{
   button.onclick=()=>{
-    document.querySelectorAll('.round-action').forEach(item=>item.classList.remove('active'));
-    button.classList.add('active');
     const isClothes=button.dataset.view==='clothes';
-    layerControl.classList.toggle('visible',isClothes);
-    clothingSlots.classList.toggle('visible',isClothes);
-    if(isClothes) renderLayer();
+    if(isClothes){
+      document.querySelectorAll('.me-tabs button').forEach((item,index)=>item.classList.toggle('active',index===1));
+      const clothesTab=document.querySelectorAll('.me-tabs button')[1];
+      document.querySelector('#meDetail').textContent=clothesTab.dataset.detail;
+      setClothingMode(true);
+    }else{
+      setClothingMode(false);
+      document.querySelectorAll('.round-action').forEach(item=>item.classList.remove('active'));
+      button.classList.add('active');
+    }
     say(button.dataset.view==='look'?'Внешний вид':isClothes?'Слои одежды':'Тело');
   };
 });
