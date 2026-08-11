@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#111117" />
+<title>OxiHuman body test v4</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#111117;color:#eee;font-family:system-ui,-apple-system,sans-serif}body{padding:8px;display:flex;justify-content:center}.app{width:min(100%,560px)}h1{font-size:18px;margin:0 0 3px}.sub{font-size:11px;line-height:1.3;color:#aaa;margin-bottom:7px}.stage{position:relative;width:100%;height:min(54vh,470px);min-height:320px;background:radial-gradient(circle at 50% 35%,#383540 0,#25242d 48%,#17171d 100%);border:1px solid #363640;border-radius:14px;overflow:hidden}.stage canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;left:8px;top:8px;display:flex;gap:5px;flex-wrap:wrap;pointer-events:none}.chip{font-size:10px;padding:4px 7px;border-radius:999px;background:#000a}.status{position:absolute;left:8px;right:8px;bottom:8px;background:#000c;padding:7px 9px;border-radius:9px;font-size:10px;line-height:1.3;pointer-events:none}.panel{margin-top:7px;background:#1b1b22;border:1px solid #303039;border-radius:14px;padding:9px}.row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:6px 0}.control{font-size:11px;color:#bbb}.control .top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px}.control b{color:#eee}input[type=range]{width:100%}button{border:1px solid #41414c;background:#282832;color:#eee;border-radius:9px;padding:8px 7px;font-weight:650}button.active{background:#ececf2;color:#111117}.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:5px 0}.measure{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.measure input{width:100%;border:1px solid #3a3a44;background:#131319;color:#eee;border-radius:8px;padding:7px 5px;font-size:12px}.measure label{font-size:9px;color:#999}.fit{margin-top:6px;width:100%}.tiny{font-size:10px;color:#8f8f9c;line-height:1.35;margin-top:6px}.warn{color:#d6b37a}.ok{color:#9fd09f}.bad{color:#e7a0a0}@media(max-height:760px){.stage{height:43vh;min-height:270px}.sub{display:none}.panel{padding:7px}.row{margin:4px 0}.status{font-size:9px}.tiny{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body><div class="app">
+<h1>Parametric Human Body v4</h1>
+<div class="sub">Настоящая morph-сетка OxiHuman: рост, масса, мышцы и форма тела меняют одну связанную геометрию прямо в браузере.</div>
+<div class="stage" id="stage"><canvas id="view"></canvas><div class="hud"><span class="chip" id="fps">— fps</span><span class="chip" id="verts">— verts</span><span class="chip" id="engine">OXI / WASM</span></div><div class="status" id="status">Подготовка OxiHuman…</div></div>
+<div class="panel">
+<div class="buttons"><button id="front" class="active">Спереди</button><button id="three">¾</button><button id="side">Сбоку</button><button id="reset">Сброс</button></div>
+<div class="row">
+<label class="control"><span class="top"><span>Рост</span><b id="heightVal">50%</b></span><input id="height" type="range" min="0" max="1" step="0.001" value="0.5"></label>
+<label class="control"><span class="top"><span>Масса</span><b id="weightVal">50%</b></span><input id="weight" type="range" min="0" max="1" step="0.001" value="0.5"></label>
+</div>
+<div class="row">
+<label class="control"><span class="top"><span>Мышцы</span><b id="muscleVal">50%</b></span><input id="muscle" type="range" min="0" max="1" step="0.001" value="0.5"></label>
+<label class="control"><span class="top"><span>Женственность формы</span><b id="genderVal">100%</b></span><input id="gender" type="range" min="0" max="1" step="0.001" value="1"></label>
+</div>
+<div class="row">
+<label class="control"><span class="top"><span>Возраст тела</span><b id="ageVal">25</b></span><input id="age" type="range" min="0.5" max="0.92" step="0.001" value="0.5"></label>
+<label class="control"><span class="top"><span>Поворот</span><b id="yawVal">0°</b></span><input id="yaw" type="range" min="-90" max="90" step="1" value="0"></label>
+</div>
+<div class="measure"><label>Рост, см<input id="mh" type="number" value="165" min="140" max="210" step="0.5"></label><label>Грудь, см<input id="mc" type="number" value="88" min="60" max="150" step="0.5"></label><label>Талия, см<input id="mw" type="number" value="68" min="45" max="150" step="0.5"></label><label>Бёдра, см<input id="mp" type="number" value="94" min="60" max="170" step="0.5"></label></div>
+<button class="fit" id="fit">Подогнать тело по меркам</button>
+<div class="tiny"><span class="warn">v4:</span> пока проверяем именно параметрическое тело. Позы и pixel-art вернём следующим слоем, когда убедимся, что morph-сетка годится нам визуально.</div>
+</div></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const $=id=>document.getElementById(id); const status=$('status');
+const canvas=$('view');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setClearColor(0,0);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(34,1,.01,100000);camera.position.set(0,12,46);
+const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;controls.autoRotate=false;controls.target.set(0,9,0);
+scene.add(new THREE.HemisphereLight(0xe9e4ff,0x1b1b24,1.4));const key=new THREE.DirectionalLight(0xffeadb,3);key.position.set(5,12,9);scene.add(key);const fill=new THREE.DirectionalLight(0x9fb8ff,1.2);fill.position.set(-7,7,5);scene.add(fill);const rim=new THREE.DirectionalLight(0xd8c2ff,1.5);rim.position.set(-3,9,-8);scene.add(rim);
+let engine,memory,mesh,geometry,gen=-1,positions,normals,indices,pending=false,last=performance.now(),fpsSamples=[];
+function resize(){const r=$('stage').getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe($('stage'));resize();
+function ageYears(p){return p<=.5?1+p*48:25+(p-.5)*130}
+function views(){const buf=memory.buffer;engine.refresh_geometry();positions=new Float32Array(buf,engine.positions_ptr(),engine.positions_len());normals=new Float32Array(buf,engine.normals_ptr(),engine.normals_len());indices=new Uint32Array(buf,engine.indices_ptr(),engine.indices_len())}
+function rebuild(g){views();const geo=new THREE.BufferGeometry();const pa=new THREE.BufferAttribute(positions,3),na=new THREE.BufferAttribute(normals,3);pa.setUsage(THREE.DynamicDrawUsage);na.setUsage(THREE.DynamicDrawUsage);geo.setAttribute('position',pa);geo.setAttribute('normal',na);geo.setIndex(new THREE.BufferAttribute(indices,1));geo.computeBoundingBox();geo.computeBoundingSphere();if(!mesh){mesh=new THREE.Mesh(geo,new THREE.MeshPhysicalMaterial({color:0xcda896,roughness:.76,metalness:0,sheen:.2,sheenColor:new THREE.Color(0xffe9dc),side:THREE.DoubleSide}));scene.add(mesh)}else{const old=geometry;mesh.geometry=geo;if(old)old.dispose()}geometry=geo;gen=g;frameCamera()}
+function frameCamera(){geometry.computeBoundingBox();const box=geometry.boundingBox,size=new THREE.Vector3(),center=new THREE.Vector3();box.getSize(size);box.getCenter(center);const max=Math.max(size.x,size.y,size.z),fov=camera.fov*Math.PI/180,dist=(max/2)/Math.tan(fov/2)*1.52;controls.target.copy(center);camera.position.set(center.x,center.y+size.y*.03,center.z+dist);camera.near=Math.max(dist/500,.001);camera.far=dist*500;camera.updateProjectionMatrix();controls.update()}
+function morph(){const g=engine.refresh_geometry();if(g!==gen||positions.buffer!==memory.buffer)rebuild(g);else{geometry.attributes.position.needsUpdate=true;geometry.attributes.normal.needsUpdate=true;geometry.computeBoundingSphere()}pending=false}
+function param(name,val){try{engine.set_param(name,Number(val));pending=true}catch(e){console.warn(name,e)}}
+for(const id of ['height','weight','muscle','gender','age']){$(id).addEventListener('input',()=>{param(id,$(id).value);updateLabels()})}
+function updateLabels(){$('heightVal').textContent=Math.round(+$('height').value*100)+'%';$('weightVal').textContent=Math.round(+$('weight').value*100)+'%';$('muscleVal').textContent=Math.round(+$('muscle').value*100)+'%';$('genderVal').textContent=Math.round(+$('gender').value*100)+'%';$('ageVal').textContent=Math.round(ageYears(+$('age').value))}
+function setYaw(v){$('yaw').value=v;$('yawVal').textContent=v+'°';if(mesh)mesh.rotation.y=THREE.MathUtils.degToRad(v);document.querySelectorAll('#front,#three,#side').forEach(b=>b.classList.remove('active'))}
+$('front').onclick=()=>{setYaw(0);$('front').classList.add('active')};$('three').onclick=()=>{setYaw(-35);$('three').classList.add('active')};$('side').onclick=()=>{setYaw(-80);$('side').classList.add('active')};$('yaw').oninput=()=>setYaw($('yaw').value);
+$('reset').onclick=()=>{for(const [k,v] of Object.entries({height:.5,weight:.5,muscle:.5,gender:1,age:.5})){$(k).value=v;param(k,v)}updateLabels();setYaw(0);$('front').classList.add('active')};
+$('fit').onclick=()=>{if(!engine)return;const b=$('fit');b.disabled=true;b.textContent='Подгоняю…';try{const target={height_cm:+$('mh').value,chest_cm:+$('mc').value,waist_cm:+$('mw').value,hip_cm:+$('mp').value};let r;try{r=engine.fit_to_measurements(target)}catch(_){r=engine.fit_to_measurements(+$('mh').value,+$('mc').value,+$('mw').value,+$('mp').value)}pending=true;for(const id of ['height','weight','muscle','gender','age']){try{const v=engine.get_param(id);if(Number.isFinite(v))$(id).value=v}catch(_){}}updateLabels();status.innerHTML='<span class="ok">Подгонка завершена.</span> Тело пересчитано по меркам.';console.log('fit',r)}catch(e){console.error(e);status.innerHTML='<span class="bad">Подгонка не сработала в этой сборке.</span> Ползунки остаются рабочими.'}finally{b.disabled=false;b.textContent='Подогнать тело по меркам'}};
+async function boot(){try{status.textContent='Загружаю WebAssembly…';const wasm=await import('./oxihuman-v4/pkg/oxihuman_wasm.js');await wasm.default();wasm.set_panic_hook?.();status.textContent='Загружаю параметрическую сетку (~2 MB)…';const resp=await fetch('./oxihuman-v4/pack/oxihuman-core-v1.ohpk');if(!resp.ok)throw new Error('core pack '+resp.status);const bytes=new Uint8Array(await resp.arrayBuffer());engine=wasm.OxiHumanEngine.from_core_pack_bytes(bytes);memory=wasm.wasm_memory();for(const [k,v] of Object.entries({height:.5,weight:.5,muscle:.5,gender:1,age:.5}))param(k,v);rebuild(engine.refresh_geometry());$('verts').textContent=engine.vertex_count().toLocaleString()+' verts';status.innerHTML='<span class="ok">Готово.</span> Это уже одна связная параметрическая человеческая сетка. Крути и двигай ползунки.';updateLabels()}catch(e){console.error(e);status.innerHTML='<span class="bad">OxiHuman ещё не собран.</span> Если файл только добавлен — GitHub Actions может ещё собирать WASM. Обнови страницу позже.';}}
+function loop(now){if(engine){if(positions?.buffer!==memory.buffer)rebuild(engine.mesh_generation());if(pending)morph()}controls.update();renderer.render(scene,camera);const dt=now-last;last=now;if(dt>0){fpsSamples.push(1000/dt);if(fpsSamples.length>45)fpsSamples.shift();$('fps').textContent=Math.round(fpsSamples.reduce((a,b)=>a+b,0)/fpsSamples.length)+' fps'}requestAnimationFrame(loop)}requestAnimationFrame(loop);boot();
+</script></body></html>
