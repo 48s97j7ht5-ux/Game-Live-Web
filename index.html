@@ -5,52 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b0d11">
   <title>Game Live</title>
-  <link rel="stylesheet" href="style.css?v=20260811-1137">
-  <link rel="stylesheet" href="me.css?v=20260811-1137">
-  <script src="game.js?v=20260811-1137" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260811-1148">
+  <link rel="stylesheet" href="me.css?v=20260811-1148">
+  <script src="game.js?v=20260811-1148" defer></script>
 </head>
 <body>
 <main class="app">
   <header class="top">
-    <div class="top-main">
-      <div class="date"><strong>Понедельник</strong><span>1 сентября</span></div>
-      <div class="clock" id="clock">08:10</div>
-      <div class="cash"><strong>24 500 ₽</strong><span>деньги</span></div>
-    </div>
+    <div class="top-main"><div class="date"><strong>Понедельник</strong><span>1 сентября</span></div><div class="clock" id="clock">08:10</div><div class="cash"><strong>24 500 ₽</strong><span>деньги</span></div></div>
     <div class="sub"><span>☁ +18° · прохладно</span><div class="speed"><button data-speed="0">Ⅱ</button><button class="active" data-speed="1">▶</button><button data-speed="4">▶▶</button></div></div>
   </header>
-
   <div class="content">
-    <section class="screen active" id="world">
-      <div class="scene"><div class="building"><div class="door"></div></div><div class="tree"></div><div class="place">ДВОР · ДОМ 17</div></div>
-      <div class="story"><h1>Твой новый дом</h1><p id="worldText">Ты стоишь во дворе старой пятиэтажки. Вещи уже занесены в квартиру. Дом живёт своей обычной утренней жизнью.</p><div class="actions"><button class="primary" id="look">Осмотреться</button><button id="enter">Зайти в подъезд</button></div></div>
-    </section>
-
-    <section class="screen panel-screen" id="phone">
-      <div class="iphone"><div class="iphone-screen"><div class="island"></div><div class="ios-status"><span id="phoneTime">08:10</span><span class="ios-icons">● ◔ ▰</span></div><div class="home-content"><div class="widget"><div class="bigtime" id="phoneBigTime">08:10</div><small>Понедельник, 1 сентября · +18°</small></div><div class="ios-apps"><button class="ios-app" data-name="Сообщения"><span class="appicon messages">●</span><small>Сообщения</small></button><button class="ios-app" data-name="Контакты"><span class="appicon contacts">♟</span><small>Контакты</small></button><button class="ios-app" id="navigator" data-name="Навигатор"><span class="appicon maps">⌖</span><small>Навигатор</small></button><button class="ios-app" data-name="Банк"><span class="appicon bank">₽</span><small>Банк</small></button><button class="ios-app" data-name="Магазины"><span class="appicon shop">▱</span><small>Магазины</small></button><button class="ios-app" data-name="Соцсеть"><span class="appicon social">◎</span><small>Соцсеть</small></button><button class="ios-app" data-name="Камера"><span class="appicon camera">◉</span><small>Камера</small></button><button class="ios-app" data-name="Настройки"><span class="appicon settings">⚙</span><small>Настройки</small></button></div><div class="dock"><button class="ios-app" data-name="Телефон"><span class="appicon messages">☎</span></button><button class="ios-app" data-name="Браузер"><span class="appicon maps">◉</span></button><button class="ios-app" data-name="Музыка"><span class="appicon social">♪</span></button><button class="ios-app" data-name="Камера"><span class="appicon camera">◉</span></button></div><div class="homebar"></div></div></div></div>
-    </section>
-
-    <section class="screen" id="me">
-      <div class="me-stage">
-        <div class="me-head"><div><h1>Я</h1><small>Текущее состояние персонажа</small></div><div class="condition">● Нормально</div></div>
-        <div class="person" aria-label="Временная болванка персонажа в полный рост">
-          <div class="person-hair"></div><div class="person-head"></div><div class="person-neck"></div><div class="person-torso"></div>
-          <div class="person-arm l"></div><div class="person-arm r"></div><div class="person-hand l"></div><div class="person-hand r"></div>
-          <div class="person-hips"></div><div class="person-leg l"></div><div class="person-leg r"></div><div class="person-foot l"></div><div class="person-foot r"></div>
-        </div>
-        <div class="layer-control" id="layerControl"><button id="layerUp" type="button" aria-label="Внешний слой">↑</button><button id="layerDown" type="button" aria-label="Внутренний слой">↓</button></div>
-        <div class="clothing-slots" id="clothingSlots" aria-label="Одежда выбранного слоя"></div>
-      </div>
-      <div class="me-bottom">
-        <div class="status-row"><div class="status-chip"><b>100%</b><span>энергия</span></div><div class="status-chip"><b>76%</b><span>сытость</span></div><div class="status-chip"><b>Чисто</b><span>гигиена</span></div><div class="status-chip"><b>Спокойно</b><span>настроение</span></div></div>
-        <div class="me-tabs"><button class="active" data-detail="Сейчас на персонаже повседневный комплект. Здесь будет краткое состояние внешности и заметные эффекты.">Обзор</button><button data-detail="Гардероб показывает надетые предметы по слоям. Ячейки располагаются рядом с соответствующими зонами тела.">Одежда</button><button data-detail="Здесь будут параметры тела и физиологические состояния, которые персонаж способен оценить сам.">Состояние</button></div>
-        <div class="detail" id="meDetail">Сейчас на персонаже повседневный комплект. Здесь будет краткое состояние внешности и заметные эффекты.</div>
-      </div>
-    </section>
+    <section class="screen active" id="world"><div class="scene"><div class="building"><div class="door"></div></div><div class="tree"></div><div class="place">ДВОР · ДОМ 17</div></div><div class="story"><h1>Твой новый дом</h1><p id="worldText">Ты стоишь во дворе старой пятиэтажки. Вещи уже занесены в квартиру. Дом живёт своей обычной утренней жизнью.</p><div class="actions"><button class="primary" id="look">Осмотреться</button><button id="enter">Зайти в подъезд</button></div></div></section>
+    <section class="screen panel-screen" id="phone"><div class="iphone"><div class="iphone-screen"><div class="island"></div><div class="ios-status"><span id="phoneTime">08:10</span><span class="ios-icons">● ◔ ▰</span></div><div class="home-content"><div class="widget"><div class="bigtime" id="phoneBigTime">08:10</div><small>Понедельник, 1 сентября · +18°</small></div><div class="ios-apps"><button class="ios-app" data-name="Сообщения"><span class="appicon messages">●</span><small>Сообщения</small></button><button class="ios-app" data-name="Контакты"><span class="appicon contacts">♟</span><small>Контакты</small></button><button class="ios-app" id="navigator" data-name="Навигатор"><span class="appicon maps">⌖</span><small>Навигатор</small></button><button class="ios-app" data-name="Банк"><span class="appicon bank">₽</span><small>Банк</small></button><button class="ios-app" data-name="Магазины"><span class="appicon shop">▱</span><small>Магазины</small></button><button class="ios-app" data-name="Соцсеть"><span class="appicon social">◎</span><small>Соцсеть</small></button><button class="ios-app" data-name="Камера"><span class="appicon camera">◉</span><small>Камера</small></button><button class="ios-app" data-name="Настройки"><span class="appicon settings">⚙</span><small>Настройки</small></button></div><div class="dock"><button class="ios-app" data-name="Телефон"><span class="appicon messages">☎</span></button><button class="ios-app" data-name="Браузер"><span class="appicon maps">◉</span></button><button class="ios-app" data-name="Музыка"><span class="appicon social">♪</span></button><button class="ios-app" data-name="Камера"><span class="appicon camera">◉</span></button></div><div class="homebar"></div></div></div></div></section>
+    <section class="screen" id="me"><div class="me-stage"><div class="me-head"><div><h1>Я</h1><small>Текущее состояние персонажа</small></div><div class="condition">● Нормально</div></div><div class="person" aria-label="Временная болванка персонажа в полный рост"><div class="person-hair"></div><div class="person-head"></div><div class="person-neck"></div><div class="person-torso"></div><div class="person-arm l"></div><div class="person-arm r"></div><div class="person-hand l"></div><div class="person-hand r"></div><div class="person-hips"></div><div class="person-leg l"></div><div class="person-leg r"></div><div class="person-foot l"></div><div class="person-foot r"></div><div class="clothing-slots" id="clothingSlots" aria-label="Одежда выбранного слоя"></div></div><div class="layer-control" id="layerControl"><button id="layerUp" type="button" aria-label="Внешний слой">↑</button><button id="layerDown" type="button" aria-label="Внутренний слой">↓</button></div></div><div class="me-bottom"><div class="status-row"><div class="status-chip"><b>100%</b><span>энергия</span></div><div class="status-chip"><b>76%</b><span>сытость</span></div><div class="status-chip"><b>Чисто</b><span>гигиена</span></div><div class="status-chip"><b>Спокойно</b><span>настроение</span></div></div><div class="me-tabs"><button class="active" data-detail="Сейчас на персонаже повседневный комплект. Здесь будет краткое состояние внешности и заметные эффекты.">Обзор</button><button data-detail="Гардероб показывает надетые предметы по слоям. Ячейки располагаются рядом с соответствующими зонами тела.">Одежда</button><button data-detail="Здесь будут параметры тела и физиологические состояния, которые персонаж способен оценить сам.">Состояние</button></div><div class="detail" id="meDetail">Сейчас на персонаже повседневный комплект. Здесь будет краткое состояние внешности и заметные эффекты.</div></div></section>
   </div>
-
   <nav class="nav"><button class="active" data-screen="world"><span class="ico">⌂</span><span class="label">Мир</span></button><button data-screen="phone"><span class="ico">▣</span><span class="label">Телефон</span></button><button data-screen="me"><span class="ico">●</span><span class="label">Я</span></button></nav>
-</main>
-<div class="toast" id="toast"></div>
+</main><div class="toast" id="toast"></div>
 </body>
 </html>
