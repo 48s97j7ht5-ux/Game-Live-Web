@@ -1,0 +1,1 @@
+Temporary note: body_base PNG binary is managed through git blob/tree, not text contents API.
