@@ -1,4 +1,4 @@
-import {drawBodyBase} from './renderer/bodyRigV09.js?v=9.2';
+import {drawBodyBase} from './renderer/bodyRigV09.js?v=9.3';
 
 const canvas=document.getElementById('characterCanvas');
 const ctx=canvas.getContext('2d');
