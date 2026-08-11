@@ -1,4 +1,4 @@
-import {drawBodyBase} from './renderer/bodyRigV09.js?v=9.3';
+import {drawBodyBase} from './renderer/bodyRigV09.js?v=9.4';
 
 const canvas=document.getElementById('characterCanvas');
 const ctx=canvas.getContext('2d');
@@ -22,6 +22,7 @@ async function render(){
     ctx.fillStyle='#ff8f8f';
     ctx.font='12px monospace';
     ctx.fillText('body_base load error',18,28);
+    ctx.fillText(String(err?.message||err).slice(0,30),18,44);
   }
 }
 
