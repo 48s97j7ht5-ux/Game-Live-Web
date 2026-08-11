@@ -1,14 +1,20 @@
-const ASSET_URL='../assets/body_base_v0_9.png';
+const DATA_URL_FILE='../assets/body_base_v0_9_dataurl.txt?v=9.4';
 let imagePromise;
 
-function loadBody(){
+async function loadBody(){
   if(!imagePromise){
-    imagePromise=new Promise((resolve,reject)=>{
-      const img=new Image();
-      img.onload=()=>resolve(img);
-      img.onerror=reject;
-      img.src=ASSET_URL;
-    });
+    imagePromise=(async()=>{
+      const res=await fetch(DATA_URL_FILE,{cache:'no-store'});
+      if(!res.ok) throw new Error(`body data url fetch failed: ${res.status}`);
+      const dataUrl=(await res.text()).trim();
+      if(!dataUrl.startsWith('data:image/png;base64,')) throw new Error('invalid body data url');
+      return await new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve(img);
+        img.onerror=()=>reject(new Error('body data url image decode failed'));
+        img.src=dataUrl;
+      });
+    })();
   }
   return imagePromise;
 }
