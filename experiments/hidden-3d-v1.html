@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#121218" />
+  <title>Hidden 3D → Pixel test v1</title>
+  <style>
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:#121218;color:#eee;font-family:system-ui,-apple-system,sans-serif}
+    body{padding:14px;display:flex;justify-content:center}
+    .app{width:min(100%,520px)} h1{font-size:18px;margin:2px 0 6px}.sub{font-size:12px;line-height:1.4;color:#aaa;margin-bottom:10px}
+    .stage{position:relative;width:100%;aspect-ratio:3/4;background:#202029;border:1px solid #353540;border-radius:14px;overflow:hidden;display:grid;place-items:center}
+    #view{width:100%;height:100%;display:block;touch-action:none}
+    .pixel #view{image-rendering:pixelated;image-rendering:crisp-edges}
+    .badge{position:absolute;left:10px;top:10px;padding:5px 8px;border-radius:999px;background:#0009;font-size:11px;pointer-events:none}
+    .status{position:absolute;left:10px;right:10px;bottom:10px;background:#000b;border-radius:9px;padding:7px 9px;font-size:11px;line-height:1.35;pointer-events:none}
+    .panel{margin-top:10px;background:#1b1b22;border:1px solid #303039;border-radius:14px;padding:12px}.row{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0}.row label{font-size:12px;color:#bbb;flex:1 1 150px}.row input[type=range]{width:100%}
+    button{border:1px solid #41414c;background:#282832;color:#eee;border-radius:9px;padding:9px 11px;font-weight:650}button.active{background:#e8e8ee;color:#121218}.wide{flex:1}.tiny{font-size:11px;color:#8f8f9c;line-height:1.45;margin-top:8px}
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<div class="app">
+  <h1>Hidden 3D → Pixel v1</h1>
+  <div class="sub">Не арт и не новый генератор. Это изолированный тест: скелетная 3D-модель → поза → ортографическая камера → низкое разрешение → пиксельный вывод.</div>
+
+  <div class="stage pixel" id="stage">
+    <canvas id="view"></canvas>
+    <div class="badge" id="badge">PIXEL 128×171</div>
+    <div class="status" id="status">Загрузка модели…</div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <button class="active wide" id="pixelBtn">Pixel</button>
+      <button class="wide" id="smoothBtn">Smooth</button>
+      <button class="wide active" id="outlineBtn">Outline</button>
+    </div>
+    <div class="row">
+      <button class="wide" data-view="front">Спереди</button>
+      <button class="wide" data-view="three">¾</button>
+      <button class="wide" data-view="side">Сбоку</button>
+    </div>
+    <div class="row">
+      <label>Пиксельная ширина: <b id="resText">128</b>
+        <input id="res" type="range" min="64" max="224" step="16" value="128" />
+      </label>
+      <label>Кадр анимации: <b id="poseText">0%</b>
+        <input id="pose" type="range" min="0" max="1000" value="0" />
+      </label>
+    </div>
+    <div class="row">
+      <label>Поворот: <b id="yawText">0°</b>
+        <input id="yaw" type="range" min="-70" max="70" value="0" />
+      </label>
+      <label>Масштаб: <b id="zoomText">100%</b>
+        <input id="zoom" type="range" min="70" max="145" value="100" />
+      </label>
+    </div>
+    <div class="tiny">Модель CesiumMan используется только как бесплатный технический манекен для проверки skinning/позы. Она не является будущим телом персонажа. Если этот pipeline визуально полезен, следующим этапом заменим манекен на параметрическое человеческое тело с morph targets.</div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
+
+const canvas = document.querySelector('#view');
+const stage = document.querySelector('#stage');
+const badge = document.querySelector('#badge');
+const status = document.querySelector('#status');
+const pixelBtn = document.querySelector('#pixelBtn');
+const smoothBtn = document.querySelector('#smoothBtn');
+const outlineBtn = document.querySelector('#outlineBtn');
+const res = document.querySelector('#res');
+const pose = document.querySelector('#pose');
+const yaw = document.querySelector('#yaw');
+const zoom = document.querySelector('#zoom');
+const resText = document.querySelector('#resText');
+const poseText = document.querySelector('#poseText');
+const yawText = document.querySelector('#yawText');
+const zoomText = document.querySelector('#zoomText');
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:false, alpha:false, powerPreference:'high-performance'});
+renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = false;
+const effect = new OutlineEffect(renderer, {defaultThickness:0.006, defaultColor:[0.06,0.05,0.07], defaultAlpha:1, defaultKeepAlive:true});
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x272631);
+scene.add(new THREE.HemisphereLight(0xffe7d0, 0x30364b, 2.4));
+const key = new THREE.DirectionalLight(0xffd7b0, 3.3); key.position.set(3,5,5); scene.add(key);
+const rim = new THREE.DirectionalLight(0x9ab7ff, 1.4); rim.position.set(-4,3,-3); scene.add(rim);
+
+const camera = new THREE.OrthographicCamera(-1,1,1,-1,0.01,100);
+camera.position.set(0,1.1,5); camera.lookAt(0,1.05,0);
+
+const floor = new THREE.Mesh(new THREE.CircleGeometry(1.25,64), new THREE.MeshBasicMaterial({color:0x1b1a22,transparent:true,opacity:.7}));
+floor.rotation.x=-Math.PI/2; floor.position.y=0; scene.add(floor);
+
+const root = new THREE.Group(); scene.add(root);
+let model=null, mixer=null, action=null, clipDuration=1, outline=true, pixel=true;
+let boundsHeight=2;
+
+function applySize(){
+  const rect=stage.getBoundingClientRect();
+  const aspect=rect.width/rect.height;
+  const baseHalf=1.12*(100/Number(zoom.value));
+  camera.left=-baseHalf*aspect; camera.right=baseHalf*aspect; camera.top=baseHalf; camera.bottom=-baseHalf; camera.updateProjectionMatrix();
+  if(pixel){
+    const w=Number(res.value), h=Math.max(1,Math.round(w/aspect));
+    renderer.setSize(w,h,false); canvas.style.width='100%'; canvas.style.height='100%';
+    badge.textContent=`PIXEL ${w}×${h}`;
+  } else {
+    const w=Math.max(1,Math.round(rect.width)),h=Math.max(1,Math.round(rect.height));
+    renderer.setSize(w,h,false); canvas.style.width='100%';canvas.style.height='100%';
+    badge.textContent=`SMOOTH ${w}×${h}`;
+  }
+  render();
+}
+
+function render(){
+  if(outline) effect.render(scene,camera); else renderer.render(scene,camera);
+}
+
+function setPixel(v){
+  pixel=v; stage.classList.toggle('pixel',v); pixelBtn.classList.toggle('active',v); smoothBtn.classList.toggle('active',!v); applySize();
+}
+function setYaw(deg){ root.rotation.y=THREE.MathUtils.degToRad(deg); yaw.value=String(deg); yawText.textContent=`${deg}°`; render(); }
+
+pixelBtn.onclick=()=>setPixel(true); smoothBtn.onclick=()=>setPixel(false);
+outlineBtn.onclick=()=>{outline=!outline;outlineBtn.classList.toggle('active',outline);render()};
+res.oninput=()=>{resText.textContent=res.value;if(pixel)applySize()};
+yaw.oninput=()=>setYaw(Number(yaw.value));
+zoom.oninput=()=>{zoomText.textContent=`${zoom.value}%`;applySize()};
+pose.oninput=()=>{
+  const f=Number(pose.value)/1000; poseText.textContent=`${Math.round(f*100)}%`;
+  if(mixer&&action){ action.paused=true; action.time=f*clipDuration; mixer.update(0); render(); }
+};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{
+  const v=b.dataset.view; setYaw(v==='front'?0:v==='three'?-35:-70);
+});
+window.addEventListener('resize',applySize,{passive:true});
+
+const MODEL='https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMan/glTF-Binary/CesiumMan.glb';
+new GLTFLoader().load(MODEL, gltf=>{
+  model=gltf.scene; root.add(model);
+  const box=new THREE.Box3().setFromObject(model); const size=box.getSize(new THREE.Vector3()); boundsHeight=size.y||2;
+  model.scale.setScalar(1.75/boundsHeight);
+  const box2=new THREE.Box3().setFromObject(model); const c=box2.getCenter(new THREE.Vector3());
+  model.position.x-=c.x; model.position.z-=c.z; model.position.y-=box2.min.y;
+  if(gltf.animations.length){
+    mixer=new THREE.AnimationMixer(model); const clip=gltf.animations[0]; clipDuration=clip.duration||1;
+    action=mixer.clipAction(clip); action.play(); action.paused=true; action.time=0; mixer.update(0);
+  }
+  status.textContent=`Готово: skinned 3D-модель, ${gltf.animations.length} анимац. клип(ов). Двигай «Кадр анимации» и сравни Pixel/Smooth.`;
+  applySize();
+}, xhr=>{
+  if(xhr.total) status.textContent=`Загрузка модели: ${Math.round(xhr.loaded/xhr.total*100)}%`;
+}, err=>{
+  console.error(err); status.textContent='Не удалось загрузить GLB. Проверь интернет/CDN и перезагрузи страницу.';
+});
+
+applySize();
+</script>
+</body>
+</html>
