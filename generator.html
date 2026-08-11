@@ -4,100 +4,76 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101114">
-<title>Game Live — Character Generator v0.2</title>
+<title>Game Live — Pixel Character Renderer v0.3</title>
 <style>
-:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#101114;color:#f5f5f5}*{box-sizing:border-box}body{margin:0;min-height:100svh;padding:max(12px,env(safe-area-inset-top)) 12px max(18px,env(safe-area-inset-bottom));background:#101114}main{width:min(100%,780px);margin:auto}.top{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.top h1{font-size:20px;margin:0}.top small{color:#9298a3}.version{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8fd694}.app{display:grid;grid-template-columns:minmax(250px,1fr) minmax(220px,290px);gap:12px}.stage,.panel{background:#181a1f;border:1px solid #30343c;border-radius:16px}.stage{min-height:540px;display:grid;place-items:center;overflow:hidden;position:relative;background:linear-gradient(#20232a 0 76%,#17191e 76%)}canvas{width:auto;height:min(74svh,520px);max-width:100%;image-rendering:pixelated;image-rendering:crisp-edges}.tag{position:absolute;left:12px;top:12px;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#aab0bb;background:#111318d9;padding:6px 8px;border-radius:8px}.badge{position:absolute;right:12px;top:12px;font-size:11px;color:#7f8792}.panel{padding:14px}.row{margin:0 0 11px}.row label{display:flex;justify-content:space-between;font-size:12px;color:#cbd0d7;margin-bottom:5px}.row output{color:#fff;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#d8dbe1}select,button{width:100%;border:1px solid #3b4049;border-radius:10px;background:#22262d;color:#fff;padding:10px;font:inherit}button{font-weight:700;margin-top:5px;background:#eceef2;color:#111;border:0}.secondary{background:#262a31;color:#e9ebef;border:1px solid #3b4049}.check{display:flex;align-items:center;gap:8px;font-size:12px;color:#b9bec7;margin:8px 0 12px}.check input{width:18px;height:18px}.note{font-size:11px;line-height:1.45;color:#8e949f;margin-top:10px;border-top:1px solid #2c3037;padding-top:10px}.legend{position:absolute;left:12px;bottom:12px;font-size:10px;color:#7e8590;background:#111318bf;padding:5px 7px;border-radius:7px}@media(max-width:620px){.app{grid-template-columns:1fr}.stage{min-height:510px}canvas{height:470px}.panel{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.panel .wide,.panel button,.panel .note,.panel .check{grid-column:1/-1}}
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#101114;color:#f5f5f5}*{box-sizing:border-box}body{margin:0;min-height:100svh;padding:max(12px,env(safe-area-inset-top)) 12px max(18px,env(safe-area-inset-bottom));background:#101114}main{width:min(100%,760px);margin:auto}.top{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.top h1{font-size:20px;margin:0}.top small{color:#9298a3}.version{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8fd694}.app{display:grid;grid-template-columns:minmax(260px,1fr) minmax(220px,290px);gap:12px}.stage,.panel{background:#181a1f;border:1px solid #30343c;border-radius:16px}.stage{min-height:560px;display:grid;place-items:center;position:relative;overflow:hidden;background:linear-gradient(#20232a 0 78%,#17191e 78%)}canvas{height:min(78svh,540px);width:auto;max-width:100%;image-rendering:pixelated;image-rendering:crisp-edges}.tag{position:absolute;left:12px;top:12px;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#aab0bb;background:#111318d9;padding:6px 8px;border-radius:8px}.badge{position:absolute;right:12px;top:12px;font-size:11px;color:#7f8792}.legend{position:absolute;left:12px;bottom:12px;font:10px ui-monospace,SFMono-Regular,Menlo,monospace;color:#87909d;background:#111318c9;padding:6px 8px;border-radius:7px}.panel{padding:14px}.row{margin:0 0 13px}.row label{display:flex;justify-content:space-between;font-size:12px;color:#cbd0d7;margin-bottom:5px}.row output{color:#fff;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#d8dbe1}.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:4px 0 14px}.swatches button{aspect-ratio:1;border:2px solid transparent;border-radius:8px;padding:0}.swatches button.active{border-color:#fff}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{border:0;border-radius:10px;padding:11px;font:inherit;font-weight:700;background:#eceef2;color:#111}.actions .secondary{background:#262a31;color:#e9ebef;border:1px solid #3b4049}.note{font-size:11px;line-height:1.5;color:#8e949f;margin-top:12px;border-top:1px solid #2c3037;padding-top:10px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}@media(max-width:620px){.app{grid-template-columns:1fr}.stage{min-height:545px}canvas{height:510px}.panel{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.panel .wide,.panel .swatches,.panel .actions,.panel .note{grid-column:1/-1}}
 </style>
 </head>
 <body><main>
-<div class="top"><div><small>Game Live · graphics prototype</small><h1>Генератор тела</h1></div><div class="version">v0.2 · 400 px</div></div>
+<div class="top"><div><small>Game Live · graphics prototype</small><h1>Pixel Character Renderer</h1></div><div class="version">v0.3 · ref 400 px</div></div>
 <div class="app">
-<section class="stage"><div class="tag">neutral_front · curved body mesh</div><div class="badge">без одежды/волос — тест силуэта</div><canvas id="c" width="240" height="400"></canvas><div class="legend">● опорные точки можно включить ниже</div></section>
+<section class="stage"><div class="tag">neutral_front · integer pixel raster</div><div class="badge">без path / ellipse / сглаживания</div><canvas id="c" width="220" height="430"></canvas><div class="legend">1 координата Canvas = 1 пиксель спрайта</div></section>
 <section class="panel">
-<div class="row wide"><label>Тип тела</label><select id="sex"><option value="f">Женский</option><option value="m">Мужской</option></select></div>
-<div class="row"><label>Рост <output id="heightO"></output></label><input id="height" type="range" min="150" max="200" value="168"></div>
-<div class="row"><label>Масса <output id="weightO"></output></label><input id="weight" type="range" min="45" max="110" value="58"></div>
-<div class="row"><label>Плечи <output id="shouldersO"></output></label><input id="shoulders" type="range" min="70" max="130" value="96"></div>
-<div class="row"><label>Талия <output id="waistO"></output></label><input id="waist" type="range" min="70" max="135" value="91"></div>
-<div class="row"><label>Бёдра <output id="hipsO"></output></label><input id="hips" type="range" min="70" max="140" value="108"></div>
-<div class="row"><label>Мышцы <output id="muscleO"></output></label><input id="muscle" type="range" min="0" max="100" value="20"></div>
-<div class="row"><label>Грудь <output id="chestO"></output></label><input id="chest" type="range" min="0" max="100" value="38"></div>
-<div class="row"><label>Тон кожи <output id="skinO"></output></label><input id="skin" type="range" min="0" max="100" value="28"></div>
-<label class="check"><input id="debug" type="checkbox">Показать опорные точки</label>
-<button id="random">Случайный NPC</button><button id="reset" class="secondary">Сбросить</button>
-<div class="note">v0.2 больше не строит тело из трапеций. Контур собирается из плавных сегментов вокруг анатомических опорных точек. Это всё ещё геометрический прототип: художественные пиксельные ассеты подключим отдельным слоем.</div>
+<div class="row wide"><label>Рост <output id="heightO"></output></label><input id="height" type="range" min="155" max="190" value="168"></div>
+<div class="row"><label>Плечи <output id="shouldersO"></output></label><input id="shoulders" type="range" min="78" max="122" value="98"></div>
+<div class="row"><label>Талия <output id="waistO"></output></label><input id="waist" type="range" min="76" max="124" value="94"></div>
+<div class="row"><label>Бёдра <output id="hipsO"></output></label><input id="hips" type="range" min="82" max="128" value="108"></div>
+<div class="wide"><label style="font-size:12px;color:#cbd0d7">Тон кожи</label><div class="swatches" id="swatches"></div></div>
+<div class="actions"><button id="random">Случайно</button><button id="reset" class="secondary">Сбросить</button></div>
+<div class="note"><b>v0.3:</b> фигура строится строка за строкой непосредственно в пиксельной сетке. Контур, свет и тень тоже состоят только из целых пикселей. Пока сознательно тестируем только силуэт и четыре пропорции.</div>
 </section></div></main>
 <script>
-const c=document.querySelector('#c');const g=c.getContext('2d');g.imageSmoothingEnabled=false;
-const ids=['height','weight','shoulders','waist','hips','muscle','chest','skin'];const el=Object.fromEntries(ids.map(i=>[i,document.getElementById(i)]));el.sex=document.getElementById('sex');el.debug=document.getElementById('debug');
-const defaults={sex:'f',height:168,weight:58,shoulders:96,waist:91,hips:108,muscle:20,chest:38,skin:28};
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const mix=(a,b,t)=>a+(b-a)*t;const V=id=>+el[id].value;
-function skinColor(v){const t=v/100,a=[247,211,185],b=[105,66,49];return `rgb(${a.map((n,i)=>Math.round(mix(n,b[i],t))).join(',')})`}
-function shadeColor(v){const t=v/100,a=[205,159,133],b=[69,42,35];return `rgb(${a.map((n,i)=>Math.round(mix(n,b[i],t))).join(',')})`}
-function path(points,fill,stroke='#2e2220',lw=2){g.beginPath();g.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++){const p=points[i];if(p.length===2)g.lineTo(p[0],p[1]);else g.bezierCurveTo(...p)}g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}
-function ellipse(cx,cy,rx,ry,fill,stroke='#2e2220',lw=2){g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}
-function line(x1,y1,x2,y2,color,w=1){g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.strokeStyle=color;g.lineWidth=w;g.stroke()}
-function dot(x,y,color='#73e2ff'){g.fillStyle=color;g.fillRect(Math.round(x)-1,Math.round(y)-1,3,3)}
-function render(){
- g.clearRect(0,0,c.width,c.height);
- const sex=el.sex.value,H=V('height'),W=V('weight'),mus=V('muscle')/100,ch=V('chest')/100;
- const fat=clamp((W-(sex==='f'?48:55))/55,0,1.15), sh=V('shoulders')/100, wa=V('waist')/100, hi=V('hips')/100;
- const skin=skinColor(V('skin')),shade=shadeColor(V('skin'));
- const cx=120,scale=H/168;const top=clamp(18-(scale-1)*20,7,28),bottom=382;const bodyH=bottom-top;
- const headH=48*clamp(scale,.92,1.09),headW=(sex==='f'?38:40)+fat*2;
- const headCY=top+headH*.47, chinY=top+headH*.94, neckTop=chinY-1, shoulderY=top+bodyH*.205;
- const chestY=top+bodyH*.34, waistY=top+bodyH*.48, pelvisY=top+bodyH*.565, crotchY=top+bodyH*.625;
- const kneeY=top+bodyH*.805, ankleY=bottom-14;
- const shoulderW=((sex==='f'?38:43)*sh)+(mus*7)+(fat*3);
- const ribW=(sex==='f'?31:35)+fat*7+mus*2;
- const waistW=((sex==='f'?25:30)*wa)+fat*10;
- const hipW=((sex==='f'?39:35)*hi)+fat*9;
- const thighW=(sex==='f'?18:19)+fat*8+mus*3; const calfW=(sex==='f'?11:12)+fat*3+mus*3;
- const upperArmW=(sex==='f'?8.5:10)+fat*3+mus*3, foreArmW=(sex==='f'?7.2:8.2)+fat*2+mus*2;
- const armTopY=shoulderY+7, elbowY=top+bodyH*.43, wristY=top+bodyH*.59;
- // back hair placeholder deliberately omitted: geometry only
- ellipse(cx,headCY,headW*.52,headH*.47,skin);
- // ears and jaw hint
- ellipse(cx-headW*.52,headCY+3,3.2,5.5,skin);ellipse(cx+headW*.52,headCY+3,3.2,5.5,skin);
+'use strict';
+const c=document.getElementById('c'),g=c.getContext('2d',{alpha:true});g.imageSmoothingEnabled=false;
+const els={height:document.getElementById('height'),shoulders:document.getElementById('shoulders'),waist:document.getElementById('waist'),hips:document.getElementById('hips')};
+const defaults={height:168,shoulders:98,waist:94,hips:108,skin:1};let skinIndex=1;
+const palettes=[
+ {base:'#f3cfb6',light:'#ffe0ca',shadow:'#c99678',dark:'#6e4638',line:'#382826'},
+ {base:'#e8b998',light:'#f8cfb1',shadow:'#b87f61',dark:'#6d4334',line:'#382724'},
+ {base:'#d99a74',light:'#edb18a',shadow:'#a7674f',dark:'#633c31',line:'#342421'},
+ {base:'#bd7957',light:'#d79470',shadow:'#8b513e',dark:'#563229',line:'#30211f'},
+ {base:'#92563e',light:'#ad6e51',shadow:'#673a30',dark:'#432821',line:'#281c1a'},
+ {base:'#633c31',light:'#7a4c3c',shadow:'#442a24',dark:'#2d1d1a',line:'#201716'}
+];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const lerp=(a,b,t)=>a+(b-a)*t;const V=k=>+els[k].value;
+function between(y,a,b){return clamp((y-a)/(b-a),0,1)}
+function piece(y,keys){for(let i=0;i<keys.length-1;i++){const a=keys[i],b=keys[i+1];if(y<=b[0])return lerp(a[1],b[1],between(y,a[0],b[0]));}return keys[keys.length-1][1]}
+function px(x,y,w,h,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)))}
+function span(y,cx,half,p){const L=Math.round(cx-half),R=Math.round(cx+half);px(L,y,R-L+1,1,p.base);px(L,y,2,1,p.line);px(R-1,y,2,1,p.line);if(R-L>8){px(L+2,y,2,1,p.shadow);px(R-4,y,2,1,p.light)}}
+function ovalRows(cx,cy,rx,ry,p){for(let y=Math.round(cy-ry);y<=Math.round(cy+ry);y++){const dy=(y-cy)/ry;const h=rx*Math.sqrt(Math.max(0,1-dy*dy));span(y,cx,h,p)}}
+function drawArm(side,ys,p,shoulderHalf,hipHalf){const {shoulderY,crotchY}=ys;const start=shoulderY+5,end=crotchY-4;for(let y=start;y<=end;y++){const t=between(y,start,end),curve=Math.sin(t*Math.PI);const center=110+side*(shoulderHalf+7+curve*7+(t>.55?(hipHalf-shoulderHalf)*.15:0));const half=piece(t,[[0,6.8],[.38,6.1],[.55,5.1],[.78,4.7],[1,4.2]]);span(y,center,half,p)}ovalRows(110+side*(hipHalf+10),end+7,5,7,p)}
+function drawLeg(side,ys,p,hipHalf){const {pelvisY,crotchY,kneeY,ankleY,bottom}=ys;for(let y=crotchY;y<=ankleY;y++){const t=between(y,crotchY,ankleY);let center;if(y<kneeY){const q=between(y,crotchY,kneeY);center=110+side*lerp(9,13,q)}else{const q=between(y,kneeY,ankleY);center=110+side*lerp(13,12,q)}const half=piece(t,[[0,hipHalf*.43],[.13,hipHalf*.38],[.52,9.5],[.68,8.3],[.86,6.7],[1,5.6]]);span(y,center,half,p)}const ax=110+side*12;for(let y=ankleY+1;y<=bottom-3;y++)span(y,ax,5.2,p);const footY=bottom-2;if(side<0){px(ax-12,footY-2,17,5,p.base);px(ax-12,footY-2,17,1,p.line);px(ax-12,footY+2,17,1,p.line)}else{px(ax-4,footY-2,17,5,p.base);px(ax-4,footY-2,17,1,p.line);px(ax-4,footY+2,17,1,p.line)}}
+function render(){g.clearRect(0,0,c.width,c.height);const p=palettes[skinIndex];
+ const h=V('height'),scale=clamp(h/168,.92,1.10);const spriteH=Math.round(400*scale);const bottom=416,top=bottom-spriteH;
+ const headH=Math.round(52*scale),headW=Math.round(38*scale),headCY=top+Math.round(headH*.47);const chin=top+headH-2;
+ const shoulderY=top+Math.round(spriteH*.205),chestY=top+Math.round(spriteH*.33),waistY=top+Math.round(spriteH*.46),pelvisY=top+Math.round(spriteH*.56),crotchY=top+Math.round(spriteH*.625),kneeY=top+Math.round(spriteH*.80),ankleY=bottom-16;
+ const shoulderHalf=34*(V('shoulders')/100),waistHalf=23*(V('waist')/100),hipHalf=35*(V('hips')/100),ribHalf=30;
+ const ys={shoulderY,chestY,waistY,pelvisY,crotchY,kneeY,ankleY,bottom};
+ // arms behind torso
+ drawArm(-1,ys,p,shoulderHalf,hipHalf);drawArm(1,ys,p,shoulderHalf,hipHalf);
+ // legs behind pelvis
+ drawLeg(-1,ys,p,hipHalf);drawLeg(1,ys,p,hipHalf);
+ // torso scanlines
+ const torsoKeys=[[shoulderY,shoulderHalf],[shoulderY+10,ribHalf+3],[chestY,ribHalf],[waistY,waistHalf],[pelvisY,hipHalf],[crotchY,10]];
+ for(let y=shoulderY;y<=crotchY;y++){span(y,110,piece(y,torsoKeys),p)}
  // neck
- path([[cx-7,neckTop],[cx-7,shoulderY-9],[cx-11,shoulderY],[cx+11,shoulderY],[cx+7,shoulderY-9],[cx+7,neckTop]],skin);
- // torso — continuous curved silhouette
- const left=[cx-shoulderW,shoulderY]; const right=[cx+shoulderW,shoulderY];
- path([
-  left,
-  [cx-shoulderW-2,shoulderY+7,cx-ribW-4,chestY-18,cx-ribW,chestY],
-  [cx-ribW+1,chestY+20,cx-waistW-2,waistY-15,cx-waistW,waistY],
-  [cx-waistW,waistY+18,cx-hipW-2,pelvisY-12,cx-hipW,pelvisY],
-  [cx-hipW+1,pelvisY+20,cx-hipW*.73,crotchY-3,cx-10,crotchY],
-  [cx+10,crotchY],
-  [cx+hipW*.73,crotchY-3,cx+hipW-1,pelvisY+20,cx+hipW,pelvisY],
-  [cx+hipW+2,pelvisY-12,cx+waistW,waistY+18,cx+waistW,waistY],
-  [cx+waistW+2,waistY-15,cx+ribW-1,chestY+20,cx+ribW,chestY],
-  [cx+ribW+4,chestY-18,cx+shoulderW+2,shoulderY+7,right]
- ],skin);
- // chest volume integrated as soft lower arcs, not circles
- if(sex==='f'&&ch>.03){const bw=7+ch*7,bh=3.5+ch*5,cy=chestY-5;g.beginPath();g.moveTo(cx-1,cy-4);g.bezierCurveTo(cx-5,cy-8,cx-10-bw,cy-7,cx-13-bw*.35,cy+2);g.bezierCurveTo(cx-12,cy+bh,cx-5,cy+bh+2,cx-1,cy+1);g.strokeStyle=shade;g.lineWidth=1.4;g.stroke();g.beginPath();g.moveTo(cx+1,cy-4);g.bezierCurveTo(cx+5,cy-8,cx+10+bw,cy-7,cx+13+bw*.35,cy+2);g.bezierCurveTo(cx+12,cy+bh,cx+5,cy+bh+2,cx+1,cy+1);g.stroke()}
- // arms — tapered curved capsules
- function arm(side){const s=side;const sx=cx+s*(shoulderW-2), ex=cx+s*(shoulderW+7+fat*2), wx=cx+s*(hipW+8);path([
-  [sx,armTopY],[sx+s*upperArmW,armTopY+3],[ex+s*upperArmW*.65,elbowY-8],[ex+s*foreArmW*.75,elbowY+8],[wx+s*foreArmW*.7,wristY-8],[wx,wristY+8],[wx-s*foreArmW*.7,wristY-8],[ex-s*foreArmW*.55,elbowY+8],[ex-s*upperArmW*.5,elbowY-8],[sx,armTopY]
- ],skin)}arm(-1);arm(1);
- // hands
- ellipse(cx-(hipW+8),wristY+10,6.2+fat,9,skin);ellipse(cx+(hipW+8),wristY+10,6.2+fat,9,skin);
- // legs — separate curved silhouettes
- function leg(side){const s=side, hipX=cx+s*(hipW*.58), innerX=cx+s*8, kneeX=cx+s*10, ankleX=cx+s*9;path([
-  [hipX,pelvisY+12],[cx+s*(hipW*.88),crotchY+8],[kneeX+s*thighW*.56,kneeY-10],[kneeX+s*calfW*.66,kneeY+12],[ankleX+s*calfW*.45,ankleY],[ankleX+s*3,bottom-2],[ankleX-s*4,bottom-1],[ankleX-s*calfW*.34,ankleY],[kneeX-s*calfW*.48,kneeY+12],[kneeX-s*thighW*.46,kneeY-10],[innerX,crotchY+7],[hipX,pelvisY+12]
- ],skin)}leg(-1);leg(1);
- // feet
- function foot(side){const s=side,x=cx+s*9,y=bottom-2;g.beginPath();g.moveTo(x-s*5,y-4);g.quadraticCurveTo(x+s*3,y+1,x+s*13,y);g.quadraticCurveTo(x+s*15,y+4,x+s*5,y+5);g.lineTo(x-s*5,y+4);g.closePath();g.fillStyle=skin;g.fill();g.strokeStyle='#2e2220';g.lineWidth=2;g.stroke()}foot(-1);foot(1);
- // simple face guides
- g.fillStyle='#2b2322';g.fillRect(Math.round(cx-11),Math.round(headCY-2),3,2);g.fillRect(Math.round(cx+8),Math.round(headCY-2),3,2);line(cx-4,headCY+12,cx+4,headCY+12,shade,1);
- // subtle body landmarks
- line(cx,waistY+5,cx,waistY+9,shade,1);line(cx-3,waistY+12,cx+3,waistY+12,shade,1);
- if(el.debug.checked){const pts=[[cx,headCY],[cx,shoulderY],[cx-shoulderW,shoulderY],[cx+shoulderW,shoulderY],[cx-ribW,chestY],[cx+ribW,chestY],[cx-waistW,waistY],[cx+waistW,waistY],[cx-hipW,pelvisY],[cx+hipW,pelvisY],[cx,crotchY],[cx-10,kneeY],[cx+10,kneeY],[cx-9,ankleY],[cx+9,ankleY]];pts.forEach(p=>dot(...p))}
- ids.forEach(id=>document.getElementById(id+'O').textContent=id==='height'?V(id)+' см':id==='weight'?V(id)+' кг':V(id)+'%');
+ for(let y=chin-1;y<shoulderY;y++){const t=between(y,chin,shoulderY);span(y,110,lerp(7,8.5,t),p)}
+ // head and ears
+ ovalRows(110,headCY,headW/2,headH/2,p);ovalRows(110-headW/2-2,headCY+2,3,5,p);ovalRows(110+headW/2+2,headCY+2,3,5,p);
+ // pixel face
+ px(101,headCY-2,3,2,p.line);px(116,headCY-2,3,2,p.line);px(108,headCY+4,3,1,p.shadow);px(106,headCY+11,8,1,p.dark);px(107,headCY+10,6,1,p.shadow);
+ // collarbone and body shading — pixel marks only
+ px(96,shoulderY+15,10,1,p.shadow);px(114,shoulderY+15,10,1,p.shadow);px(104,waistY-3,2,18,p.shadow);px(115,waistY+8,2,13,p.light);
+ // lower torso shadow blocks
+ px(Math.round(110-hipHalf+4),pelvisY+8,3,8,p.shadow);px(Math.round(110+hipHalf-7),pelvisY+8,3,8,p.light);
+ // ground shadow, pixelated
+ for(let i=0;i<9;i++)px(82+i*6,bottom+5+Math.abs(4-i),5,2,i<5?'#101217':'#0d0f13');
+ document.getElementById('heightO').textContent=h+' см';document.getElementById('shouldersO').textContent=V('shoulders')+'%';document.getElementById('waistO').textContent=V('waist')+'%';document.getElementById('hipsO').textContent=V('hips')+'%';
 }
-ids.forEach(i=>el[i].addEventListener('input',render));el.sex.addEventListener('change',render);el.debug.addEventListener('change',render);
-document.getElementById('random').onclick=()=>{el.sex.value=Math.random()<.5?'f':'m';el.height.value=155+Math.floor(Math.random()*41);el.weight.value=48+Math.floor(Math.random()*50);el.shoulders.value=82+Math.floor(Math.random()*35);el.waist.value=80+Math.floor(Math.random()*35);el.hips.value=84+Math.floor(Math.random()*42);el.muscle.value=Math.floor(Math.random()*65);el.chest.value=Math.floor(Math.random()*82);el.skin.value=Math.floor(Math.random()*90);render()};
-document.getElementById('reset').onclick=()=>{el.sex.value=defaults.sex;ids.forEach(i=>el[i].value=defaults[i]);render()};render();
+Object.values(els).forEach(e=>e.addEventListener('input',render));
+const sw=document.getElementById('swatches');palettes.forEach((p,i)=>{const b=document.createElement('button');b.style.background=p.base;b.title='Тон кожи '+(i+1);b.onclick=()=>{skinIndex=i;[...sw.children].forEach(x=>x.classList.remove('active'));b.classList.add('active');render()};if(i===skinIndex)b.classList.add('active');sw.appendChild(b)});
+document.getElementById('reset').onclick=()=>{Object.keys(els).forEach(k=>els[k].value=defaults[k]);skinIndex=defaults.skin;[...sw.children].forEach((b,i)=>b.classList.toggle('active',i===skinIndex));render()};
+document.getElementById('random').onclick=()=>{els.height.value=158+Math.floor(Math.random()*29);els.shoulders.value=84+Math.floor(Math.random()*31);els.waist.value=82+Math.floor(Math.random()*31);els.hips.value=92+Math.floor(Math.random()*28);skinIndex=Math.floor(Math.random()*palettes.length);[...sw.children].forEach((b,i)=>b.classList.toggle('active',i===skinIndex));render()};
+render();
 </script>
 </body></html>
