@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>A170 Character Renderer Test</title>
+<style>
+  :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark}
+  body{margin:0;background:#101317;color:#eef2f7;min-height:100vh;display:flex;flex-direction:column}
+  header{padding:14px 16px;border-bottom:1px solid #2b323b;background:#161b22}
+  h1{font-size:18px;margin:0 0 4px}.sub{font-size:12px;color:#9ba7b4}
+  main{display:grid;grid-template-columns:minmax(280px,1fr) minmax(260px,340px);gap:16px;padding:16px;align-items:start}
+  .stageWrap{display:flex;justify-content:center}
+  .stage{position:relative;width:256px;height:448px;background:
+    linear-gradient(45deg,#20262e 25%,transparent 25%) 0 0/16px 16px,
+    linear-gradient(45deg,transparent 75%,#20262e 75%) 0 0/16px 16px,
+    linear-gradient(45deg,transparent 75%,#20262e 75%) 8px -8px/16px 16px,
+    linear-gradient(45deg,#20262e 25%,#171c22 25%) 8px 8px/16px 16px;
+    border:1px solid #39414c;box-shadow:0 8px 30px #0008;overflow:hidden}
+  canvas{position:absolute;inset:0;width:256px;height:448px;image-rendering:pixelated}
+  .panel{background:#161b22;border:1px solid #2b323b;border-radius:10px;padding:14px}
+  .panel h2{font-size:15px;margin:0 0 10px}.row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  label{font-size:13px}.row label{flex:1}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  button,select{background:#222a34;color:#eef2f7;border:1px solid #3b4653;border-radius:8px;padding:8px 10px;font-size:13px}
+  button:active{transform:translateY(1px)}
+  .legend{font-size:12px;color:#aeb8c4;line-height:1.45;margin-top:10px}
+  .status{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#0e1217;border:1px solid #2b323b;border-radius:8px;padding:10px;white-space:pre-wrap}
+  .ok{color:#7ee787}.warn{color:#f2cc60}
+  @media(max-width:760px){main{grid-template-columns:1fr}.stageWrap{order:1}.controls{order:2}}
+</style>
+</head>
+<body>
+<header>
+  <h1>A170 Character Renderer — production test scaffold</h1>
+  <div class="sub">256×448 canvas · A170 = 400 px body height · structural / surface / joint-cover layers</div>
+</header>
+<main>
+  <div class="stageWrap"><div class="stage"><canvas id="view" width="256" height="448"></canvas></div></div>
+  <div class="controls">
+    <section class="panel">
+      <h2>Слои</h2>
+      <div id="layerControls"></div>
+      <div class="row"><label for="abdomenVariant">Abdomen variant</label>
+        <select id="abdomenVariant"><option value="flat">flat</option><option value="soft">soft</option></select>
+      </div>
+      <div class="btns"><button id="allOn">Все включить</button><button id="allOff">Все выключить</button><button id="gridToggle">Сетка/anchors</button></div>
+      <div class="legend">Сейчас модули рисуются программными заглушками. Смысл теста — проверить Z-order, координаты, включение/замену модулей и структуру рендера. Настоящие PNG можно положить в <code>assets/</code> и заменить генераторы-заглушки.</div>
+    </section>
+    <section class="panel" style="margin-top:12px">
+      <h2>Статус</h2>
+      <div class="status" id="status"></div>
+    </section>
+  </div>
+</main>
+<script>
+const W=256,H=448,CX=128;
+const canvas=document.getElementById('view'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
+let showGuides=true;
+const state={
+  chest:true,pelvis:true,thighL:true,lowerLegL:true,kneeL:true,abdomen:true,
+  abdomenVariant:'flat'
+};
+const anchors={
+  chestBottom:137, waist:158, pelvisTop:177, hipY:196, kneeY:302, ankleY:382, soleY:400
+};
+const layers=[
+  {id:'pelvis',label:'pelvis_structural',z:300},
+  {id:'thighL',label:'thigh_L_structural',z:310},
+  {id:'lowerLegL',label:'lowerLeg_L_structural',z:320},
+  {id:'chest',label:'chest_structural',z:400},
+  {id:'abdomen',label:'abdomen_surface',z:610},
+  {id:'kneeL',label:'knee_L_surface',z:700},
+];
+function skin(base='#d39a7b',shadow='#ad6f55',light='#efbc9c'){return {base,shadow,light}}
+const pal=skin();
+function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function poly(points,c){ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fill()}
+function outlinePoly(points,c='#5e3b32'){ctx.strokeStyle=c;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(points[0][0]+.5,points[0][1]+.5);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0]+.5,points[i][1]+.5);ctx.closePath();ctx.stroke()}
+function drawChest(){
+  const p=[[93,72],[163,72],[160,108],[151,137],[105,137],[96,108]];poly(p,pal.base);outlinePoly(p);pxRect(97,78,7,44,pal.light);pxRect(151,82,7,40,pal.shadow)
+}
+function drawPelvis(){
+  const p=[[98,158],[158,158],[169,190],[162,222],[144,235],[112,235],[94,222],[87,190]];poly(p,pal.base);outlinePoly(p);pxRect(91,166,8,44,pal.light);pxRect(156,168,8,44,pal.shadow)
+}
+function drawThighL(){
+  const p=[[92,188],[121,188],[120,314],[96,314],[88,260]];poly(p,pal.base);outlinePoly(p);pxRect(91,198,5,88,pal.light);pxRect(115,204,5,90,pal.shadow)
+}
+function drawLowerLegL(){
+  const p=[[96,288],[120,288],[118,388],[102,400],[94,388]];poly(p,pal.base);outlinePoly(p);pxRect(97,306,4,62,pal.light);pxRect(114,302,4,68,pal.shadow)
+}
+function drawKneeL(){
+  const p=[[94,290],[120,290],[123,303],[118,316],[99,318],[92,304]];poly(p,'#dca184');outlinePoly(p);pxRect(96,294,4,12,pal.light);pxRect(117,297,4,12,pal.shadow)
+}
+function drawAbdomenFlat(){
+  const p=[[102,126],[154,126],[158,159],[153,183],[103,183],[98,159]];poly(p,'#d89f80');outlinePoly(p);pxRect(102,132,5,35,pal.light);pxRect(150,135,5,32,pal.shadow);pxRect(127,149,2,12,'#8e5e4b')
+}
+function drawAbdomenSoft(){
+  const p=[[101,126],[155,126],[162,158],[163,185],[155,197],[101,197],[93,185],[94,158]];poly(p,'#d8a184');outlinePoly(p);pxRect(98,132,6,42,pal.light);pxRect(154,138,6,40,pal.shadow);pxRect(127,151,2,13,'#8e5e4b')
+}
+function drawGuides(){
+  ctx.save();ctx.setLineDash([2,2]);ctx.lineWidth=1;
+  ctx.strokeStyle='#5fc3ff77';ctx.beginPath();ctx.moveTo(CX+.5,0);ctx.lineTo(CX+.5,H);ctx.stroke();
+  const ys=[['chestBottom',137],['waist',158],['pelvisTop',177],['hip',196],['knee',302],['ankle',382],['sole',400]];
+  ys.forEach(([name,y])=>{ctx.strokeStyle='#ffffff33';ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(W,y+.5);ctx.stroke();ctx.fillStyle='#ffffff99';ctx.font='8px monospace';ctx.fillText(name,4,y-3)});
+  ctx.restore();
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
+  const ordered=layers.filter(l=>state[l.id]).sort((a,b)=>a.z-b.z);
+  for(const l of ordered){
+    if(l.id==='chest')drawChest();
+    if(l.id==='pelvis')drawPelvis();
+    if(l.id==='thighL')drawThighL();
+    if(l.id==='lowerLegL')drawLowerLegL();
+    if(l.id==='abdomen')state.abdomenVariant==='soft'?drawAbdomenSoft():drawAbdomenFlat();
+    if(l.id==='kneeL')drawKneeL();
+  }
+  if(showGuides)drawGuides();
+  document.getElementById('status').innerHTML =
+`Canvas: ${W}×${H}\nCenter X: ${CX}\nA170 body height target: 400 px\n\nActive modules:\n${ordered.map(l=>`  z${l.z}  ${l.label}`).join('\n')||'  —'}\n\nAbdomen: ${state.abdomenVariant}\nGuides: ${showGuides?'ON':'OFF'}\n\n<span class="ok">Renderer scaffold active.</span>\n<span class="warn">Next: replace placeholder draws with real transparent PNG modules.</span>`;
+}
+const controls=document.getElementById('layerControls');
+layers.forEach(l=>{const d=document.createElement('div');d.className='row';d.innerHTML=`<label>${l.label} <small style="color:#8b98a7">z:${l.z}</small></label><input type="checkbox" data-id="${l.id}" ${state[l.id]?'checked':''}>`;controls.appendChild(d)});
+controls.addEventListener('change',e=>{if(e.target.matches('input[data-id]')){state[e.target.dataset.id]=e.target.checked;render()}});
+document.getElementById('abdomenVariant').addEventListener('change',e=>{state.abdomenVariant=e.target.value;render()});
+document.getElementById('allOn').onclick=()=>{layers.forEach(l=>state[l.id]=true);document.querySelectorAll('input[data-id]').forEach(x=>x.checked=true);render()};
+document.getElementById('allOff').onclick=()=>{layers.forEach(l=>state[l.id]=false);document.querySelectorAll('input[data-id]').forEach(x=>x.checked=false);render()};
+document.getElementById('gridToggle').onclick=()=>{showGuides=!showGuides;render()};
+render();
+</script>
+</body>
+</html>
