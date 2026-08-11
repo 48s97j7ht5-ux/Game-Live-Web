@@ -1,4 +1,4 @@
-import {drawBodyBase} from './renderer/bodyRigV09.js';
+import {drawBodyBase} from './renderer/bodyRigV09.js?v=9.2';
 
 const canvas=document.getElementById('characterCanvas');
 const ctx=canvas.getContext('2d');
@@ -15,7 +15,14 @@ function paintStage(){
 
 async function render(){
   paintStage();
-  await drawBodyBase(ctx,canvas,{debug:debug.checked});
+  try{
+    await drawBodyBase(ctx,canvas,{debug:debug.checked});
+  }catch(err){
+    console.error('body_base render failed',err);
+    ctx.fillStyle='#ff8f8f';
+    ctx.font='12px monospace';
+    ctx.fillText('body_base load error',18,28);
+  }
 }
 
 debug.addEventListener('change',render);
