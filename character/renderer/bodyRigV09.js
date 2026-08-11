@@ -1,4 +1,4 @@
-const ASSET_URL='./assets/body_base_v0_9.png';
+const ASSET_URL='../assets/body_base_v0_9.png';
 let imagePromise;
 
 function loadBody(){
