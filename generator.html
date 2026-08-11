@@ -4,52 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f1116">
-<title>Game Live — Body Rig v0.9.5</title>
+<title>Game Live — Character Rig v1.0</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;background:#0f1116;color:#e9edf5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{min-height:100vh}.wrap{max-width:820px;margin:auto;padding:24px 16px 48px}.top{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}small{color:#9298a7;font:16px system-ui,sans-serif}.top h1{font:700 34px/1 system-ui,sans-serif;margin:6px 0 0}.ver{color:#9bd48f;text-align:right;font-size:17px;line-height:1.4}.stage{border:2px solid #343944;border-radius:28px;padding:18px;background:#171a21}.tag,.note{background:#0e1015;border-radius:18px;padding:10px 14px;color:#a5abb8;font-size:16px}.canvasWrap{display:flex;justify-content:center;background:#202530;margin:0 28px;overflow:hidden}canvas{width:min(100%,480px);height:auto;image-rendering:pixelated;display:block;background:#202530}.note{margin-top:16px}.status{margin-top:18px;border:2px solid #343944;border-radius:24px;padding:18px;color:#b9bfcc;line-height:1.55}.ok{color:#9bd48f}@media(max-width:600px){.wrap{padding:14px 10px 36px}.top h1{font-size:27px}.ver{font-size:14px}.stage{padding:12px;border-radius:22px}.canvasWrap{margin:0 12px}.tag,.note{font-size:13px}}
+*{box-sizing:border-box}html,body{margin:0;background:#0f1116;color:#e9edf5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{min-height:100vh}.wrap{max-width:820px;margin:auto;padding:18px 12px 44px}.top{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:14px}.top h1{font:700 30px/1 system-ui,sans-serif;margin:5px 0 0}small{color:#9298a7;font:14px system-ui,sans-serif}.ver{color:#9bd48f;text-align:right;font-size:14px;line-height:1.4}.stage,.panel{border:2px solid #343944;border-radius:24px;padding:14px;background:#171a21}.canvasWrap{display:flex;justify-content:center;background:#202530;border-radius:18px;overflow:hidden;margin-top:10px}canvas{width:min(100%,480px);height:auto;image-rendering:pixelated;display:block}.tag,.note{background:#0e1015;border-radius:14px;padding:9px 12px;color:#a5abb8;font-size:13px;line-height:1.45}.panel{margin-top:12px}.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}button,label{font:14px system-ui,sans-serif}button{border:1px solid #414856;background:#252a34;color:#eef2f7;border-radius:12px;padding:9px 12px}button.active{outline:2px solid #9bd48f}.err{color:#ff8f8f}.ok{color:#9bd48f}@media(max-width:600px){.top h1{font-size:25px}.ver{font-size:12px}.stage,.panel{border-radius:20px;padding:10px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-  <div class="top"><div><small>Game Live · graphics prototype</small><h1>Body Rig</h1></div><div class="ver">v0.9.5 · standalone<br>no external assets</div></div>
+  <div class="top"><div><small>Game Live · graphics prototype</small><h1>Character Rig</h1></div><div class="ver">v1.0 · authored master<br>rig reconstruction test</div></div>
   <section class="stage">
-    <div class="tag">female_average · front · 240×400 · baseline 168 cm</div>
+    <div class="tag">female_average_front_v1 · source 126×400 · canvas 240×400</div>
     <div class="canvasWrap"><canvas id="c" width="240" height="400"></canvas></div>
-    <div class="note">Сначала проверяем только цельность базовой анатомии. Ползунки, волосы, лицо и одежда намеренно отключены.</div>
   </section>
-  <section class="status"><span class="ok">Новая архитектура:</span> head_base + body_core + цельные руки + цельные ноги + стопы. Никаких PNG, fetch и внешних JS-модулей — весь тест находится в одном HTML.</section>
+  <section class="panel">
+    <div class="controls">
+      <button id="master" class="active">Master 1:1</button>
+      <button id="rig">Rig reconstruction</button>
+      <label><input id="debug" type="checkbox"> debug regions</label>
+    </div>
+    <div id="status" class="note">Загружаю authored master…</div>
+  </section>
 </main>
-<script>
+<script type="module">
+import {FEMALE_AVERAGE_FRONT_V1} from './character/data/femaleAverageFrontV1.js?v=1.0';
 const c=document.getElementById('c'),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;
-const S=2,W=120,H=200;
-const pal={bg:'#202530',floor:'#151922',skin:'#df955f',shadow:'#bc7048',light:'#f2b074',outline:'#53352d',deep:'#8d5139'};
-const off=document.createElement('canvas');off.width=W;off.height=H;const g=off.getContext('2d');g.imageSmoothingEnabled=false;
-const mask=document.createElement('canvas');mask.width=W;mask.height=H;const m=mask.getContext('2d');m.imageSmoothingEnabled=false;
-m.fillStyle='#fff';
-m.beginPath();m.moveTo(53,11);m.lineTo(67,11);m.lineTo(72,15);m.lineTo(74,22);m.lineTo(73,29);m.lineTo(69,35);m.lineTo(64,39);m.lineTo(56,39);m.lineTo(51,35);m.lineTo(47,29);m.lineTo(46,22);m.lineTo(48,15);m.closePath();m.fill();
-m.fillRect(55,35,10,12);
-m.beginPath();m.moveTo(55,43);m.lineTo(49,43);m.lineTo(43,46);m.lineTo(39,51);m.lineTo(40,61);m.lineTo(44,69);m.lineTo(47,77);m.lineTo(47,88);m.lineTo(43,98);m.lineTo(41,107);m.lineTo(44,114);m.lineTo(50,119);m.lineTo(57,122);m.lineTo(63,122);m.lineTo(70,119);m.lineTo(76,114);m.lineTo(79,107);m.lineTo(77,98);m.lineTo(73,88);m.lineTo(73,77);m.lineTo(76,69);m.lineTo(80,61);m.lineTo(81,51);m.lineTo(77,46);m.lineTo(71,43);m.lineTo(65,43);m.closePath();m.fill();
-function arm(side){const q=side<0?-1:1, x=v=>60+q*v;m.beginPath();m.moveTo(x(17),48);m.lineTo(x(23),47);m.lineTo(x(27),54);m.lineTo(x(28),66);m.lineTo(x(31),80);m.lineTo(x(35),94);m.lineTo(x(38),104);m.lineTo(x(36),111);m.lineTo(x(32),110);m.lineTo(x(29),98);m.lineTo(x(25),84);m.lineTo(x(22),69);m.lineTo(x(19),57);m.closePath();m.fill();m.beginPath();m.moveTo(x(35),104);m.lineTo(x(39),105);m.lineTo(x(41),109);m.lineTo(x(40),114);m.lineTo(x(37),116);m.lineTo(x(34),113);m.lineTo(x(33),109);m.closePath();m.fill();}
-arm(-1);arm(1);
-function leg(side){const q=side<0?-1:1,x=v=>60+q*v;m.beginPath();m.moveTo(x(7),113);m.lineTo(x(16),115);m.lineTo(x(20),123);m.lineTo(x(21),136);m.lineTo(x(18),148);m.lineTo(x(15),156);m.lineTo(x(16),169);m.lineTo(x(13),186);m.lineTo(x(7),186);m.lineTo(x(5),171);m.lineTo(x(6),158);m.lineTo(x(4),146);m.lineTo(x(4),130);m.closePath();m.fill();}
-leg(-1);leg(1);
-function foot(side){const q=side<0?-1:1,x=v=>60+q*v;m.beginPath();m.moveTo(x(7),182);m.lineTo(x(14),182);m.lineTo(x(18),190);m.lineTo(x(17),194);m.lineTo(x(7),194);m.lineTo(x(5),190);m.closePath();m.fill();}
-foot(-1);foot(1);
-const md=m.getImageData(0,0,W,H),a=md.data;const inside=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&a[(y*W+x)*4+3]>0;
-g.clearRect(0,0,W,H);const body=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inside(x,y))body.push([x,y]);
-g.fillStyle=pal.outline;for(const [x,y] of body){let edge=false;for(let yy=-1;yy<=1&&!edge;yy++)for(let xx=-1;xx<=1;xx++)if(!inside(x+xx,y+yy)){edge=true;break}if(edge)g.fillRect(x,y,1,1)}
-g.fillStyle=pal.skin;for(const [x,y] of body){let edge=false;for(let yy=-1;yy<=1&&!edge;yy++)for(let xx=-1;xx<=1;xx++)if(!inside(x+xx,y+yy)){edge=true;break}if(!edge)g.fillRect(x,y,1,1)}
-function px(x,y,w=1,h=1,col=pal.shadow){g.fillStyle=col;g.fillRect(x,y,w,h)}
-px(49,20,2,10);px(51,31,3,3);px(68,18,2,8,pal.light);px(56,38,8,2,pal.deep);
-px(49,49,6,1);px(65,49,6,1);px(53,52,4,1,pal.light);px(63,52,4,1,pal.light);
-px(47,64,5,2);px(68,64,5,2);px(45,73,3,9);px(72,73,3,9,pal.light);
-px(46,84,2,9);px(72,84,2,9,pal.light);px(59,88,2,3);px(58,99,4,1,pal.light);
-px(45,111,4,5);px(71,111,4,5);px(54,117,3,2,pal.deep);px(63,117,3,2,pal.deep);
-px(35,77,2,6);px(83,77,2,6,pal.light);px(28,98,2,5);px(90,98,2,5,pal.light);
-px(48,124,2,18);px(70,124,2,18);px(45,148,6,2);px(69,148,6,2);px(47,151,3,4,pal.deep);px(70,151,3,4,pal.deep);px(46,163,2,14);px(72,163,2,14,pal.light);px(48,183,3,2);px(69,183,3,2);
-px(59,76,2,1,pal.light);px(59,90,2,2,pal.deep);
-ctx.fillStyle=pal.bg;ctx.fillRect(0,0,240,304);ctx.fillStyle=pal.floor;ctx.fillRect(0,304,240,96);
-ctx.drawImage(off,0,0,W,H,0,0,240,400);
+const status=document.getElementById('status'),debug=document.getElementById('debug');
+const bMaster=document.getElementById('master'),bRig=document.getElementById('rig');
+let mode='master';
+const img=new Image();
+const ROOT_X=57,ROOT_Y=0; // 126px asset centered in 240px canvas
+const regions=[
+  {id:'head_base',sx:0,sy:0,sw:126,sh:100},
+  {id:'body_core',sx:0,sy:80,sw:126,sh:165},
+  {id:'legs_feet',sx:0,sy:225,sw:126,sh:175}
+];
+function bg(){ctx.clearRect(0,0,240,400);ctx.fillStyle='#202530';ctx.fillRect(0,0,240,304);ctx.fillStyle='#151922';ctx.fillRect(0,304,240,96)}
+function drawMaster(){ctx.drawImage(img,ROOT_X,ROOT_Y)}
+function drawRig(){for(const r of regions)ctx.drawImage(img,r.sx,r.sy,r.sw,r.sh,ROOT_X+r.sx,ROOT_Y+r.sy,r.sw,r.sh)}
+function drawDebug(){ctx.save();ctx.font='10px monospace';ctx.lineWidth=1;for(const r of regions){ctx.strokeStyle='rgba(130,255,170,.8)';ctx.strokeRect(ROOT_X+r.sx+.5,ROOT_Y+r.sy+.5,r.sw-1,r.sh-1);ctx.fillStyle='rgba(130,255,170,.95)';ctx.fillText(r.id,ROOT_X+r.sx+3,ROOT_Y+r.sy+12)}ctx.restore()}
+function render(){bg();if(!img.complete||!img.naturalWidth)return;mode==='master'?drawMaster():drawRig();if(debug.checked)drawDebug();status.innerHTML=mode==='master'?'<span class="ok">MASTER:</span> исходный художественный sprite выводится без процедурного рисования и без деформации.':'<span class="ok">RIG TEST:</span> тот же master собирается из перекрывающихся регионов. На этом этапе результат обязан совпадать с исходником.'}
+img.onload=()=>{status.innerHTML='<span class="ok">OK:</span> authored master загружен. Переключи Master / Rig reconstruction.';render()};
+img.onerror=e=>{console.error(e);status.innerHTML='<span class="err">Ошибка:</span> master sprite module загрузился, но браузер не декодировал data URL.'};
+img.src=FEMALE_AVERAGE_FRONT_V1;
+bMaster.onclick=()=>{mode='master';bMaster.classList.add('active');bRig.classList.remove('active');render()};
+bRig.onclick=()=>{mode='rig';bRig.classList.add('active');bMaster.classList.remove('active');render()};
+debug.onchange=render;
 </script>
 </body>
 </html>
