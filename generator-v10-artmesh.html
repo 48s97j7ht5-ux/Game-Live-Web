@@ -12,22 +12,18 @@ function bend(x,y,a){let ox=x-KX;if(Math.abs(a)<1e-6)return[x,y];
   if(y<Y1){const t=(y-Y0)/B,kc=-a/B,ang=-a*t;if(Math.abs(kc)<1e-6)return[x,y];cx=KX+(1-Math.cos(ang))/kc;cy=Y0+Math.sin(ang)/kc;th=ang}
   else{const kc=-a/B,ang=-a;let x1=KX,y1=Y1;if(Math.abs(kc)>1e-6){x1=KX+(1-Math.cos(ang))/kc;y1=Y0+Math.sin(ang)/kc}const d=y-Y1;cx=x1+Math.sin(ang)*d;cy=y1+Math.cos(ang)*d;th=ang}
   const deg=Math.abs(a)*180/Math.PI;
-  // v15 strong-flex correction remains unchanged.
   const strong=clamp((Math.abs(a)-0.75)/1.55,0,1);
   const local=Math.exp(-Math.pow((y-100)/19,2));
   ox*=1-0.16*back*strong*local;
   const nx=Math.cos(th),ny=-Math.sin(th);
   let px=cx+ox*nx,py=cy+ox*ny;
   const tuck=1.35*back*strong*local;px+=nx*tuck;py+=ny*tuck;
-  // v16: bell-shaped posterior support only at mid flexion.
-  // Rises after 30°, strongest near 62°, fades to zero by ~92°.
   const rise=smoothstep(30,55,deg), fall=1-smoothstep(72,92,deg), mid=rise*fall;
   const pocket=Math.exp(-Math.pow((y-100)/13,2));
-  // Move posterior vertices outward from the bend centre to preserve tissue volume.
   const support=2.7*back*back*mid*pocket;
   px-=nx*support;py-=ny*support;
   return[px,py]
 }
-function tri(s0,s1,s2,d0,d1,d2,S,OX,OY){const D=[d0,d1,d2].map(v=>[OX+v[0]*S,OY+v[1]*S]);ctx.save();ctx.beginPath();ctx.moveTo(...D[0]);ctx.lineTo(...D[1]);ctx.lineTo(...D[2]);ctx.closePath();ctx.clip();const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);if(!den){ctx.restore();return}const aa=(D[0][0]*(s1[1]-s2[1])+D[1][0]*(s2[1]-s0[1])+D[2][0]*(s0[1]-s1[1]))/den,b=(D[0][1]*(s1[1]-s2[1])+D[1][1]*(s2[1]-s0[1])+D[2][1]*(s0[1]-s1[1]))/den,c1=(D[0][0]*(s2[0]-s1[0])+D[1][0]*(s0[0]-s2[0])+D[2][0]*(s1[0]-s0[0]))/den,d=(D[0][1]*(s2[0]-s1[0])+D[1][1]*(s0[0]-s2[0])+D[2][1]*(s1[0]-s0[1]))/den,e=(D[0][0]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][0]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den,f=(D[0][1]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][1]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;ctx.setTransform(aa,b,c1,d,e,f);ctx.imageSmoothingEnabled=false;ctx.drawImage(im,0,0);ctx.restore()}
+function tri(s0,s1,s2,d0,d1,d2,S,OX,OY){const D=[d0,d1,d2].map(v=>[OX+v[0]*S,OY+v[1]*S]);ctx.save();ctx.beginPath();ctx.moveTo(...D[0]);ctx.lineTo(...D[1]);ctx.lineTo(...D[2]);ctx.closePath();ctx.clip();const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);if(!den){ctx.restore();return}const aa=(D[0][0]*(s1[1]-s2[1])+D[1][0]*(s2[1]-s0[1])+D[2][0]*(s0[1]-s1[1]))/den,b=(D[0][1]*(s1[1]-s2[1])+D[1][1]*(s2[1]-s0[1])+D[2][1]*(s0[1]-s1[1]))/den,c1=(D[0][0]*(s2[0]-s1[0])+D[1][0]*(s0[0]-s2[0])+D[2][0]*(s1[0]-s0[0]))/den,d=(D[0][1]*(s2[0]-s1[0])+D[1][1]*(s0[0]-s2[0])+D[2][1]*(s1[0]-s0[0]))/den,e=(D[0][0]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][0]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den,f=(D[0][1]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][1]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;ctx.setTransform(aa,b,c1,d,e,f);ctx.imageSmoothingEnabled=false;ctx.drawImage(im,0,0);ctx.restore()}
 function draw(){if(!im.complete||!im.naturalWidth)return;kv.textContent=k.value+'°';pv.textContent=p.value+'×';ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#d8d2c8';ctx.fillRect(0,0,c.width,c.height);const A=+k.value*Math.PI/180,S=2.45,OX=225,OY=50,V=[];for(let j=0;j<=rows;j++){V[j]=[];for(let i=0;i<=cols;i++)V[j][i]=bend(i*SW/cols,j*SH/rows,A)}for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const s00=[i*SW/cols,j*SH/rows],s10=[(i+1)*SW/cols,j*SH/rows],s01=[i*SW/cols,(j+1)*SH/rows],s11=[(i+1)*SW/cols,(j+1)*SH/rows];tri(s00,s10,s11,V[j][i],V[j][i+1],V[j+1][i+1],S,OX,OY);tri(s00,s11,s01,V[j][i],V[j+1][i+1],V[j+1][i],S,OX,OY)}if(mesh.checked){ctx.setTransform(1,0,0,1,0,0);ctx.strokeStyle='#2867d8';ctx.lineWidth=1;for(let j=0;j<=rows;j++){ctx.beginPath();V[j].forEach((v,i)=>i?ctx.lineTo(OX+v[0]*S,OY+v[1]*S):ctx.moveTo(OX+v[0]*S,OY+v[1]*S));ctx.stroke()}for(let i=0;i<=cols;i++){ctx.beginPath();for(let j=0;j<=rows;j++){const v=V[j][i];j?ctx.lineTo(OX+v[0]*S,OY+v[1]*S):ctx.moveTo(OX+v[0]*S,OY+v[1]*S)}ctx.stroke()}const q=bend(KX,100,A);ctx.fillStyle='#f04f6b';ctx.fillRect(OX+q[0]*S-4,OY+q[1]*S-4,8,8)}}[k,p,mesh].forEach(x=>x.oninput=draw);fetch('character/assets/a170_profile_leg_v10_dataurl.txt').then(r=>r.text()).then(s=>{im.onload=draw;im.src=s.trim()}).catch(()=>{ctx.fillStyle='#900';ctx.fillText('texture load error',20,30)});
 </script></body></html>
