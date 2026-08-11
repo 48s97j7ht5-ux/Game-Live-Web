@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pixel Rig Test</title>
+<style>
+  :root{color-scheme:dark;--bg:#111218;--panel:#1b1d26;--line:#353948;--text:#f1f2f6;--muted:#a8adba}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,sans-serif}
+  main{max-width:760px;margin:auto;padding:16px 14px 36px}
+  h1{font-size:20px;margin:0 0 6px}
+  p{margin:0 0 14px;color:var(--muted)}
+  .controls{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+  .row{display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin:8px 0}
+  input[type=range]{width:100%}
+  .views{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px;min-width:0}
+  .card h2{font-size:13px;font-weight:600;margin:0 0 8px;color:var(--muted)}
+  canvas{display:block;width:100%;height:auto;aspect-ratio:3/5;background:#d8d2c7;border-radius:8px;image-rendering:pixelated;image-rendering:crisp-edges}
+  .wide{grid-column:1/-1}
+  .note{margin-top:12px;font-size:12px;color:var(--muted)}
+  .switch{display:flex;gap:8px;align-items:center;margin-top:8px}
+  button{border:1px solid var(--line);background:#252835;color:var(--text);padding:8px 11px;border-radius:9px}
+  @media(max-width:430px){main{padding:12px 10px 30px}.views{gap:8px}.card{padding:7px}.row{grid-template-columns:76px 1fr 44px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Pixel Rig — тест колена</h1>
+  <p>Одна и та же составная нога. Слева — обычное уменьшение nearest-neighbour. Справа — блочное квантование + простая очистка контура.</p>
+
+  <section class="controls">
+    <div class="row"><label for="angle">Колено</label><input id="angle" type="range" min="0" max="105" value="38"><output id="angleOut">38°</output></div>
+    <div class="row"><label for="hip">Бедро</label><input id="hip" type="range" min="-25" max="25" value="-5"><output id="hipOut">-5°</output></div>
+    <div class="row"><label for="scale">Пиксель</label><input id="scale" type="range" min="4" max="9" value="6"><output id="scaleOut">6×</output></div>
+    <div class="switch"><input id="cleanup" type="checkbox" checked><label for="cleanup">cleanup: убирать одиночные зубцы и закрывать микродырки</label></div>
+    <div class="switch"><input id="joint" type="checkbox" checked><label for="joint">мягкая зона перекрытия вокруг колена</label></div>
+  </section>
+
+  <section class="views">
+    <article class="card"><h2>Nearest-neighbour</h2><canvas id="nn" width="216" height="360"></canvas></article>
+    <article class="card"><h2>Pixel-resample + cleanup</h2><canvas id="clean" width="216" height="360"></canvas></article>
+    <article class="card wide"><h2>Внутренняя геометрия (увеличенная)</h2><canvas id="hi" width="432" height="720"></canvas></article>
+  </section>
+  <div class="note">Это не финальный арт и не полноценный mesh skinning. Цель теста — проверить сам принцип: скрытое перекрытие → дробная геометрия → единичная растеризация в пиксельную сетку.</div>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ui = { angle:$('angle'), hip:$('hip'), scale:$('scale'), cleanup:$('cleanup'), joint:$('joint') };
+  const hi = $('hi'), hctx = hi.getContext('2d');
+  const nn = $('nn'), nctx = nn.getContext('2d');
+  const clean = $('clean'), cctx = clean.getContext('2d');
+  nctx.imageSmoothingEnabled = false;
+  cctx.imageSmoothingEnabled = false;
+
+  const palette = [
+    [0,0,0,0],
+    [72,44,41,255],
+    [139,88,75,255],
+    [205,143,119,255],
+    [238,183,151,255],
+    [251,210,176,255]
+  ];
+
+  const rad = d => d * Math.PI / 180;
+  const pt = (x,y,a,len) => ({x:x+Math.sin(a)*len, y:y+Math.cos(a)*len});
+
+  function capsule(ctx, a, b, ra, rb, fill, stroke){
+    const dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy) || 1;
+    const nx=-dy/L, ny=dx/L;
+    const p1={x:a.x+nx*ra,y:a.y+ny*ra}, p2={x:b.x+nx*rb,y:b.y+ny*rb};
+    const p3={x:b.x-nx*rb,y:b.y-ny*rb}, p4={x:a.x-nx*ra,y:a.y-ny*ra};
+    ctx.beginPath();
+    ctx.moveTo(p1.x,p1.y);
+    ctx.lineTo(p2.x,p2.y);
+    ctx.quadraticCurveTo(b.x+dx*.06,b.y+dy*.06,p3.x,p3.y);
+    ctx.lineTo(p4.x,p4.y);
+    ctx.quadraticCurveTo(a.x-dx*.05,a.y-dy*.05,p1.x,p1.y);
+    ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.lineWidth=1.15; ctx.strokeStyle=stroke; ctx.stroke();
+  }
+
+  function drawRig(){
+    const S = +ui.scale.value;
+    const LW=72, LH=120;
+    hi.width=LW*S; hi.height=LH*S;
+    hctx.setTransform(S,0,0,S,0,0);
+    hctx.clearRect(0,0,LW,LH);
+    hctx.fillStyle='#d8d2c7'; hctx.fillRect(0,0,LW,LH);
+
+    const hipA=rad(+ui.hip.value), kneeA=hipA-rad(+ui.angle.value);
+    const H={x:31,y:17};
+    const K=pt(H.x,H.y,hipA,43);
+    const A=pt(K.x,K.y,kneeA,42);
+
+    // Rear lower leg first: it extends several pixels into the knee.
+    const lowerStart=pt(K.x,K.y,kneeA+Math.PI,-4.5);
+    capsule(hctx, lowerStart, A, 7.0, 4.8, '#eeb797', '#8b584b');
+
+    // Small highlight and shade are also geometry, so they survive quantisation.
+    const sh1=pt(lowerStart.x,lowerStart.y,kneeA,5), sh2=pt(A.x,A.y,kneeA+Math.PI,7);
+    capsule(hctx, sh1, sh2, 1.15, .7, '#cd8f77', '#cd8f77');
+
+    // Upper leg overlaps knee instead of ending at a ruler-cut boundary.
+    const upperEnd=pt(K.x,K.y,hipA,4.0);
+    capsule(hctx, H, upperEnd, 10.4, 7.8, '#fbd2b0', '#8b584b');
+
+    // Optional soft joint patch: not a separate kneecap sprite, just overlap geometry.
+    if(ui.joint.checked){
+      hctx.save();
+      hctx.translate(K.x,K.y); hctx.rotate(-kneeA);
+      hctx.beginPath(); hctx.ellipse(0,0,7.1,6.0,0,0,Math.PI*2);
+      hctx.fillStyle='#eeb797'; hctx.fill();
+      hctx.lineWidth=1.1; hctx.strokeStyle='#8b584b'; hctx.stroke();
+      hctx.beginPath(); hctx.arc(-1.0,-1.1,2.0,.1,2.4);
+      hctx.strokeStyle='#cd8f77'; hctx.stroke();
+      hctx.restore();
+    }
+
+    // Red rig overlay only on high-res preview.
+    hctx.save(); hctx.fillStyle='#ff3b63';
+    [H,K,A].forEach(p=>{hctx.beginPath();hctx.arc(p.x,p.y,1.0,0,Math.PI*2);hctx.fill()});
+    hctx.strokeStyle='rgba(255,59,99,.75)';hctx.lineWidth=.45;hctx.beginPath();hctx.moveTo(H.x,H.y);hctx.lineTo(K.x,K.y);hctx.lineTo(A.x,A.y);hctx.stroke();hctx.restore();
+
+    // Re-render a clean source without rig overlay into temp high-res canvas.
+    const src=document.createElement('canvas'); src.width=hi.width; src.height=hi.height;
+    const s=src.getContext('2d'); s.setTransform(S,0,0,S,0,0); s.fillStyle='#d8d2c7';s.fillRect(0,0,LW,LH);
+    capsule(s, lowerStart, A, 7.0, 4.8, '#eeb797', '#8b584b');
+    capsule(s, sh1, sh2, 1.15, .7, '#cd8f77', '#cd8f77');
+    capsule(s, H, upperEnd, 10.4, 7.8, '#fbd2b0', '#8b584b');
+    if(ui.joint.checked){
+      s.save();s.translate(K.x,K.y);s.rotate(-kneeA);s.beginPath();s.ellipse(0,0,7.1,6,0,0,Math.PI*2);s.fillStyle='#eeb797';s.fill();s.lineWidth=1.1;s.strokeStyle='#8b584b';s.stroke();s.beginPath();s.arc(-1,-1.1,2,.1,2.4);s.strokeStyle='#cd8f77';s.stroke();s.restore();
+    }
+    return {src,S,LW,LH};
+  }
+
+  function nearest(src,LW,LH){
+    const logical=document.createElement('canvas'); logical.width=LW;logical.height=LH;
+    const x=logical.getContext('2d'); x.imageSmoothingEnabled=false;
+    x.drawImage(src,0,0,LW,LH);
+    nctx.imageSmoothingEnabled=false;nctx.clearRect(0,0,nn.width,nn.height);
+    nctx.drawImage(logical,0,0,nn.width,nn.height);
+  }
+
+  function nearestPalette(r,g,b,a){
+    if(a<70) return palette[0];
+    let best=palette[1], bd=1e9;
+    for(let i=1;i<palette.length;i++){
+      const p=palette[i], d=(r-p[0])**2+(g-p[1])**2+(b-p[2])**2;
+      if(d<bd){bd=d;best=p}
+    }
+    return best;
+  }
+
+  function resample(src,S,LW,LH){
+    const sx=src.getContext('2d'), data=sx.getImageData(0,0,src.width,src.height).data;
+    const out=new Uint8ClampedArray(LW*LH*4);
+    for(let y=0;y<LH;y++) for(let x=0;x<LW;x++){
+      let ar=0,ag=0,ab=0,aa=0,w=0;
+      for(let yy=0;yy<S;yy++) for(let xx=0;xx<S;xx++){
+        const i=((y*S+yy)*src.width+(x*S+xx))*4, a=data[i+3]/255;
+        // Ignore the beige preview background by treating it as transparent workspace.
+        const bg=Math.abs(data[i]-216)<7 && Math.abs(data[i+1]-210)<7 && Math.abs(data[i+2]-199)<7;
+        if(!bg && a>.03){ar+=data[i]*a;ag+=data[i+1]*a;ab+=data[i+2]*a;aa+=a;w+=a}
+      }
+      const o=(y*LW+x)*4;
+      if(w){const p=nearestPalette(ar/w,ag/w,ab/w,Math.min(255,aa/(S*S)*430));out[o]=p[0];out[o+1]=p[1];out[o+2]=p[2];out[o+3]=p[3]}
+    }
+    if(ui.cleanup.checked) cleanup(out,LW,LH);
+    const logical=document.createElement('canvas');logical.width=LW;logical.height=LH;
+    const lc=logical.getContext('2d');
+    lc.fillStyle='#d8d2c7';lc.fillRect(0,0,LW,LH);
+    lc.putImageData(new ImageData(out,LW,LH),0,0);
+    cctx.imageSmoothingEnabled=false;cctx.clearRect(0,0,clean.width,clean.height);cctx.drawImage(logical,0,0,clean.width,clean.height);
+  }
+
+  function cleanup(px,w,h){
+    const copy=new Uint8ClampedArray(px);
+    const alpha=(x,y)=>copy[(y*w+x)*4+3]>0;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      let n=0;for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++)if(xx||yy)n+=alpha(x+xx,y+yy)?1:0;
+      const i=(y*w+x)*4;
+      if(alpha(x,y) && n<=1){px[i+3]=0;continue}
+      if(!alpha(x,y) && n>=6){
+        let rr=0,gg=0,bb=0,c=0;
+        for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++)if(alpha(x+xx,y+yy)){
+          const q=((y+yy)*w+x+xx)*4;rr+=copy[q];gg+=copy[q+1];bb+=copy[q+2];c++
+        }
+        const p=nearestPalette(rr/c,gg/c,bb/c,255);px[i]=p[0];px[i+1]=p[1];px[i+2]=p[2];px[i+3]=255;
+      }
+    }
+  }
+
+  function render(){
+    $('angleOut').textContent=ui.angle.value+'°'; $('hipOut').textContent=ui.hip.value+'°'; $('scaleOut').textContent=ui.scale.value+'×';
+    const r=drawRig(); nearest(r.src,r.LW,r.LH); resample(r.src,r.S,r.LW,r.LH);
+  }
+  Object.values(ui).forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+</script>
+</body>
+</html>
