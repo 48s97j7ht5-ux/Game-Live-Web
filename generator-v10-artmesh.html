@@ -1,36 +1,33 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Art Rig v15</title><style>*{box-sizing:border-box}body{margin:0;background:#0f1116;color:#e9edf5;font-family:system-ui,sans-serif}.w{max-width:820px;margin:auto;padding:18px}.card{background:#171a21;border:2px solid #343944;border-radius:24px;padding:16px;margin:14px 0}h1{margin:0 0 8px}.muted{color:#a5abb8}.row{display:grid;grid-template-columns:105px 1fr 64px;gap:12px;align-items:center;margin:14px 0}input{width:100%}canvas{display:block;width:100%;height:auto;background:#d8d2c8;image-rendering:pixelated;border-radius:18px}.ok{color:#9bd48f}label.cb{display:flex;gap:10px;align-items:center}.cb input{width:auto}</style></head><body><main class="w"><h1>Art Rig v15</h1><div class="muted">Передняя сторона колена оставлена как в v14. Задняя часть теперь деформируется асимметрично: у подколенной впадины зона сгиба шире и мягче, а при сильном сгибе ткань немного сжимается вместо схлопывания в острый залом.</div><section class="card"><div class="row"><b>Колено</b><input id="k" type="range" min="0" max="130" value="0"><span id="kv">0°</span></div><div class="row"><b>Пиксель</b><input id="p" type="range" min="1" max="6" value="2"><span id="pv">2×</span></div><label class="cb"><input id="mesh" type="checkbox"> показать mesh</label></section><section class="card"><canvas id="c" width="640" height="640"></canvas></section><section class="card muted"><span class="ok">Проверка:</span> сравни 60° / 90° / 110° / 130°. Передняя часть должна остаться почти как в v14, а сзади колена сетка должна складываться мягче и без резкого клина.</section></main><script>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Art Rig v16</title><style>*{box-sizing:border-box}body{margin:0;background:#0f1116;color:#e9edf5;font-family:system-ui,sans-serif}.w{max-width:820px;margin:auto;padding:18px}.card{background:#171a21;border:2px solid #343944;border-radius:24px;padding:16px;margin:14px 0}h1{margin:0 0 8px}.muted{color:#a5abb8}.row{display:grid;grid-template-columns:105px 1fr 64px;gap:12px;align-items:center;margin:14px 0}input{width:100%}canvas{display:block;width:100%;height:auto;background:#d8d2c8;image-rendering:pixelated;border-radius:18px}.ok{color:#9bd48f}label.cb{display:flex;gap:10px;align-items:center}.cb input{width:auto}</style></head><body><main class="w"><h1>Art Rig v16</h1><div class="muted">v15 сохранена как база. Коррекция действует главным образом на заднюю часть колена при среднем сгибе 35–80°: уменьшаем провал около 55–70°. К 90–130° поправка плавно исчезает, чтобы не портить удачный сильный сгиб.</div><section class="card"><div class="row"><b>Колено</b><input id="k" type="range" min="0" max="130" value="0"><span id="kv">0°</span></div><div class="row"><b>Пиксель</b><input id="p" type="range" min="1" max="6" value="2"><span id="pv">2×</span></div><label class="cb"><input id="mesh" type="checkbox"> показать mesh</label></section><section class="card"><canvas id="c" width="640" height="640"></canvas></section><section class="card muted"><span class="ok">Проверка:</span> сравни 40° / 55° / 67° / 80° / 90° / 130°. Главная цель — 55–70° без глубокой перетяжки сзади; 90–130° должны остаться близкими к v15.</section></main><script>
 const c=document.getElementById('c'),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;
 const k=document.getElementById('k'),p=document.getElementById('p'),mesh=document.getElementById('mesh'),kv=document.getElementById('kv'),pv=document.getElementById('pv');const im=new Image();
 const SW=70,SH=200,KX=28,Y0F=94,Y1F=106,cols=10,rows=40;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function smoothstep(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
 function bend(x,y,a){let ox=x-KX;if(Math.abs(a)<1e-6)return[x,y];
-  // В нашем профильном crop задняя сторона колена находится слева от оси KX.
-  // Чем дальше вершина к заднему контуру, тем шире её локальная deform-zone.
   const back=clamp((KX-x)/18,0,1);
   const Y0=Y0F-7*back, Y1=Y1F+7*back, B=Y1-Y0;
   let th=0,cx=KX,cy=y;
   if(y<=Y0)return[x,y];
-  if(y<Y1){
-    const t=(y-Y0)/B,kc=-a/B,ang=-a*t;
-    if(Math.abs(kc)<1e-6)return[x,y];
-    cx=KX+(1-Math.cos(ang))/kc;cy=Y0+Math.sin(ang)/kc;th=ang;
-  }else{
-    const kc=-a/B,ang=-a;let x1=KX,y1=Y1;
-    if(Math.abs(kc)>1e-6){x1=KX+(1-Math.cos(ang))/kc;y1=Y0+Math.sin(ang)/kc}
-    const d=y-Y1;cx=x1+Math.sin(ang)*d;cy=y1+Math.cos(ang)*d;th=ang;
-  }
-  // Posterior corrective: при большом сгибе задняя мягкая ткань немного сжимается
-  // поперёк ноги вместо образования большого острого залома.
+  if(y<Y1){const t=(y-Y0)/B,kc=-a/B,ang=-a*t;if(Math.abs(kc)<1e-6)return[x,y];cx=KX+(1-Math.cos(ang))/kc;cy=Y0+Math.sin(ang)/kc;th=ang}
+  else{const kc=-a/B,ang=-a;let x1=KX,y1=Y1;if(Math.abs(kc)>1e-6){x1=KX+(1-Math.cos(ang))/kc;y1=Y0+Math.sin(ang)/kc}const d=y-Y1;cx=x1+Math.sin(ang)*d;cy=y1+Math.cos(ang)*d;th=ang}
+  const deg=Math.abs(a)*180/Math.PI;
+  // v15 strong-flex correction remains unchanged.
   const strong=clamp((Math.abs(a)-0.75)/1.55,0,1);
   const local=Math.exp(-Math.pow((y-100)/19,2));
   ox*=1-0.16*back*strong*local;
   const nx=Math.cos(th),ny=-Math.sin(th);
   let px=cx+ox*nx,py=cy+ox*ny;
-  // Небольшое сближение задних тканей к центру сгиба, максимум около 130°.
-  const tuck=1.35*back*strong*local;
-  px+=nx*tuck;py+=ny*tuck;
+  const tuck=1.35*back*strong*local;px+=nx*tuck;py+=ny*tuck;
+  // v16: bell-shaped posterior support only at mid flexion.
+  // Rises after 30°, strongest near 62°, fades to zero by ~92°.
+  const rise=smoothstep(30,55,deg), fall=1-smoothstep(72,92,deg), mid=rise*fall;
+  const pocket=Math.exp(-Math.pow((y-100)/13,2));
+  // Move posterior vertices outward from the bend centre to preserve tissue volume.
+  const support=2.7*back*back*mid*pocket;
+  px-=nx*support;py-=ny*support;
   return[px,py]
 }
-function tri(s0,s1,s2,d0,d1,d2,S,OX,OY){const D=[d0,d1,d2].map(v=>[OX+v[0]*S,OY+v[1]*S]);ctx.save();ctx.beginPath();ctx.moveTo(...D[0]);ctx.lineTo(...D[1]);ctx.lineTo(...D[2]);ctx.closePath();ctx.clip();const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);if(!den){ctx.restore();return}const aa=(D[0][0]*(s1[1]-s2[1])+D[1][0]*(s2[1]-s0[1])+D[2][0]*(s0[1]-s1[1]))/den,b=(D[0][1]*(s1[1]-s2[1])+D[1][1]*(s2[1]-s0[1])+D[2][1]*(s0[1]-s1[1]))/den,c1=(D[0][0]*(s2[0]-s1[0])+D[1][0]*(s0[0]-s2[0])+D[2][0]*(s1[0]-s0[0]))/den,d=(D[0][1]*(s2[0]-s1[0])+D[1][1]*(s0[0]-s2[0])+D[2][1]*(s1[0]-s0[0]))/den,e=(D[0][0]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][0]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den,f=(D[0][1]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][1]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;ctx.setTransform(aa,b,c1,d,e,f);ctx.imageSmoothingEnabled=false;ctx.drawImage(im,0,0);ctx.restore()}
+function tri(s0,s1,s2,d0,d1,d2,S,OX,OY){const D=[d0,d1,d2].map(v=>[OX+v[0]*S,OY+v[1]*S]);ctx.save();ctx.beginPath();ctx.moveTo(...D[0]);ctx.lineTo(...D[1]);ctx.lineTo(...D[2]);ctx.closePath();ctx.clip();const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);if(!den){ctx.restore();return}const aa=(D[0][0]*(s1[1]-s2[1])+D[1][0]*(s2[1]-s0[1])+D[2][0]*(s0[1]-s1[1]))/den,b=(D[0][1]*(s1[1]-s2[1])+D[1][1]*(s2[1]-s0[1])+D[2][1]*(s0[1]-s1[1]))/den,c1=(D[0][0]*(s2[0]-s1[0])+D[1][0]*(s0[0]-s2[0])+D[2][0]*(s1[0]-s0[0]))/den,d=(D[0][1]*(s2[0]-s1[0])+D[1][1]*(s0[0]-s2[0])+D[2][1]*(s1[0]-s0[1]))/den,e=(D[0][0]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][0]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][0]*(s0[0]*s1[1]-s1[0]*s0[1]))/den,f=(D[0][1]*(s1[0]*s2[1]-s2[0]*s1[1])+D[1][1]*(s2[0]*s0[1]-s0[0]*s2[1])+D[2][1]*(s0[0]*s1[1]-s1[0]*s0[1]))/den;ctx.setTransform(aa,b,c1,d,e,f);ctx.imageSmoothingEnabled=false;ctx.drawImage(im,0,0);ctx.restore()}
 function draw(){if(!im.complete||!im.naturalWidth)return;kv.textContent=k.value+'°';pv.textContent=p.value+'×';ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#d8d2c8';ctx.fillRect(0,0,c.width,c.height);const A=+k.value*Math.PI/180,S=2.45,OX=225,OY=50,V=[];for(let j=0;j<=rows;j++){V[j]=[];for(let i=0;i<=cols;i++)V[j][i]=bend(i*SW/cols,j*SH/rows,A)}for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const s00=[i*SW/cols,j*SH/rows],s10=[(i+1)*SW/cols,j*SH/rows],s01=[i*SW/cols,(j+1)*SH/rows],s11=[(i+1)*SW/cols,(j+1)*SH/rows];tri(s00,s10,s11,V[j][i],V[j][i+1],V[j+1][i+1],S,OX,OY);tri(s00,s11,s01,V[j][i],V[j+1][i+1],V[j+1][i],S,OX,OY)}if(mesh.checked){ctx.setTransform(1,0,0,1,0,0);ctx.strokeStyle='#2867d8';ctx.lineWidth=1;for(let j=0;j<=rows;j++){ctx.beginPath();V[j].forEach((v,i)=>i?ctx.lineTo(OX+v[0]*S,OY+v[1]*S):ctx.moveTo(OX+v[0]*S,OY+v[1]*S));ctx.stroke()}for(let i=0;i<=cols;i++){ctx.beginPath();for(let j=0;j<=rows;j++){const v=V[j][i];j?ctx.lineTo(OX+v[0]*S,OY+v[1]*S):ctx.moveTo(OX+v[0]*S,OY+v[1]*S)}ctx.stroke()}const q=bend(KX,100,A);ctx.fillStyle='#f04f6b';ctx.fillRect(OX+q[0]*S-4,OY+q[1]*S-4,8,8)}}[k,p,mesh].forEach(x=>x.oninput=draw);fetch('character/assets/a170_profile_leg_v10_dataurl.txt').then(r=>r.text()).then(s=>{im.onload=draw;im.src=s.trim()}).catch(()=>{ctx.fillStyle='#900';ctx.fillText('texture load error',20,30)});
 </script></body></html>
