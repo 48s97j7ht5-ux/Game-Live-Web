@@ -4,33 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f1116">
-<title>Game Live — Character Renderer v0.7</title>
-<link rel="stylesheet" href="character/styles.css?v=7">
+<title>Game Live — Character Renderer v0.8</title>
+<link rel="stylesheet" href="character/styles.css?v=8">
 </head>
 <body>
 <main class="wrap">
   <div class="top">
     <div><small>Game Live · graphics prototype</small><h1>Character Renderer</h1></div>
-    <div class="ver">v0.7 · traced core<br>reference sprite</div>
+    <div class="ver">v0.8 · layered pipeline<br>body-first architecture</div>
   </div>
-
   <div class="app">
     <section class="stage">
-      <div class="tag">female_average · traced reference · 240×400</div>
+      <div class="tag">female_average · layered · 240×400</div>
       <canvas id="characterCanvas" width="240" height="400"></canvas>
-      <div class="note-stage">эталонный арт теперь является самой базой рендера, а не подсказкой для геометрии</div>
+      <div class="note-stage">body_base / shading / face / hair / underwear — независимые слои</div>
     </section>
-
     <section class="panel">
       <div class="row"><label>Рост <output id="heightO"></output></label><input id="height" type="range" min="155" max="190" value="168"></div>
       <div class="row"><label>Плечи <output id="shouldersO"></output></label><input id="shoulders" type="range" min="80" max="120" value="100"></div>
       <div class="row"><label>Талия <output id="waistO"></output></label><input id="waist" type="range" min="82" max="118" value="100"></div>
       <div class="row"><label>Бёдра <output id="hipsO"></output></label><input id="hips" type="range" min="86" max="124" value="100"></div>
-      <button id="reset">Сбросить эталон</button>
-      <div class="note">v0.7 использует уменьшенный и очищенный эталонный pixel-art спрайт как исходник. Параметры больше не собирают анатомию из простых масок: они локально деформируют уже хороший художественный силуэт по анатомическим зонам.</div>
+
+      <div class="note"><strong>Слои:</strong><br>
+        <label><input id="shading" type="checkbox" checked> body_shading</label><br>
+        <label><input id="face" type="checkbox" checked> face</label><br>
+        <label><input id="hair" type="checkbox" checked> hair_back + hair_front</label><br>
+        <label><input id="underwear" type="checkbox" checked> underwear</label>
+      </div>
+      <button id="bodyOnly">Показать только body_base</button>
+      <button id="allLayers">Показать все слои</button>
+      <button id="reset">Сбросить пропорции</button>
+      <div class="note">v0.8 больше не рендерит персонажа как один готовый спрайт. Старый эталон временно разбирается на независимые raster-слои во время загрузки. Это переходный этап: следующий body_base можно заменить отдельным авторским ассетом без переделки renderer.</div>
     </section>
   </div>
 </main>
-<script type="module" src="character/app.js?v=7"></script>
+<script type="module" src="character/app.js?v=8"></script>
 </body>
 </html>
