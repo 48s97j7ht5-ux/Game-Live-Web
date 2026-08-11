@@ -31,8 +31,8 @@
 </head>
 <body>
 <header>
-  <h1>A170 Character Renderer — production test scaffold</h1>
-  <div class="sub">256×448 canvas · A170 = 400 px body height · structural / surface / joint-cover layers</div>
+  <h1>A170 Character Renderer — anatomical overlap test</h1>
+  <div class="sub">256×448 canvas · A170 = 400 px · abdomen over pelvis · pelvis over thigh · knee joint-cover</div>
 </header>
 <main>
   <div class="stageWrap"><div class="stage"><canvas id="view" width="256" height="448"></canvas></div></div>
@@ -44,7 +44,7 @@
         <select id="abdomenVariant"><option value="flat">flat</option><option value="soft">soft</option></select>
       </div>
       <div class="btns"><button id="allOn">Все включить</button><button id="allOff">Все выключить</button><button id="gridToggle">Сетка/anchors</button></div>
-      <div class="legend">Сейчас модули рисуются программными заглушками. Смысл теста — проверить Z-order, координаты, включение/замену модулей и структуру рендера. Настоящие PNG можно положить в <code>assets/</code> и заменить генераторы-заглушки.</div>
+      <div class="legend">Это всё ещё технические формы, а не игровые ассеты. Но теперь они специально моделируют нашу архитектуру перекрытий: pelvis заходит в талию и верх бедра, abdomen лежит поверх pelvis, thigh и lowerLeg пересекаются под knee_surface.</div>
     </section>
     <section class="panel" style="margin-top:12px">
       <h2>Статус</h2>
@@ -56,13 +56,8 @@
 const W=256,H=448,CX=128;
 const canvas=document.getElementById('view'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
 let showGuides=true;
-const state={
-  chest:true,pelvis:true,thighL:true,lowerLegL:true,kneeL:true,abdomen:true,
-  abdomenVariant:'flat'
-};
-const anchors={
-  chestBottom:137, waist:158, pelvisTop:177, hipY:196, kneeY:302, ankleY:382, soleY:400
-};
+const state={chest:true,pelvis:true,thighL:true,lowerLegL:true,kneeL:true,abdomen:true,abdomenVariant:'flat'};
+const anchors={chestBottom:137,waist:158,pelvisTop:177,hipY:196,kneeY:302,ankleY:382,soleY:400};
 const layers=[
   {id:'pelvis',label:'pelvis_structural',z:300},
   {id:'thighL',label:'thigh_L_structural',z:310},
@@ -71,31 +66,49 @@ const layers=[
   {id:'abdomen',label:'abdomen_surface',z:610},
   {id:'kneeL',label:'knee_L_surface',z:700},
 ];
-function skin(base='#d39a7b',shadow='#ad6f55',light='#efbc9c'){return {base,shadow,light}}
-const pal=skin();
+const pal={deep:'#704a3d',shadow:'#a86f58',base:'#d29a7b',light:'#efbea0',surface:'#d8a184'};
 function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
 function poly(points,c){ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fill()}
-function outlinePoly(points,c='#5e3b32'){ctx.strokeStyle=c;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(points[0][0]+.5,points[0][1]+.5);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0]+.5,points[i][1]+.5);ctx.closePath();ctx.stroke()}
+function outline(points,c=pal.deep){ctx.strokeStyle=c;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(points[0][0]+.5,points[0][1]+.5);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0]+.5,points[i][1]+.5);ctx.closePath();ctx.stroke()}
+function shadeLeft(x,y,w,h){pxRect(x,y,w,h,pal.light)}
+function shadeRight(x,y,w,h){pxRect(x,y,w,h,pal.shadow)}
+
 function drawChest(){
-  const p=[[93,72],[163,72],[160,108],[151,137],[105,137],[96,108]];poly(p,pal.base);outlinePoly(p);pxRect(97,78,7,44,pal.light);pxRect(151,82,7,40,pal.shadow)
+  const p=[[94,72],[162,72],[160,96],[156,116],[151,139],[105,139],[100,116],[96,96]];
+  poly(p,pal.base);outline(p);shadeLeft(99,80,5,39);shadeRight(152,84,5,35);
 }
 function drawPelvis(){
-  const p=[[98,158],[158,158],[169,190],[162,222],[144,235],[112,235],[94,222],[87,190]];poly(p,pal.base);outlinePoly(p);pxRect(91,166,8,44,pal.light);pxRect(156,168,8,44,pal.shadow)
+  // Structural base deliberately extends upward into waist and downward into upper thighs.
+  const p=[[102,150],[154,150],[160,166],[166,186],[170,201],[166,219],[157,236],[147,249],[137,256],[119,256],[109,249],[99,236],[90,219],[86,201],[90,184],[96,165]];
+  poly(p,pal.base);outline(p);shadeLeft(92,169,6,48);shadeRight(158,170,6,48);
+  // hidden upper-thigh sockets: intentionally visible only when thigh layer is switched off
+  pxRect(100,230,17,35,pal.shadow);pxRect(139,230,17,35,pal.shadow);
 }
 function drawThighL(){
-  const p=[[92,188],[121,188],[120,314],[96,314],[88,260]];poly(p,pal.base);outlinePoly(p);pxRect(91,198,5,88,pal.light);pxRect(115,204,5,90,pal.shadow)
+  // Starts high under pelvis and continues beyond knee center.
+  const p=[[96,205],[118,205],[122,228],[123,255],[121,284],[120,311],[116,324],[99,324],[94,310],[91,282],[91,251],[93,225]];
+  poly(p,pal.base);outline(p);shadeLeft(95,224,4,69);shadeRight(116,227,4,67);
 }
 function drawLowerLegL(){
-  const p=[[96,288],[120,288],[118,388],[102,400],[94,388]];poly(p,pal.base);outlinePoly(p);pxRect(97,306,4,62,pal.light);pxRect(114,302,4,68,pal.shadow)
+  // Starts above knee so knee_surface can own the visible transition.
+  const p=[[99,288],[117,288],[120,306],[119,331],[116,356],[115,380],[118,389],[109,401],[101,395],[96,386],[96,357],[94,330],[95,306]];
+  poly(p,pal.base);outline(p);shadeLeft(98,316,4,59);shadeRight(113,316,4,57);
 }
 function drawKneeL(){
-  const p=[[94,290],[120,290],[123,303],[118,316],[99,318],[92,304]];poly(p,'#dca184');outlinePoly(p);pxRect(96,294,4,12,pal.light);pxRect(117,297,4,12,pal.shadow)
+  // Joint cover is wider than both hidden seams and owns the final knee silhouette.
+  const p=[[96,290],[116,290],[121,296],[123,304],[119,314],[114,320],[101,320],[96,316],[92,306],[93,298]];
+  poly(p,pal.surface);outline(p);shadeLeft(96,296,4,11);shadeRight(117,298,3,11);
+  pxRect(102,313,12,2,pal.shadow);
 }
 function drawAbdomenFlat(){
-  const p=[[102,126],[154,126],[158,159],[153,183],[103,183],[98,159]];poly(p,'#d89f80');outlinePoly(p);pxRect(102,132,5,35,pal.light);pxRect(150,135,5,32,pal.shadow);pxRect(127,149,2,12,'#8e5e4b')
+  // Surface begins inside chest overlap and descends over pelvis structural base.
+  const p=[[103,126],[153,126],[158,143],[159,158],[156,171],[153,184],[145,190],[111,190],[103,184],[100,171],[97,158],[98,143]];
+  poly(p,pal.surface);outline(p);shadeLeft(101,136,4,37);shadeRight(152,138,4,34);pxRect(127,151,2,12,pal.deep);
 }
 function drawAbdomenSoft(){
-  const p=[[101,126],[155,126],[162,158],[163,185],[155,197],[101,197],[93,185],[94,158]];poly(p,'#d8a184');outlinePoly(p);pxRect(98,132,6,42,pal.light);pxRect(154,138,6,40,pal.shadow);pxRect(127,151,2,13,'#8e5e4b')
+  // Soft variant has larger surfaceCoverage over pelvis without changing structural pelvis.
+  const p=[[102,126],[154,126],[160,143],[162,159],[164,176],[162,190],[157,202],[149,210],[107,210],[99,202],[94,190],[92,176],[94,159],[96,143]];
+  poly(p,pal.surface);outline(p);shadeLeft(98,137,5,43);shadeRight(154,139,5,43);pxRect(127,153,2,13,pal.deep);pxRect(106,198,44,3,pal.shadow);
 }
 function drawGuides(){
   ctx.save();ctx.setLineDash([2,2]);ctx.lineWidth=1;
@@ -117,7 +130,7 @@ function render(){
   }
   if(showGuides)drawGuides();
   document.getElementById('status').innerHTML =
-`Canvas: ${W}×${H}\nCenter X: ${CX}\nA170 body height target: 400 px\n\nActive modules:\n${ordered.map(l=>`  z${l.z}  ${l.label}`).join('\n')||'  —'}\n\nAbdomen: ${state.abdomenVariant}\nGuides: ${showGuides?'ON':'OFF'}\n\n<span class="ok">Renderer scaffold active.</span>\n<span class="warn">Next: replace placeholder draws with real transparent PNG modules.</span>`;
+`Canvas: ${W}×${H}\nCenter X: ${CX}\nA170 body height target: 400 px\n\nActive modules:\n${ordered.map(l=>`  z${l.z}  ${l.label}`).join('\n')||'  —'}\n\nAbdomen: ${state.abdomenVariant}\nGuides: ${showGuides?'ON':'OFF'}\n\n<span class="ok">Overlap model active.</span>\nPelvis: waist + upper-thigh underlay\nAbdomen: surfaceCoverage over pelvis\nKnee: contour owner for thigh/lowerLeg seam\n\n<span class="warn">Next: replace these anatomical placeholders with real PNG cuts from one A170 reference.</span>`;
 }
 const controls=document.getElementById('layerControls');
 layers.forEach(l=>{const d=document.createElement('div');d.className='row';d.innerHTML=`<label>${l.label} <small style="color:#8b98a7">z:${l.z}</small></label><input type="checkbox" data-id="${l.id}" ${state[l.id]?'checked':''}>`;controls.appendChild(d)});
