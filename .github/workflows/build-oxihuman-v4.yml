@@ -55,5 +55,9 @@ jobs:
             echo 'No changes to commit.'
           else
             git commit -m 'Build OxiHuman v4 browser assets'
-            git push origin main
+            # The branch may have moved while Rust/WASM was compiling.
+            # Rebase the generated-assets commit onto the current main instead
+            # of failing with a non-fast-forward push.
+            git pull --rebase origin main
+            git push origin HEAD:main
           fi
