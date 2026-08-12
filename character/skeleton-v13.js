@@ -5,7 +5,9 @@ import { scaledAnthropometry } from './anthropometry-v01.js';
  * Skeleton v1.3 — mechanics-ready contract layer.
  *
  * Geometry remains based on v1.2 for now. Mechanics talks only to contract v1.
- * Future geometry versions may change visuals while preserving this contract.
+ * Skeleton v1.3 itself owns the version-specific binding from contract joints to
+ * its visual geometry. Future geometry versions can replace that binding while
+ * keeping contractVersion 1 and Mechanics v1 unchanged.
  */
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
@@ -62,8 +64,7 @@ function anthropometricRest(stature){
 }
 function setNodeWorld(node,world){
  jointLayer.updateMatrixWorld(true);
- const parent=node.parent;
- parent.updateMatrixWorld(true);
+ const parent=node.parent;parent.updateMatrixWorld(true);
  node.position.copy(parent.worldToLocal(world.clone()));node.quaternion.identity();node.scale.set(1,1,1);node.updateMatrix();node.updateMatrixWorld(true);
 }
 function rebuildRestPose({stature=currentStature,preferSource=false}={}){
@@ -74,17 +75,99 @@ function rebuildRestPose({stature=currentStature,preferSource=false}={}){
   let world=null;if(preferSource&&Math.abs(currentStature-1.75)<1e-6)world=sourceWorld(name);if(!world)world=generated[name];if(!world)throw new Error(`Skeleton v1.3: no rest position for ${name}`);
   setNodeWorld(joints.get(name),world);
  }
- jointLayer.updateMatrixWorld(true);return getRestMetrics();
+ jointLayer.updateMatrixWorld(true);
+ captureVisualRest();
+ return getRestMetrics();
 }
 function getJoint(name){return joints.get(name)||null;}
 function getSegment(name){const d=SEGMENT_DEFS[name];if(!d)return null;const a=getJoint(d[0]),b=getJoint(d[1]);if(!a||!b)return null;const start=a.getWorldPosition(new THREE.Vector3()),end=b.getWorldPosition(new THREE.Vector3());return{name,a:d[0],b:d[1],start,end,length:start.distanceTo(end)};}
 function getRestMetrics(){const out={stature:currentStature,segments:{}};for(const n of Object.keys(SEGMENT_DEFS))out.segments[n]=getSegment(n)?.length??null;return out;}
 function resetPose(){for(const n of joints.values())n.quaternion.identity();jointLayer.updateMatrixWorld(true);}
 
+// ---------------------------------------------------------------------------
+// v1.3 VISUAL ADAPTER
+// Version-specific on purpose. Mechanics must never depend on this implementation.
+// It binds the current v1.2-derived left-leg meshes to Contract v1 joints.
+// A future Skeleton 1.4 may replace this entire section while keeping the same API.
+// ---------------------------------------------------------------------------
+const visualRestWorld=new Map();
+const driverRestWorld=new Map();
+let visualBindings=[];
+
+function captureVisualRest(){
+ root.updateMatrixWorld(true);jointLayer.updateMatrixWorld(true);
+ visualRestWorld.clear();driverRestWorld.clear();visualBindings=[];
+ root.traverse(o=>{if(o.isMesh)visualRestWorld.set(o.uuid,o.matrixWorld.clone());});
+ for(const name of ['hip_L','knee_L','ankle_L'])driverRestWorld.set(name,getJoint(name).matrixWorld.clone());
+ buildLeftLegVisualBindings();
+}
+
+function buildLeftLegVisualBindings(){
+ const hip=getJoint('hip_L').getWorldPosition(new THREE.Vector3());
+ const knee=getJoint('knee_L').getWorldPosition(new THREE.Vector3());
+ const ankle=getJoint('ankle_L').getWorldPosition(new THREE.Vector3());
+ const thighLen=hip.distanceTo(knee),shinLen=knee.distanceTo(ankle);
+ const maxWidth=Math.max(thighLen,shinLen)*.34;
+
+ root.traverse(o=>{
+  if(!o.isMesh)return;
+  const p=o.getWorldPosition(new THREE.Vector3());
+  if(p.x>=0)return;
+  if(Math.abs(p.x-hip.x)>maxWidth)return;
+  if(p.y>hip.y+thighLen*.08)return;
+
+  let driver=null;
+  if(p.y>=knee.y-shinLen*.045)driver='hip_L';
+  else if(p.y>=ankle.y-shinLen*.07)driver='knee_L';
+  else if(p.y>=-0.02)driver='ankle_L';
+  if(driver)visualBindings.push({object:o,driver});
+ });
+}
+
+function syncVisualPose(){
+ root.updateMatrixWorld(true);jointLayer.updateMatrixWorld(true);
+ const delta=new THREE.Matrix4(),targetWorld=new THREE.Matrix4(),parentInv=new THREE.Matrix4();
+ const pos=new THREE.Vector3(),quat=new THREE.Quaternion(),scale=new THREE.Vector3();
+ for(const {object,driver} of visualBindings){
+  const restObject=visualRestWorld.get(object.uuid),restDriver=driverRestWorld.get(driver),joint=getJoint(driver);
+  if(!restObject||!restDriver||!joint)continue;
+  delta.copy(joint.matrixWorld).multiply(new THREE.Matrix4().copy(restDriver).invert());
+  targetWorld.copy(delta).multiply(restObject);
+  parentInv.copy(object.parent.matrixWorld).invert();
+  targetWorld.premultiply(parentInv).decompose(pos,quat,scale);
+  object.position.copy(pos);object.quaternion.copy(quat);object.scale.copy(scale);object.updateMatrix();
+ }
+ root.updateMatrixWorld(true);
+ return getVisualBindingInfo();
+}
+
+function resetVisualPose(){
+ root.updateMatrixWorld(true);
+ const local=new THREE.Matrix4(),parentInv=new THREE.Matrix4();
+ for(const {object} of visualBindings){
+  const rest=visualRestWorld.get(object.uuid);if(!rest)continue;
+  parentInv.copy(object.parent.matrixWorld).invert();local.copy(parentInv).multiply(rest);
+  local.decompose(object.position,object.quaternion,object.scale);object.updateMatrix();
+ }
+ root.updateMatrixWorld(true);
+}
+
+function getVisualBindingInfo(){
+ const counts={hip:0,knee:0,ankle:0};
+ for(const b of visualBindings){if(b.driver==='hip_L')counts.hip++;else if(b.driver==='knee_L')counts.knee++;else if(b.driver==='ankle_L')counts.ankle++;}
+ return {total:visualBindings.length,...counts};
+}
+
+// Initial migration: preserve current 1.2 landmark locations at 175 cm.
 rebuildRestPose({stature:1.75,preferSource:true});
-const api=Object.freeze({contractVersion:CONTRACT_VERSION,skeletonVersion:'1.3',jointNames:JOINT_NAMES,segmentNames:Object.freeze(Object.keys(SEGMENT_DEFS)),jointRoot:jointLayer,getJoint,getSegment,getRestMetrics,rebuildRestPose,resetPose});
+
+const api=Object.freeze({
+ contractVersion:CONTRACT_VERSION,skeletonVersion:'1.3',jointNames:JOINT_NAMES,segmentNames:Object.freeze(Object.keys(SEGMENT_DEFS)),jointRoot:jointLayer,
+ getJoint,getSegment,getRestMetrics,rebuildRestPose,resetPose,
+ syncVisualPose,resetVisualPose,getVisualBindingInfo
+});
 root.userData.skeletonAPI=api;scene.userData.skeletonContractVersion=CONTRACT_VERSION;scene.userData.skeletonVersion='1.3';
 const title=document.querySelector('.info .title');if(title)title.textContent='Skeleton v1.3';
 const sub=document.querySelector('.info .sub');if(sub)sub.innerHTML='mechanics-ready contract v1 · hierarchical joints<br>геометрия v1.2 · рост 1750 мм';
-const metrics=document.getElementById('metrics');if(metrics)metrics.insertAdjacentHTML('beforeend','<div class="row"><span>Contract</span><span>v1 · hierarchical joints</span></div><div class="row"><span>Rest pose</span><span>rebuildable by stature</span></div>');
+const metrics=document.getElementById('metrics');if(metrics)metrics.insertAdjacentHTML('beforeend','<div class="row"><span>Contract</span><span>v1 · hierarchical joints</span></div><div class="row"><span>Visual pose</span><span>owned by skeleton v1.3</span></div>');
 export {api as skeletonAPI};
