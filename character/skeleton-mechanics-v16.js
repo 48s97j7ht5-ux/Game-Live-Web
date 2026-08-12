@@ -2,9 +2,10 @@ import * as THREE from 'three';
 
 /** Mechanics v1.6 for Skeleton v1.4 development line.
  * Shoulder model: SC + AC coupled motion, scapula constrained to a calibrated thoracic ellipsoid,
- * GH motion solved as the remaining humeral elevation.
+ * GH motion solved as the remaining humeral elevation. Glenoid trajectory is explicitly constrained
+ * so the shoulder centre cannot migrate unrealistically toward the neck at high elevation.
  */
-export const MECHANICS_VERSION='1.6.0';
+export const MECHANICS_VERSION='1.6.1';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const rad=THREE.MathUtils.degToRad;
@@ -32,8 +33,7 @@ function initShoulder(api,side){
  const pivotLocal=scap.worldToLocal(pivot.clone());
  const model={
   sideSign,pivotLocal,restPivotWorld:pivot.clone(),restPosition:scap.position.clone(),restQuaternion:scap.quaternion.clone(),
-  thorax:{centerY,centerZ,rx,rz,zBias},
-  restGH:worldPoint(gh)
+  thorax:{centerY,centerZ,rx,rz,zBias},restGH:worldPoint(gh)
  };
  scap.userData.stModel=model;return model;
 }
@@ -44,57 +44,59 @@ function thoraxSurface(model,x,y){
  const z=centerZ-rz*Math.sqrt(Math.max(.001,1-nx*nx))+zBias;
  return new THREE.Vector3(x,y,z);
 }
-
 function surfaceNormal(model,p){
- const {centerZ,rx,rz,zBias}=model.thorax;
- const cz=centerZ+zBias;
+ const {centerZ,rx,rz,zBias}=model.thorax,cz=centerZ+zBias;
  return new THREE.Vector3(p.x/(rx*rx),0,(p.z-cz)/(rz*rz)).normalize();
 }
-
 function setScapulaWorldPose(scap,model,desiredPivotWorld,worldQuat){
- const parent=scap.parent; parent.updateMatrixWorld(true);
- const invParent=parent.matrixWorld.clone().invert();
- const parentQuat=parent.getWorldQuaternion(new THREE.Quaternion());
- const localQuat=parentQuat.clone().invert().multiply(worldQuat);
- scap.quaternion.copy(localQuat);
+ const parent=scap.parent;parent.updateMatrixWorld(true);
+ const invParent=parent.matrixWorld.clone().invert(),parentQuat=parent.getWorldQuaternion(new THREE.Quaternion());
+ scap.quaternion.copy(parentQuat.clone().invert().multiply(worldQuat));
  scap.updateMatrixWorld(true);
- const rotatedPivot=model.pivotLocal.clone().applyQuaternion(scap.quaternion);
- const desiredLocal=desiredPivotWorld.clone().applyMatrix4(invParent);
- scap.position.copy(desiredLocal).sub(rotatedPivot);
- scap.updateMatrixWorld(true);
+ const rotatedPivot=model.pivotLocal.clone().applyQuaternion(scap.quaternion),desiredLocal=desiredPivotWorld.clone().applyMatrix4(invParent);
+ scap.position.copy(desiredLocal).sub(rotatedPivot);scap.updateMatrixWorld(true);
 }
-
-function solveScapula(api,side,elevation,planeShare){
- const scap=api.getJoint(`scapula_${side}`),model=initShoulder(api,side),sign=model.sideSign;
- const p=smooth((elevation-20)/160);
- // Healthy elevation: upward rotation dominates; flexion adds more posterior tilt/external rotation.
- const upward=(52+4*(1-planeShare))*p;
- const posterior=(18+5*planeShare)*p;
- const external=(10+7*planeShare)*p;
- // Scapular centroid glides superiorly and slightly laterally, but remains on thoracic surface.
- const y=model.restPivotWorld.y+.020*p;
- const x=model.restPivotWorld.x+sign*.014*p;
- const pivot=thoraxSurface(model,x,y);
- const n=surfaceNormal(model,pivot);
- // Build a tangent frame on the thorax, then apply anatomical rotations in that frame.
- const up=new THREE.Vector3(0,1,0);
- const tangentX=new THREE.Vector3().crossVectors(up,n).normalize();
- if(sign<0)tangentX.negate();
+function buildScapulaQuaternion(model,pivot,upward,posterior,external,restOffset){
+ const sign=model.sideSign,n=surfaceNormal(model,pivot),up=new THREE.Vector3(0,1,0);
+ const tangentX=new THREE.Vector3().crossVectors(up,n).normalize();if(sign<0)tangentX.negate();
  const tangentY=new THREE.Vector3().crossVectors(n,tangentX).normalize();
- const basis=new THREE.Matrix4().makeBasis(tangentX,tangentY,n);
- const qBase=new THREE.Quaternion().setFromRotationMatrix(basis);
- const qUp=new THREE.Quaternion().setFromAxisAngle(n,rad(sign*upward));
- const qTilt=new THREE.Quaternion().setFromAxisAngle(tangentX,rad(-posterior));
- const qER=new THREE.Quaternion().setFromAxisAngle(tangentY,rad(sign*external));
- const q=qBase.clone().multiply(qUp).multiply(qTilt).multiply(qER);
- // Preserve the rest orientation offset relative to our surface frame.
+ const qBase=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangentX,tangentY,n));
+ const q=qBase.clone()
+  .multiply(new THREE.Quaternion().setFromAxisAngle(n,rad(sign*upward)))
+  .multiply(new THREE.Quaternion().setFromAxisAngle(tangentX,rad(-posterior)))
+  .multiply(new THREE.Quaternion().setFromAxisAngle(tangentY,rad(sign*external)));
+ if(restOffset)q.multiply(restOffset);
+ return {q,qBase};
+}
+function solveScapula(api,side,elevation,planeShare){
+ const scap=api.getJoint(`scapula_${side}`),gh=api.getJoint(`shoulder_${side}`),model=initShoulder(api,side),sign=model.sideSign;
+ const p=smooth((elevation-20)/160);
+ const upward=(51+3*(1-planeShare))*p;
+ const posterior=(16+5*planeShare)*p;
+ const external=(8+5*planeShare)*p;
+ // Healthy scapula translates only modestly; lateral glide becomes more important at high elevation.
+ const y=model.restPivotWorld.y+.018*p;
+ let x=model.restPivotWorld.x+sign*.020*p;
+ let pivot=thoraxSurface(model,x,y);
+ let frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);
  if(!model.restOffset){
-  const restBasisQ=qBase.clone();
-  model.restOffset=restBasisQ.invert().multiply(scap.getWorldQuaternion(new THREE.Quaternion()));
+  model.restOffset=frame.qBase.clone().invert().multiply(model.restQuaternion.clone());
+  frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);
  }
- q.multiply(model.restOffset);
- setScapulaWorldPose(scap,model,pivot,q);
- return {upward,posterior,external,pivot};
+ setScapulaWorldPose(scap,model,pivot,frame.q);
+ api.jointRoot.updateMatrixWorld(true);
+ // Glenoid/GH lateral constraint: high arm elevation must not pull the shoulder centre toward the neck.
+ // Allow a small physiological lateral excursion, then correct the scapular contact point ON the thorax surface.
+ const desiredGHx=model.restGH.x+sign*.010*p,currentGHx=worldPoint(gh).x;
+ const correction=clamp(desiredGHx-currentGHx,-.060,.060);
+ if(Math.abs(correction)>.0005){
+  x+=correction;
+  pivot=thoraxSurface(model,x,y);
+  frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);
+  setScapulaWorldPose(scap,model,pivot,frame.q);
+  api.jointRoot.updateMatrixWorld(true);
+ }
+ return {upward,posterior,external,pivot,ghX:worldPoint(gh).x,targetGHx:desiredGHx};
 }
 
 export class SkeletonMechanicsV16{
@@ -112,16 +114,12 @@ export class SkeletonMechanicsV16{
  }
  _applyArm(side,p){
   const sign=side==='L'?-1:1,sc=this.api.getJoint(`sc_${side}`),ac=this.api.getJoint(`ac_${side}`),shoulder=this.api.getJoint(`shoulder_${side}`),elbow=this.api.getJoint(`elbow_${side}`),wrist=this.api.getJoint(`wrist_${side}`);
-  const f=Math.max(0,p.shoulderFlexion),a=Math.max(0,p.shoulderAbduction),e=Math.min(180,Math.hypot(f,a)),flexShare=e>.001?f/e:0;
-  const progress=smooth((e-15)/165);
-  // SC: small elevation + posterior rotation/retraction. AC: additional upward rotation. Keep both modest.
-  sc.rotation.set(rad(-2*progress),rad(sign*4*progress),rad(sign*7*progress));
-  ac.rotation.set(rad(-2*progress),rad(sign*3*progress),rad(sign*6*progress));
+  const f=Math.max(0,p.shoulderFlexion),a=Math.max(0,p.shoulderAbduction),e=Math.min(180,Math.hypot(f,a)),flexShare=e>.001?f/e:0,progress=smooth((e-15)/165);
+  // Keep clavicular motion modest; scapular surface mechanics carries most of the girdle response.
+  sc.rotation.set(rad(-1.5*progress),rad(sign*3*progress),rad(sign*6*progress));
+  ac.rotation.set(rad(-1.5*progress),rad(sign*2.5*progress),rad(sign*5*progress));
   this.api.jointRoot.updateMatrixWorld(true);
-  const scap=solveScapula(this.api,side,e,flexShare);
-  // Remaining elevation belongs to GH; capped below the full global arm elevation.
-  const scapContribution=scap.upward;
-  const ghScale=e>.001?clamp((e-scapContribution)/e,.55,1):1;
+  const scap=solveScapula(this.api,side,e,flexShare),ghScale=e>.001?clamp((e-scap.upward)/e,.58,1):1;
   shoulder.rotation.set(rad(-p.shoulderFlexion*ghScale),rad(p.shoulderRotation),rad(sign*p.shoulderAbduction*ghScale));
   elbow.rotation.set(rad(-p.elbowFlexion),0,0);wrist.rotation.set(rad(-p.wristFlexion),0,rad(side==='L'?-p.wristDeviation:p.wristDeviation));
   this.api.jointRoot.updateMatrixWorld(true);
