@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Mechanics v1 for Skeleton Contract v1. */
-export const MECHANICS_VERSION='1.5.0';
+export const MECHANICS_VERSION='1.5.1';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const LIMITS=Object.freeze({
@@ -38,14 +38,15 @@ function placeScapulaOnThorax(scap,side,upwardDeg,flexShare){
  const sign=side==='L'?-1:1;
  const pivot=scapulaContactPivot(scap,side);
  const rest=scap.userData.contactRestPosition;
- const posteriorTilt=upwardDeg*(.20+.10*flexShare);
- const externalRotation=upwardDeg*(.08+.04*flexShare);
- const localUpward=upwardDeg*.40;
+ const posteriorTilt=upwardDeg*(.16+.08*flexShare);
+ const externalRotation=upwardDeg*(.06+.03*flexShare);
+ // Most of the shoulder-girdle elevation is now true scapular upward rotation,
+ // not clavicular elevation. This keeps the GH centre away from the neck.
+ const localUpward=upwardDeg*.80;
  scap.rotation.set(rad(-posteriorTilt),rad(sign*externalRotation),rad(sign*localUpward));
- // Keep the anatomical contact centre on the thoracic wall while the blade rotates.
- // r = r0 + pivot + slide - R*pivot rotates around the contact centre instead of AC.
+ // Rotate around the blade's thoracic contact centre, then allow only a small slide.
  const rotatedPivot=pivot.clone().applyQuaternion(scap.quaternion);
- const slide=new THREE.Vector3(sign*upwardDeg*.00010,upwardDeg*.00028,-upwardDeg*flexShare*.00005);
+ const slide=new THREE.Vector3(sign*upwardDeg*.00004,upwardDeg*.00008,-upwardDeg*flexShare*.000025);
  scap.position.copy(rest).add(pivot).add(slide).sub(rotatedPivot);
 }
 
@@ -66,10 +67,11 @@ export class SkeletonMechanicsV1{
   const sign=side==='L'?-1:1;
   const activeFlex=Math.max(0,p.shoulderFlexion),activeAbd=Math.max(0,p.shoulderAbduction);
   const elevation=Math.min(180,Math.hypot(activeFlex,activeAbd));
-  // Setting phase first, then progressive scapulothoracic contribution.
-  const scapUp=Math.min(58,Math.max(0,elevation-30)*.37);
+  // Scapular contribution grows after the setting phase but is capped conservatively.
+  const scapUp=Math.min(52,Math.max(0,elevation-30)*.35);
   const ghScale=elevation>.001?(elevation-scapUp)/elevation:1;
-  const clavicleUp=scapUp*.25,acUp=scapUp*.35;
+  // Keep clavicular elevation small; most upward rotation belongs to the scapula itself.
+  const clavicleUp=scapUp*.10,acUp=scapUp*.10;
   const flexShare=elevation>.001?activeFlex/elevation:0;
   sc.rotation.set(0,0,rad(sign*clavicleUp));
   ac.rotation.set(0,0,rad(sign*acUp));
