@@ -1,0 +1,8 @@
+import * as THREE from 'three';
+import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js?v=20260812-1808';
+let capturedScene=null;const add0=THREE.Scene.prototype.add;THREE.Scene.prototype.add=function(...o){if(!capturedScene)capturedScene=this;return add0.apply(this,o)};const mod=await import('./skeleton-v13.js?v=20260812-1808');THREE.Scene.prototype.add=add0;
+const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api||api.contractVersion!==1)throw new Error('Torso test: Skeleton Contract v1 missing');const mechanics=createSkeletonMechanicsV1(api);window.skeletonMechanics=mechanics;
+const fields={lumbarFlexion:document.getElementById('lumbarFlexion'),thoracicFlexion:document.getElementById('thoracicFlexion'),thoracicRotation:document.getElementById('thoracicRotation'),neckFlexion:document.getElementById('neckFlexion'),neckRotation:document.getElementById('neckRotation'),headFlexion:document.getElementById('headFlexion')};const outputs={};for(const k of Object.keys(fields))outputs[k]=document.getElementById(k+'Value');const status=document.getElementById('mechanicsStatus');
+function read(){return Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,+v.value]))}function show(v){for(const k of Object.keys(outputs))outputs[k].textContent=`${v[k]}°`}
+function apply(){mechanics.reset();const out=mechanics.setTorsoPose(read());show(out);status.textContent='OK · native torso · pelvis → lumbar → thoracic → cervical → head'}
+for(const f of Object.values(fields))f.addEventListener('input',()=>{try{apply()}catch(e){status.textContent=`ERROR · ${e.message}`;console.error(e)}});document.getElementById('resetMechanics').addEventListener('click',()=>{for(const f of Object.values(fields))f.value='0';apply()});apply();
