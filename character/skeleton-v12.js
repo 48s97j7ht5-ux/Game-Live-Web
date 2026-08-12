@@ -48,10 +48,10 @@ for(const side of [-1,1]){
     if(o.position.y<wy-.012&&o.position.y>wy-.24&&Math.abs(o.position.x-wx)<.09)o.visible=false;
   });
 
-  // Eight carpals in two compact rows. Proximal: scaphoid/lunate/triquetrum/pisiform.
-  // Distal: trapezium/trapezoid/capitate/hamate. The palm has a shallow transverse arch.
+  // Eight carpals in two compact rows. Proximal row is mirrored anatomically so
+  // the radial/scaphoid side and the thumb are lateral (away from the body's midline).
   const rowY=[wy-.018,wy-.040];
-  const lateral=[-.018,-.006,.007,.019];
+  const lateral=[.018,.006,-.007,-.019];
   const prox=[],dist=[];
   for(let i=0;i<4;i++){const z=wz+(i===0?.006:i===3?-.005:0);prox.push(n(wx+side*lateral[i],rowY[0],z,.0055));}
   for(let i=0;i<4;i++){const arch=Math.abs(i-1.5)*.004;dist.push(n(wx+side*lateral[i]*1.08,rowY[1],wz+arch,.0055));}
@@ -60,8 +60,8 @@ for(const side of [-1,1]){
   b(wrist,prox[1],.0033,frameMat);b(wrist,prox[2],.0033,frameMat);
   b(prox[0],dist[0],.0027,frameMat);b(prox[1],dist[1],.0027,frameMat);b(prox[2],dist[2],.0027,frameMat);b(prox[3],dist[3],.0027,frameMat);
 
-  // Five metacarpals. III is longest/central; II and IV slightly shorter, V shorter. I diverges for the thumb.
-  const mcX=[-.030,-.018,-.004,.011,.026];
+  // Five metacarpals ordered anatomically from thumb (lateral/radial side) to little finger (medial/ulnar side).
+  const mcX=[.030,.018,.004,-.011,-.026];
   const mcLen=[.064,.086,.091,.085,.076];
   const heads=[];
   for(let i=0;i<5;i++){
@@ -73,7 +73,7 @@ for(const side of [-1,1]){
     b(base,head,i===0?.0048:.0042);heads.push(head);
   }
 
-  // Thumb: two phalanges, oblique and anterior to the palm to preserve opposition geometry.
+  // Thumb: two phalanges, diverging further laterally and slightly anterior to the palm.
   let p=heads[0];
   const th1=n(p.position.x+side*.022,p.position.y-.031,p.position.z+.012,.0055);b(p,th1,.0042);
   const th2=n(th1.position.x+side*.014,th1.position.y-.026,th1.position.z+.006,.005,endMat);b(th1,th2,.0038);
@@ -82,7 +82,7 @@ for(const side of [-1,1]){
   const segs=[[.043,.026,.021],[.048,.030,.023],[.044,.028,.022],[.036,.023,.019]];
   for(let f=1;f<5;f++){
     let q=heads[f];
-    const outward=(f-2.2)*.003*side;
+    const outward=(2.2-f)*.003*side;
     for(let j=0;j<3;j++){
       const tip=n(q.position.x+outward,q.position.y-segs[f-1][j],q.position.z+(j===2?.002:0),j===2?.0045:.005,j===2?endMat:frameMat);
       b(q,tip,j===0?.0038:.0033);q=tip;
