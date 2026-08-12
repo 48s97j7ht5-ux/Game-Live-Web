@@ -1,4 +1,4 @@
-name: Anatomy v1.4 shoulder regression
+name: Anatomy v1.4 regression
 on:
   workflow_dispatch:
   push:
@@ -15,7 +15,7 @@ concurrency:
   group: anatomy-v14-regression
   cancel-in-progress: true
 jobs:
-  shoulder:
+  anatomy:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -33,18 +33,18 @@ jobs:
         run: |
           python3 -m http.server 4173 >/tmp/anatomy-v14-http.log 2>&1 &
           sleep 3
-      - name: Capture shoulder matrix
+      - name: Capture anatomy matrix
         run: node tests/anatomy-v14-screenshots.mjs
       - name: Commit generated v1.4 and regression output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add character/skeleton-v14.js anatomy-test-output/v14-shoulder
+          git add character/skeleton-v14.js anatomy-test-output/v14-anatomy
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "test: update Skeleton v1.4 shoulder regression"
+          git commit -m "test: update Skeleton v1.4 anatomy regression"
           git push origin HEAD:dev/skeleton-v1.4
       - uses: actions/upload-artifact@v4
         with:
-          name: anatomy-v14-shoulder
-          path: anatomy-test-output/v14-shoulder
+          name: anatomy-v14-regression
+          path: anatomy-test-output/v14-anatomy
           retention-days: 14
