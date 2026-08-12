@@ -4,7 +4,7 @@ import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js'
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v13.js?v=20260812-1630');
+const mod=await import('./skeleton-v13.js?v=20260812-1646');
 THREE.Scene.prototype.add=originalSceneAdd;
 
 const scene=capturedScene;
