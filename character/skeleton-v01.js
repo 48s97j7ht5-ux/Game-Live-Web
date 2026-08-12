@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { scaledAnthropometry } from './anthropometry-v01.js';
 
 const container = document.getElementById('app');
 const scene = new THREE.Scene();
@@ -77,48 +78,45 @@ function updateBone(b) {
   b.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), c.clone().sub(a).normalize());
 }
 
-// Canonical adult skeleton. All important dimensions are proportions of height.
-// This is a neutral baseline, not a male/female body preset.
-const BODY = {
-  height: 1.75,
-  headsTall: 7.5,
-  shoulderWidthRatio: 0.245,
-  hipJointWidthRatio: 0.125,
-  footLengthRatio: 0.148,
-};
+const BODY = scaledAnthropometry(1.75);
 
 function buildLandmarks(b = BODY) {
-  const H = b.height;
-  const headH = H / b.headsTall;
-  const shoulderHalf = H * b.shoulderWidthRatio * 0.5;
-  const hipHalf = H * b.hipJointWidthRatio * 0.5;
-  const footLength = H * b.footLengthRatio;
+  const H = b.stature;
 
-  // Vertical anthropometric landmarks. They are kept independent so later presets
-  // can alter leg/torso proportions without rewriting the renderer.
-  const ankleY = H * 0.045;
-  const kneeY = H * 0.285;
-  const hipY = H * 0.530;
-  const pelvisY = H * 0.542;
+  // Long-bone positions are now derived from measured bone lengths rather than
+  // independent height percentages. This keeps femur:tibia and humerus:forearm
+  // relationships anatomically coherent when stature changes.
+  const ankleY = b.ankleJointHeight;
+  const kneeY = ankleY + b.tibia;
+  const hipY = kneeY + b.femur;
+  const pelvisY = hipY + H * 0.012;
 
   const crownY = H;
-  const headCenterY = crownY - headH * 0.50;
-  const chinY = crownY - headH;
-  const neckTopY = chinY + headH * 0.13;
-  const neckBaseY = H * 0.815;
-  const shoulderY = H * 0.805;
+  const headCenterY = crownY - b.headHeight * 0.50;
+  const chinY = crownY - b.headHeight;
+  const neckTopY = chinY + b.headHeight * 0.12;
 
-  const sacrumY = H * 0.585;
-  const lumbarLowY = H * 0.630;
-  const lumbarHighY = H * 0.680;
-  const thoracicLowY = H * 0.725;
-  const thoracicMidY = H * 0.765;
-  const thoracicHighY = H * 0.800;
+  // Shoulder height is constrained by the upper-limb chain so the wrist falls
+  // near the greater-trochanter region in neutral stance.
+  const wristTargetY = hipY - H * 0.015;
+  const shoulderY = wristTargetY + b.humerus + b.radius;
+  const neckBaseY = shoulderY + H * 0.010;
 
-  const elbowY = H * 0.620;
-  const wristY = H * 0.485;
-  const palmCenterY = H * 0.435;
-  const fingerY = H * 0.380;
+  const sacrumY = pelvisY + (neckBaseY - pelvisY) * 0.15;
+  const lumbarLowY = pelvisY + (neckBaseY - pelvisY) * 0.30;
+  const lumbarHighY = pelvisY + (neckBaseY - pelvisY) * 0.46;
+  const thoracicLowY = pelvisY + (neckBaseY - pelvisY) * 0.62;
+  const thoracicMidY = pelvisY + (neckBaseY - pelvisY) * 0.78;
+  const thoracicHighY = pelvisY + (neckBaseY - pelvisY) * 0.94;
+
+  const elbowY = shoulderY - b.humerus;
+  const wristY = elbowY - b.radius;
+  const palmCenterY = wristY - b.hand * 0.48;
+  const fingerY = wristY - b.hand;
+
+  const hipHalf = b.hipJointHalfWidth;
+  const shoulderHalf = b.shoulderJointHalfWidth;
+  const clavicleInnerHalf = Math.max(0.055, shoulderHalf - b.clavicle);
 
   return {
     pelvis: [0, pelvisY, -0.014],
@@ -135,61 +133,57 @@ function buildLandmarks(b = BODY) {
 
     hipL: [-hipHalf, hipY, 0],
     hipR: [ hipHalf, hipY, 0],
-    kneeL: [-hipHalf * .88, kneeY, 0.014],
-    kneeR: [ hipHalf * .88, kneeY, 0.014],
-    ankleL: [-hipHalf * .82, ankleY, 0],
-    ankleR: [ hipHalf * .82, ankleY, 0],
-    heelL: [-hipHalf * .82, H * .022, -footLength * .22],
-    heelR: [ hipHalf * .82, H * .022, -footLength * .22],
-    toeL: [-hipHalf * .82, H * .020, footLength * .78],
-    toeR: [ hipHalf * .82, H * .020, footLength * .78],
+    kneeL: [-hipHalf * .92, kneeY, 0.014],
+    kneeR: [ hipHalf * .92, kneeY, 0.014],
+    ankleL: [-hipHalf * .86, ankleY, 0],
+    ankleR: [ hipHalf * .86, ankleY, 0],
+    heelL: [-hipHalf * .86, H * .022, -b.foot * .22],
+    heelR: [ hipHalf * .86, H * .022, -b.foot * .22],
+    toeL: [-hipHalf * .86, H * .020, b.foot * .78],
+    toeR: [ hipHalf * .86, H * .020, b.foot * .78],
 
-    clavicleL: [-shoulderHalf * .42, shoulderY + H * .010, 0.005],
-    clavicleR: [ shoulderHalf * .42, shoulderY + H * .010, 0.005],
+    clavicleL: [-clavicleInnerHalf, shoulderY + H * .006, 0.005],
+    clavicleR: [ clavicleInnerHalf, shoulderY + H * .006, 0.005],
     shoulderL: [-shoulderHalf, shoulderY, 0],
     shoulderR: [ shoulderHalf, shoulderY, 0],
-    elbowL: [-shoulderHalf - H * .030, elbowY, 0.010],
-    elbowR: [ shoulderHalf + H * .030, elbowY, 0.010],
-    wristL: [-shoulderHalf - H * .038, wristY, 0.018],
-    wristR: [ shoulderHalf + H * .038, wristY, 0.018],
-    handL: [-shoulderHalf - H * .040, palmCenterY, 0.022],
-    handR: [ shoulderHalf + H * .040, palmCenterY, 0.022],
-    fingerL: [-shoulderHalf - H * .041, fingerY, 0.024],
-    fingerR: [ shoulderHalf + H * .041, fingerY, 0.024],
+    elbowL: [-shoulderHalf - H * .022, elbowY, 0.010],
+    elbowR: [ shoulderHalf + H * .022, elbowY, 0.010],
+    wristL: [-shoulderHalf - H * .030, wristY, 0.018],
+    wristR: [ shoulderHalf + H * .030, wristY, 0.018],
+    handL: [-shoulderHalf - H * .032, palmCenterY, 0.022],
+    handR: [ shoulderHalf + H * .032, palmCenterY, 0.022],
+    fingerL: [-shoulderHalf - H * .033, fingerY, 0.024],
+    fingerR: [ shoulderHalf + H * .033, fingerY, 0.024],
   };
 }
 
 const P = buildLandmarks();
-const HEAD_HEIGHT = BODY.height / BODY.headsTall;
 
 for (const [name, v] of Object.entries(P)) {
   const end = /crown|toe|heel|finger/.test(name);
   const core = /pelvis|sacrum|lumbar|thoracic|neckBase|neckTop|head/.test(name);
 
-  let radius = BODY.height * 0.020;
-  if (name === 'head') radius = HEAD_HEIGHT * 0.47;
-  if (name === 'pelvis') radius = BODY.height * 0.032;
-  if (/shoulder|hip/.test(name)) radius = BODY.height * 0.023;
-  if (/knee|elbow/.test(name)) radius = BODY.height * 0.021;
-  if (/ankle|wrist|hand/.test(name)) radius = BODY.height * 0.018;
-  if (end) radius = BODY.height * 0.016;
-  if (name === 'crown') radius = BODY.height * 0.012;
+  let radius = BODY.stature * 0.020;
+  if (name === 'head') radius = BODY.headHeight * 0.47;
+  if (name === 'pelvis') radius = BODY.stature * 0.032;
+  if (/shoulder|hip/.test(name)) radius = BODY.stature * 0.023;
+  if (/knee|elbow/.test(name)) radius = BODY.stature * 0.021;
+  if (/ankle|wrist|hand/.test(name)) radius = BODY.stature * 0.018;
+  if (end) radius = BODY.stature * 0.016;
+  if (name === 'crown') radius = BODY.stature * 0.012;
 
   sphere(name, new THREE.Vector3(...v), radius, end ? MAT_END : (core ? MAT_CORE : MAT_JOINT));
 }
 
-// Axial skeleton
 [
   ['pelvis','sacrum'], ['sacrum','lumbarLow'], ['lumbarLow','lumbarHigh'],
   ['lumbarHigh','thoracicLow'], ['thoracicLow','thoracicMid'], ['thoracicMid','thoracicHigh'],
   ['thoracicHigh','neckBase'], ['neckBase','neckTop'], ['neckTop','head'], ['head','crown']
 ].forEach((x, i) => cylinder('spine' + i, x[0], x[1], i < 7 ? .019 : .015));
 
-// Pelvis
 cylinder('pelvisL','pelvis','hipL',.022);
 cylinder('pelvisR','pelvis','hipR',.022);
 
-// Legs and feet
 for (const s of ['L','R']) {
   cylinder('femur'+s,'hip'+s,'knee'+s,.023);
   cylinder('tibia'+s,'knee'+s,'ankle'+s,.020);
@@ -197,7 +191,6 @@ for (const s of ['L','R']) {
   cylinder('foot'+s,'ankle'+s,'toe'+s,.020);
 }
 
-// Shoulder girdle and arms
 cylinder('clavicleCenterL','neckBase','clavicleL',.016);
 cylinder('clavicleCenterR','neckBase','clavicleR',.016);
 for (const s of ['L','R']) {
