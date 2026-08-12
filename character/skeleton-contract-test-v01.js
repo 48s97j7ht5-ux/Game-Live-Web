@@ -4,7 +4,7 @@ import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js'
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v13.js?v=20260812-1600');
+const mod=await import('./skeleton-v13.js?v=20260812-1630');
 THREE.Scene.prototype.add=originalSceneAdd;
 
 const scene=capturedScene;
@@ -14,7 +14,8 @@ if(!api||api.contractVersion!==1)throw new Error('Contract test: Skeleton Contra
 const mechanics=createSkeletonMechanicsV1(api);
 window.skeletonAPI=api;window.skeletonMechanics=mechanics;
 
-// Visible debug rig is separate from Skeleton geometry. It only visualizes contract joints.
+// Visible debug rig remains separate. It visualizes the contract joints so we can
+// compare them with Skeleton v1.3's own version-specific visual binding.
 const debug=new THREE.Group();debug.name='contract_debug_rig';scene.add(debug);
 const matJoint=new THREE.MeshBasicMaterial({color:0x00ff88,depthTest:false});
 const matBone=new THREE.MeshBasicMaterial({color:0x00d5ff,depthTest:false,transparent:true,opacity:.9});
@@ -33,7 +34,16 @@ const outputs={hipFlexion:document.getElementById('hipFlexionValue'),kneeFlexion
 const status=document.getElementById('mechanicsStatus');
 function read(){return{hipFlexion:+fields.hipFlexion.value,kneeFlexion:+fields.kneeFlexion.value,ankleFlexion:+fields.ankleFlexion.value};}
 function show(v){for(const k of Object.keys(outputs))outputs[k].textContent=`${v[k]}°`;}
-function apply(){const v=read();mechanics.reset();const out=mechanics.setLegPose('L',v);syncDebug();show(out);const m=api.getRestMetrics();status.textContent=`OK · contract ${api.contractVersion} · thigh ${(m.segments.thigh_L*1000).toFixed(0)} mm · shin ${(m.segments.shin_L*1000).toFixed(0)} mm`;}
-for(const f of Object.values(fields))f.addEventListener('input',()=>{try{apply();}catch(e){status.textContent=`ERROR · ${e.message}`;}});
+function apply(){
+ const v=read();
+ mechanics.reset();
+ api.resetVisualPose();
+ const out=mechanics.setLegPose('L',v);
+ const visual=api.syncVisualPose();
+ syncDebug();show(out);
+ const m=api.getRestMetrics();
+ status.textContent=`OK · contract ${api.contractVersion} · visual ${visual.total} · thigh ${(m.segments.thigh_L*1000).toFixed(0)} mm · shin ${(m.segments.shin_L*1000).toFixed(0)} mm`;
+}
+for(const f of Object.values(fields))f.addEventListener('input',()=>{try{apply();}catch(e){status.textContent=`ERROR · ${e.message}`;console.error(e);}});
 document.getElementById('resetMechanics').addEventListener('click',()=>{for(const f of Object.values(fields))f.value='0';apply();});
 show({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});apply();
