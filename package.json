@@ -1,0 +1,7 @@
+{
+  "name":"game-live-web-anatomy-tests",
+  "private":true,
+  "type":"module",
+  "scripts":{"test:anatomy":"node tests/anatomy-screenshots.mjs"},
+  "devDependencies":{"playwright":"1.55.0"}
+}
