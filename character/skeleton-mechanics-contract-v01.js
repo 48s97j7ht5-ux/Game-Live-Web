@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Mechanics v1 for Skeleton Contract v1. */
-export const MECHANICS_VERSION='1.1.0';
+export const MECHANICS_VERSION='1.1.1';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const LIMITS=Object.freeze({
@@ -55,7 +55,9 @@ export class SkeletonMechanicsV1{
   const shoulder=this.api.getJoint(`shoulder_${side}`),elbow=this.api.getJoint(`elbow_${side}`),wrist=this.api.getJoint(`wrist_${side}`);
   if(!shoulder||!elbow||!wrist)throw new Error(`missing arm joints ${side}`);
   shoulder.rotation.set(THREE.MathUtils.degToRad(-p.shoulderFlexion),THREE.MathUtils.degToRad(p.shoulderRotation),THREE.MathUtils.degToRad(side==='L'?-p.shoulderAbduction:p.shoulderAbduction));
-  elbow.rotation.set(THREE.MathUtils.degToRad(p.elbowFlexion),0,0);
+  // Local arm rest pose points mostly down (-Y). Negative X rotates the forearm anteriorly (+Z),
+  // matching anatomical elbow flexion instead of folding the hand behind the torso.
+  elbow.rotation.set(THREE.MathUtils.degToRad(-p.elbowFlexion),0,0);
   wrist.rotation.set(THREE.MathUtils.degToRad(-p.wristFlexion),0,THREE.MathUtils.degToRad(side==='L'?-p.wristDeviation:p.wristDeviation));
   this.api.jointRoot.updateMatrixWorld(true);
  }
