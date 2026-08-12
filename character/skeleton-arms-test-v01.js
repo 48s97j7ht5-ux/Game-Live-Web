@@ -13,11 +13,11 @@ const mechanics=createSkeletonMechanicsV1(api);
 window.skeletonAPI=api;window.skeletonMechanics=mechanics;
 
 const debug=new THREE.Group();debug.name='arm_debug_rig';scene.add(debug);
-const matJoint=new THREE.MeshBasicMaterial({color:0x00ff88,depthTest:false});
-const matBone=new THREE.MeshBasicMaterial({color:0x00d5ff,depthTest:false,transparent:true,opacity:.9});
+const matJoint=new THREE.MeshBasicMaterial({color:0x00ff88,depthTest:false,transparent:true,opacity:.68});
+const matBone=new THREE.MeshBasicMaterial({color:0x00d5ff,depthTest:false,transparent:true,opacity:.42});
 const markers={};
-for(const name of ['shoulder_L','elbow_L','wrist_L']){const m=new THREE.Mesh(new THREE.SphereGeometry(.025,16,12),matJoint);m.renderOrder=99;debug.add(m);markers[name]=m;}
-function makeLink(){const m=new THREE.Mesh(new THREE.CylinderGeometry(.010,.010,1,10),matBone);m.renderOrder=98;debug.add(m);return m;}
+for(const name of ['shoulder_L','elbow_L','wrist_L']){const m=new THREE.Mesh(new THREE.SphereGeometry(.016,14,10),matJoint);m.renderOrder=99;debug.add(m);markers[name]=m;}
+function makeLink(){const m=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,1,8),matBone);m.renderOrder=98;debug.add(m);return m;}
 const upper=makeLink(),fore=makeLink();
 function placeLink(mesh,a,b){const v=b.clone().sub(a);mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.scale.set(1,v.length(),1);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());}
 function syncDebug(){const s=mechanics.getJointWorld('shoulder_L'),e=mechanics.getJointWorld('elbow_L'),w=mechanics.getJointWorld('wrist_L');markers.shoulder_L.position.copy(s);markers.elbow_L.position.copy(e);markers.wrist_L.position.copy(w);placeLink(upper,s,e);placeLink(fore,e,w);}
