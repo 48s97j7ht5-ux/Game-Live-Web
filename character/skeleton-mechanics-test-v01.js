@@ -1,68 +1,70 @@
 import * as THREE from 'three';
-import { createSkeletonMechanics } from './skeleton-mechanics-v01.js';
+import { createSkeletonRig } from './skeleton-rig-v01.js';
+import { createSkeletonRigBinding } from './skeleton-rig-binding-v01.js';
 
-// Capture the scene created by the frozen skeleton-v12 module without editing it.
-let capturedScene = null;
-const originalSceneAdd = THREE.Scene.prototype.add;
-THREE.Scene.prototype.add = function (...objects) {
-  if (!capturedScene) capturedScene = this;
-  return originalSceneAdd.apply(this, objects);
-};
-
+let capturedScene=null;
+const originalSceneAdd=THREE.Scene.prototype.add;
+THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
 await import('./skeleton-v12.js?v=20260812-1720');
-THREE.Scene.prototype.add = originalSceneAdd;
+THREE.Scene.prototype.add=originalSceneAdd;
 
-const scene = capturedScene;
-if (!scene) throw new Error('Mechanics test: skeleton v1.2 scene not captured');
-const rigRoot = scene.getObjectByName('rig_root');
-if (!rigRoot) throw new Error('Mechanics test: rig_root not found');
+const scene=capturedScene;
+if(!scene) throw new Error('Rig test: Skeleton v1.2 scene not captured');
+const sourceRoot=scene.getObjectByName('rig_root');
+if(!sourceRoot) throw new Error('Rig test: source rig_root not found');
 
-const mechanics = createSkeletonMechanics(rigRoot);
-window.skeletonMechanics = mechanics;
+const rig=createSkeletonRig(sourceRoot);
+scene.add(rig.root);
+const binding=createSkeletonRigBinding(sourceRoot,rig);
+window.skeletonRig=rig;
+window.skeletonRigBinding=binding;
 
-const fields = {
-  hipFlexion: document.getElementById('hipFlexion'),
-  kneeFlexion: document.getElementById('kneeFlexion'),
-  ankleFlexion: document.getElementById('ankleFlexion'),
+const fields={
+  hipFlexion:document.getElementById('hipFlexion'),
+  kneeFlexion:document.getElementById('kneeFlexion'),
+  ankleFlexion:document.getElementById('ankleFlexion'),
 };
-const outputs = {
-  hipFlexion: document.getElementById('hipFlexionValue'),
-  kneeFlexion: document.getElementById('kneeFlexionValue'),
-  ankleFlexion: document.getElementById('ankleFlexionValue'),
+const outputs={
+  hipFlexion:document.getElementById('hipFlexionValue'),
+  kneeFlexion:document.getElementById('kneeFlexionValue'),
+  ankleFlexion:document.getElementById('ankleFlexionValue'),
 };
-const status = document.getElementById('mechanicsStatus');
-const resetButton = document.getElementById('resetMechanics');
+const status=document.getElementById('mechanicsStatus');
+const resetButton=document.getElementById('resetMechanics');
 
-function currentValues() {
-  return {
-    hipFlexion: Number(fields.hipFlexion.value),
-    kneeFlexion: Number(fields.kneeFlexion.value),
-    ankleFlexion: Number(fields.ankleFlexion.value),
-  };
+function values(){return{
+  hipFlexion:Number(fields.hipFlexion.value),
+  kneeFlexion:Number(fields.kneeFlexion.value),
+  ankleFlexion:Number(fields.ankleFlexion.value),
+};}
+function updateOutputs(v){for(const k of Object.keys(outputs))outputs[k].textContent=`${v[k]}°`;}
+
+function apply(){
+  const v=values();
+  rig.resetRotations();
+  rig.setJointRotation('hip_L',{x:-v.hipFlexion});
+  rig.setJointRotation('knee_L',{x:v.kneeFlexion});
+  rig.setJointRotation('ankle_L',{x:-v.ankleFlexion});
+  binding.sync();
+  updateOutputs(v);
+  const info=binding.getInfo();
+  const m=rig.getMetrics().segments;
+  status.textContent=`OK · hierarchical rig · bind ${info.bindings} · thigh ${(m.thigh_L*1000).toFixed(0)} mm · shin ${(m.shin_L*1000).toFixed(0)} mm`;
 }
 
-function updateOutputs(values) {
-  for (const key of Object.keys(outputs)) outputs[key].textContent = `${values[key]}°`;
-}
-
-function apply() {
-  const requested = currentValues();
-  const applied = mechanics.setLegPose('L', requested);
-  updateOutputs(applied);
-  const chain = mechanics.getChainInfo('L');
-  status.textContent = `OK · rig ${mechanics.rigVersion} · hip ${chain.hipObjects} · knee ${chain.kneeObjects} · ankle ${chain.ankleObjects}`;
-}
-
-for (const field of Object.values(fields)) field.addEventListener('input', apply);
-
-resetButton.addEventListener('click', () => {
-  mechanics.resetPose();
-  fields.hipFlexion.value = '0';
-  fields.kneeFlexion.value = '0';
-  fields.ankleFlexion.value = '0';
-  updateOutputs({ hipFlexion: 0, kneeFlexion: 0, ankleFlexion: 0 });
-  status.textContent = 'Сброшено в исходную позу Skeleton v1.2';
+for(const field of Object.values(fields))field.addEventListener('input',()=>{
+  try{apply();}catch(error){status.textContent=`ERROR · ${error.message}`;console.error(error);}
 });
 
-updateOutputs({ hipFlexion: 0, kneeFlexion: 0, ankleFlexion: 0 });
-apply();
+resetButton.addEventListener('click',()=>{
+  rig.resetRotations();
+  binding.resetVisual();
+  for(const field of Object.values(fields))field.value='0';
+  updateOutputs({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});
+  status.textContent='Сброшено · Skeleton v1.2 не изменён';
+});
+
+const title=document.querySelector('.info .title');if(title)title.textContent='Skeleton v1.2 · Hierarchical Rig';
+const sub=document.querySelector('.info .sub');if(sub)sub.innerHTML='frozen anatomy + dimension-independent rig<br>тест левой ноги';
+updateOutputs({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});
+try{apply();}catch(error){status.textContent=`INIT ERROR · ${error.message}`;console.error(error);}
