@@ -1,4 +1,57 @@
-// Skeleton v1.0 loader — stable mobile baseline.
-// v0.9 is the last verified rendering module. Do not wrap it in Blob modules:
-// nested dynamic Blob imports are fragile on mobile Safari / iOS WebKit.
-import './skeleton-v09.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { scaledAnthropometry } from './anthropometry-v01.js';
+
+const A=scaledAnthropometry(1.75), H=A.stature;
+const app=document.getElementById('app'), metrics=document.getElementById('metrics'), labelsRoot=document.getElementById('labels');
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0b0d12);
+const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.01,100);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); app.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.enablePan=false; controls.target.set(0,.9,0);
+scene.add(new THREE.HemisphereLight(0xdde8ff,0x1d2330,2.2)); const dl=new THREE.DirectionalLight(0xffffff,2); dl.position.set(4,6,5); scene.add(dl);
+const grid=new THREE.GridHelper(4,40,0x32405a,0x202735); grid.position.y=.002; scene.add(grid);
+
+const MAT={bone:new THREE.MeshStandardMaterial({color:0xd7dbe7}),joint:new THREE.MeshStandardMaterial({color:0xf0a65b}),frame:new THREE.MeshStandardMaterial({color:0x8a95ae}),vert:new THREE.MeshStandardMaterial({color:0xb8a8ff}),cart:new THREE.MeshStandardMaterial({color:0x8ed3c7}),end:new THREE.MeshStandardMaterial({color:0x7cc7ff})};
+const root=new THREE.Group(); scene.add(root); const N={}, B=[];
+function node(k,x,y,z,r=.018,m=MAT.joint){const q=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),m);q.position.set(x,y,z);root.add(q);N[k]=q;return q}
+function bone(a,c,r=.011,m=MAT.bone){const q=new THREE.Mesh(new THREE.CylinderGeometry(r,r,1,10),m);root.add(q);B.push([q,a,c]);return q}
+function sync(){for(const[q,a,c]of B){const p=N[a].position,d=N[c].position,v=d.clone().sub(p);q.position.copy(p).add(d).multiplyScalar(.5);q.scale.set(1,v.length(),1);q.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize())}}
+function smooth(a,b,t){t=t*t*(3-2*t);return a+(b-a)*t}
+
+const ankle=A.ankleJointHeight,knee=ankle+A.tibia,hip=knee+A.femur,hx=A.hipCenterHalfWidth,sx=A.shoulderJointHalfWidth;
+const s1=hip+.125,l1=s1+.18,t12=l1+.022,t1=t12+.30,c7=t1+.022,c1=c7+.105;
+const spine=[]; function V(k,y,z,r=.015){node(k,0,y,z,r,MAT.vert);spine.push(k)}
+V('S1',s1,-.010,.021);
+['L5','L4','L3','L2','L1'].forEach((k,i)=>{let t=(i+1)/5,z=i<2?smooth(-.010,.006,(i+1)/2):smooth(.006,-.005,(i-1)/3);V(k,s1+(l1-s1)*t,z,.018)});
+Array.from({length:12},(_,i)=>'T'+(12-i)).forEach((k,i)=>{let t=(i+1)/12,z=t<=.5?smooth(-.005,-.050,t/.5):smooth(-.050,-.020,(t-.5)/.5);V(k,t12+(t1-t12)*t,z,.015)});
+['C7','C6','C5','C4','C3'].forEach((k,i)=>{let t=(i+1)/5;V(k,c7+(c1-c7)*t*.62,smooth(-.020,-.012,t),.012)});
+for(let i=0;i<spine.length-1;i++)bone(spine[i],spine[i+1],.008,MAT.vert);
+const c2y=N.C3.position.y+.030,c1y=c2y+.032; node('C2',0,c2y,-.008,.016,MAT.vert); node('dens',0,c2y+.024,-.002,.007,MAT.vert); node('C1',0,c1y,-.004,.017,MAT.vert); bone('C3','C2',.008,MAT.vert);bone('C2','C1',.008,MAT.vert);bone('C2','dens',.005,MAT.vert);
+
+const skY=H-A.headHeight*.50; node('occL',-.028,c1y+.018,0,.010,MAT.frame);node('occR',.028,c1y+.018,0,.010,MAT.frame);node('skullBase',0,skY-.055,.020,.018,MAT.frame);bone('C1','occL',.006,MAT.frame);bone('C1','occR',.006,MAT.frame);bone('occL','skullBase',.006,MAT.frame);bone('occR','skullBase',.006,MAT.frame);
+const skull=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),MAT.vert);skull.scale.set(.082,.105,.092);skull.position.set(0,skY+.012,.018);root.add(skull);node('face',0,skY-.008,.095,.018,MAT.frame);node('jaw',0,skY-.090,.060,.015,MAT.frame);bone('skullBase','face',.006,MAT.frame);bone('face','jaw',.006,MAT.frame);node('crown',0,H,.018,.011,MAT.end);
+
+const px=A.pelvisWidth*.5,pz=A.pelvisDepth*.5; node('hipL',-hx,hip,.014,.026);node('hipR',hx,hip,.014,.026);
+for(const s of['L','R']){const g=s==='L'?-1:1;node('ASIS'+s,g*px*.90,s1+.047,pz*.64,.012,MAT.frame);node('PSIS'+s,g*px*.78,s1+.041,-pz*.68,.012,MAT.frame);node('crestA'+s,g*px*1.06,s1+.088,pz*.12,.011,MAT.frame);node('crestP'+s,g*px,s1+.086,-pz*.34,.011,MAT.frame);node('acet'+s,g*hx,hip+.015,.012,.018,MAT.frame);node('pub'+s,g*.040,hip-.022,pz*.52,.011,MAT.frame);node('isch'+s,g*.082,hip-.098,-.025,.012,MAT.frame);node('ramus'+s,g*.060,hip-.060,pz*.24,.009,MAT.frame);bone('PSIS'+s,'crestP'+s,.008,MAT.frame);bone('crestP'+s,'crestA'+s,.008,MAT.frame);bone('crestA'+s,'ASIS'+s,.008,MAT.frame);bone('ASIS'+s,'acet'+s,.008,MAT.frame);bone('acet'+s,'isch'+s,.008,MAT.frame);bone('isch'+s,'ramus'+s,.008,MAT.frame);bone('ramus'+s,'pub'+s,.008,MAT.frame);bone('pub'+s,'acet'+s,.008,MAT.frame);bone('PSIS'+s,'S1',.008,MAT.frame);bone('acet'+s,'hip'+s,.008,MAT.frame)} bone('pubL','pubR',.008,MAT.frame);bone('PSISL','PSISR',.007,MAT.frame);
+
+const sternY=N.T3.position.y-.012;node('manubrium',0,sternY,N.T3.position.z+.095,.012,MAT.frame);node('sternumBody',0,N.T7.position.y-.006,N.T7.position.z+.135,.011,MAT.frame);node('xiphoid',0,N.T10.position.y-.025,N.T10.position.z+.118,.009,MAT.frame);bone('manubrium','sternumBody',.009,MAT.frame);bone('sternumBody','xiphoid',.007,MAT.frame);
+const widths=[.078,.101,.125,.142,.154,.162,.166,.163,.155,.143,.118,.097],fronts=[.058,.070,.086,.100,.112,.121,.127,.125,.118,.108,.090,.074],backs=[.042,.050,.058,.065,.071,.075,.078,.079,.078,.074,.066,.058],drops=[.004,.009,.018,.029,.041,.054,.067,.080,.093,.106,.119,.132],ribVs=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+for(let i=0;i<12;i++){const v=ribVs[i],p=N[v].position;for(const s of['L','R']){const g=s==='L'?-1:1,k=`r${i+1}${s}`;node(k+'P',g*widths[i]*.36,p.y-.002,p.z-backs[i],.006,MAT.frame);node(k+'PL',g*widths[i]*.78,p.y-drops[i]*.20,p.z-backs[i]*.72,.006,MAT.frame);node(k+'L',g*widths[i],p.y-drops[i]*.46,p.z+fronts[i]*.18,.006,MAT.frame);node(k+'AL',g*widths[i]*.86,p.y-drops[i]*.74,p.z+fronts[i]*.66,.006,MAT.frame);node(k+'A',g*widths[i]*.64,p.y-drops[i],p.z+fronts[i],.006,MAT.frame);bone(v,k+'P',.0055,MAT.frame);bone(k+'P',k+'PL',.0055,MAT.frame);bone(k+'PL',k+'L',.0055,MAT.frame);bone(k+'L',k+'AL',.0055,MAT.frame);bone(k+'AL',k+'A',.0055,MAT.frame);if(i<7)bone(k+'A',i<2?'manubrium':'sternumBody',.0048,MAT.cart);else if(i<10)bone(k+'A',`r${i}${s}A`,.0046,MAT.cart)}}
+
+const sy=N.T3.position.y+.01;for(const s of['L','R']){const g=s==='L'?-1:1;node('g'+s,g*sx,sy,-.010,.018,MAT.frame);node('sh'+s,g*sx,sy,0,.025);node('cl'+s,g*A.clavicle*.72,sy+.010,.020,.011,MAT.frame);bone('manubrium','cl'+s,.009);bone('cl'+s,'g'+s,.009);bone('g'+s,'sh'+s,.006,MAT.frame);node('scMed'+s,g*.066,N.T4.position.y-.004,-.112,.010,MAT.frame);node('scInf'+s,g*.082,N.T8.position.y-.012,-.097,.010,MAT.frame);node('scAc'+s,g*(sx-.012),sy+.012,-.024,.010,MAT.frame);node('scGlen'+s,g*(sx-.004),sy-.018,-.015,.010,MAT.frame);bone('scMed'+s,'scInf'+s,.007,MAT.frame);bone('scInf'+s,'scGlen'+s,.007,MAT.frame);bone('scGlen'+s,'scAc'+s,.007,MAT.frame);bone('scAc'+s,'scMed'+s,.007,MAT.frame);bone('scGlen'+s,'g'+s,.006,MAT.frame)}
+
+for(const s of['L','R']){const g=s==='L'?-1:1,kcx=g*hx*.90,shaftX=g*(hx+.034),neckX=g*(hx+.028),gtX=g*(hx+.058);
+ node('fNeck'+s,neckX,hip-.032,.008,.014,MAT.frame);node('GT'+s,gtX,hip-.026,-.006,.019,MAT.frame);node('LT'+s,g*(hx+.020),hip-.074,.016,.012,MAT.frame);node('fShaftTop'+s,shaftX,hip-.100,-.006,.015,MAT.frame);bone('hip'+s,'fNeck'+s,.014);bone('fNeck'+s,'fShaftTop'+s,.016);bone('fNeck'+s,'GT'+s,.011,MAT.frame);bone('fShaftTop'+s,'LT'+s,.010,MAT.frame);
+ node('kn'+s,kcx,knee,-.020,.008,MAT.frame);node('fCondMed'+s,kcx-g*.020,knee+.005,-.020,.020,MAT.frame);node('fCondLat'+s,kcx+g*.023,knee+.003,-.019,.021,MAT.frame);node('tPlatMed'+s,kcx-g*.019,knee-.030,-.018,.017,MAT.frame);node('tPlatLat'+s,kcx+g*.021,knee-.031,-.017,.017,MAT.frame);node('patella'+s,kcx,knee-.005,.026,.016,MAT.joint);node('tShaftTop'+s,kcx,knee-.057,-.020,.012,MAT.frame);node('fibHead'+s,kcx+g*.036,knee-.052,-.022,.010,MAT.frame);bone('fShaftTop'+s,'fCondMed'+s,.018);bone('fShaftTop'+s,'fCondLat'+s,.018);bone('fCondMed'+s,'fCondLat'+s,.010,MAT.frame);bone('tPlatMed'+s,'tPlatLat'+s,.010,MAT.frame);bone('tPlatMed'+s,'tShaftTop'+s,.013);bone('tPlatLat'+s,'tShaftTop'+s,.013);bone('patella'+s,'kn'+s,.006,MAT.cart);
+ node('an'+s,g*hx*.86,ankle,-.048,.019);node('fibAn'+s,g*(hx*.86+.032),ankle+.004,-.050,.009,MAT.frame);bone('fibHead'+s,'fibAn'+s,.007,MAT.frame);bone('tShaftTop'+s,'an'+s,.015);
+ node('heel'+s,g*hx*.86,.038,-A.foot*.18,.013,MAT.end);node('mid'+s,g*hx*.86,.028,A.foot*.30,.012,MAT.end);node('toe'+s,g*hx*.86,.018,A.foot*.78,.013,MAT.end);bone('an'+s,'heel'+s,.010);bone('heel'+s,'mid'+s,.011);bone('mid'+s,'toe'+s,.010);
+ const ey=sy-A.humerus,wy=ey-A.radius;node('el'+s,g*(sx+.025),ey,.004,.023);node('wr'+s,g*(sx+.035),wy,.01,.017);node('ulnaEl'+s,g*(sx+.014),ey-.008,-.004,.010,MAT.frame);node('ulnaWr'+s,g*(sx+.025),wy-.004,.004,.008,MAT.frame);node('ha'+s,g*(sx+.038),wy-A.hand*.48,.014,.015,MAT.end);node('fi'+s,g*(sx+.04),wy-A.hand,.016,.012,MAT.end);bone('sh'+s,'el'+s,.015);bone('el'+s,'wr'+s,.010);bone('ulnaEl'+s,'ulnaWr'+s,.007,MAT.frame);bone('wr'+s,'ha'+s,.011);bone('ha'+s,'fi'+s,.008)}
+
+sync();
+const gravity=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,H+.05,0)]),new THREE.LineBasicMaterial({color:0xff7f7f}));scene.add(gravity);
+const dist=(a,c)=>Math.round(N[a].position.distanceTo(N[c].position)*1000);
+metrics.innerHTML=`<h3>Диагностика v1.0</h3><div class="row"><span>Рост</span><span>1750 мм</span></div><div class="row"><span>Femur ref</span><span>${Math.round(A.femur*1000)} мм</span></div><div class="row"><span>Tibia ref</span><span>${Math.round(A.tibia*1000)} мм</span></div><div class="row"><span>Humerus</span><span>${dist('shL','elL')} мм</span></div><div class="row"><span>Radius</span><span>${dist('elL','wrL')} мм</span></div><div class="row"><span>Hip</span><span>head / neck / GT / LT</span></div><div class="row"><span>Knee</span><span>condyles / plateau / patella</span></div><div class="row"><span>Leg</span><span>tibia + fibula</span></div><div class="row"><span>Forearm</span><span>radius + ulna</span></div><div class="row"><span>Status</span><span>FROZEN v1 baseline</span></div>`;
+const diag=['S1','L4','T7','C2','C1','skullBase','ASISL','PSISL','acetL','GTL','fNeckL','fCondMedL','fCondLatL','tPlatMedL','tPlatLatL','patellaL','fibHeadL','fibAnL','scMedL','scInfL','scGlenL'],LE={};for(const k of diag){if(!N[k])continue;const d=document.createElement('div');d.className='joint-label';d.textContent=k;labelsRoot.appendChild(d);LE[k]=d}document.body.classList.add('labels-hidden');
+function lab(){for(const[k,d]of Object.entries(LE)){const p=N[k].position.clone().project(camera);d.style.left=(p.x*.5+.5)*innerWidth+'px';d.style.top=(-p.y*.5+.5)*innerHeight+'px'}}
+function view(v){controls.target.set(0,.9,0);if(v==='front')camera.position.set(0,1.15,4.7);if(v==='side')camera.position.set(4.7,1.15,0);if(v==='back')camera.position.set(0,1.15,-4.7);if(v==='threequarter')camera.position.set(3.2,1.35,3.2);camera.lookAt(controls.target);controls.update();document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===v));lab()}
+document.querySelectorAll('[data-view]').forEach(x=>x.onclick=()=>view(x.dataset.view));document.querySelector('[data-labels]').onclick=e=>{document.body.classList.toggle('labels-hidden');e.currentTarget.classList.toggle('active');lab()};view('threequarter');addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);lab()});renderer.setAnimationLoop(()=>{controls.update();lab();renderer.render(scene,camera)});
