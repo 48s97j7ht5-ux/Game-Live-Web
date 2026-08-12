@@ -1,22 +1,15 @@
-// Research-backed anthropometry baseline for Character Engine skeleton v0.1.
-// Units: metres. These are a neutral adult reference assembled from published
-// osteometric/anthropometric measurements and are meant to be parameter inputs,
-// not a claim that a single 'average human' exists.
+// Character Engine anthropometry baseline v0.2
+// Units: metres.
 //
-// Key source-derived relations used here:
-// - New Zealand European adult male osteometric means: humerus 317.1 mm,
-//   radius 229.2 mm, ulna 245.8 mm, femur 444.3 mm, tibia 354.9 mm.
-//   Source: Fundamental ratios and logarithmic periodicity in human limb bones
-//   (PMC3633342).
-// - Clavicle CT means are roughly 155 mm male / 141 mm female; neutral baseline
-//   below uses the midpoint 148 mm.
-// - Whole-body stature remains a separate generator parameter; long-bone ratios
-//   are preserved when the baseline is scaled.
+// Long-bone values below preserve the research-backed reference already used by
+// the project. Axial/pelvic values are explicit rig parameters so that they can
+// later be replaced by sex/population/preset distributions without changing the
+// skeleton renderer.
 
 export const REFERENCE_ADULT = {
   stature: 1.75,
 
-  // Long bones
+  // Long bones (osteometric reference)
   femur: 0.4443,
   tibia: 0.3549,
   fibula: 0.3533,
@@ -25,23 +18,52 @@ export const REFERENCE_ADULT = {
   ulna: 0.2458,
   clavicle: 0.1480,
 
-  // Distal segments. These are external segment targets rather than a single bone.
+  // Distal body segments (rig targets, not single bones)
   hand: 0.185,
   foot: 0.255,
-
-  // Head/axial landmarks used by the rig renderer.
   headHeight: 0.232,
+
+  // Joint / landmark heights
   ankleJointHeight: 0.078,
-  hipJointHalfWidth: 0.095,
+
+  // Pelvic frame. These are neutral engineering baseline dimensions used to
+  // place the acetabula and sacrum in 3D; later presets may override them.
+  pelvisWidth: 0.285,
+  pelvisDepth: 0.190,
+  pelvisHeight: 0.205,
+  hipCenterHalfWidth: 0.092,
+  hipCenterDepth: 0.018,
+
+  // Rib-cage frame (skeletal envelope, not skin/chest circumference).
+  ribCageWidth: 0.285,
+  ribCageDepth: 0.205,
+  ribCageHeight: 0.330,
+  upperThoraxWidth: 0.235,
+
+  // Shoulder girdle / scapular frame.
+  scapulaHeight: 0.145,
+  scapulaWidth: 0.100,
+  scapulaDepth: 0.075,
   shoulderJointHalfWidth: 0.215,
+
+  // Neck/head support.
+  neckLength: 0.105,
 };
 
-export function scaledAnthropometry(stature = REFERENCE_ADULT.stature) {
+const NON_SCALING_KEYS = new Set(['stature']);
+
+export function scaledAnthropometry(stature = REFERENCE_ADULT.stature, overrides = {}) {
   const k = stature / REFERENCE_ADULT.stature;
   const out = {};
+
   for (const [key, value] of Object.entries(REFERENCE_ADULT)) {
-    out[key] = key === 'stature' ? stature : value * k;
+    out[key] = NON_SCALING_KEYS.has(key) ? stature : value * k;
   }
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value !== undefined && value !== null) out[key] = value;
+  }
+
   return out;
 }
 
@@ -49,4 +71,5 @@ export const REFERENCE_RATIOS = {
   femurToTibia: REFERENCE_ADULT.femur / REFERENCE_ADULT.tibia,
   humerusToRadius: REFERENCE_ADULT.humerus / REFERENCE_ADULT.radius,
   humerusToUlna: REFERENCE_ADULT.humerus / REFERENCE_ADULT.ulna,
+  clavicleToHumerus: REFERENCE_ADULT.clavicle / REFERENCE_ADULT.humerus,
 };
