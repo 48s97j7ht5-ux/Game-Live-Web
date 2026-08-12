@@ -1,16 +1,20 @@
 import * as THREE from 'three';
 import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js';
+import { hideLegacyLeftLegShaftsExact } from './skeleton-v13-legacy-cleanup.js';
 
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v13.js?v=20260812-1658');
+const mod=await import('./skeleton-v13.js?v=20260812-1710');
 THREE.Scene.prototype.add=originalSceneAdd;
 
 const scene=capturedScene;
 const api=mod.skeletonAPI;
 if(!scene)throw new Error('Contract test: scene not captured');
 if(!api||api.contractVersion!==1)throw new Error('Contract test: Skeleton Contract v1 missing');
+const sourceRoot=scene.getObjectByName('rig_root');
+if(!sourceRoot)throw new Error('Contract test: rig_root missing');
+const exactHidden=hideLegacyLeftLegShaftsExact(sourceRoot);
 const mechanics=createSkeletonMechanicsV1(api);
 window.skeletonAPI=api;window.skeletonMechanics=mechanics;
 
@@ -29,7 +33,7 @@ const outputs={hipFlexion:document.getElementById('hipFlexionValue'),kneeFlexion
 const status=document.getElementById('mechanicsStatus');
 function read(){return{hipFlexion:+fields.hipFlexion.value,kneeFlexion:+fields.kneeFlexion.value,ankleFlexion:+fields.ankleFlexion.value};}
 function show(v){for(const k of Object.keys(outputs))outputs[k].textContent=`${v[k]}°`;}
-function apply(){const v=read();mechanics.reset();const out=mechanics.setLegPose('L',v);const visual=api.syncVisualPose();syncDebug();show(out);const m=api.getRestMetrics();status.textContent=`OK · contract ${api.contractVersion} · driven ${visual.total} · old hidden ${visual.hiddenLegacy} · thigh ${(m.segments.thigh_L*1000).toFixed(0)} mm · shin ${(m.segments.shin_L*1000).toFixed(0)} mm`;}
+function apply(){const v=read();mechanics.reset();const out=mechanics.setLegPose('L',v);const visual=api.syncVisualPose();syncDebug();show(out);const m=api.getRestMetrics();status.textContent=`OK · contract ${api.contractVersion} · driven ${visual.total} · exact hidden ${exactHidden} · thigh ${(m.segments.thigh_L*1000).toFixed(0)} mm · shin ${(m.segments.shin_L*1000).toFixed(0)} mm`;}
 for(const f of Object.values(fields))f.addEventListener('input',()=>{try{apply();}catch(e){status.textContent=`ERROR · ${e.message}`;console.error(e);}});
-document.getElementById('resetMechanics').addEventListener('click',()=>{for(const f of Object.values(fields))f.value='0';mechanics.reset();api.syncVisualPose();syncDebug();show({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});status.textContent='Сброшено · explicit joint-to-joint segments';});
+document.getElementById('resetMechanics').addEventListener('click',()=>{for(const f of Object.values(fields))f.value='0';mechanics.reset();api.syncVisualPose();syncDebug();show({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});status.textContent=`Сброшено · exact hidden ${exactHidden}`;});
 show({hipFlexion:0,kneeFlexion:0,ankleFlexion:0});apply();
