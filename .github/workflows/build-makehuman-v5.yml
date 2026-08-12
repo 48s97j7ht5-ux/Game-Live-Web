@@ -1,4 +1,4 @@
-name: Build MakeHuman v5 base mesh
+name: Build MakeHuman v6 morph assets
 
 on:
   push:
@@ -27,20 +27,22 @@ jobs:
           path: _makehuman
           sparse-checkout: |
             makehuman/data/3dobjs
+            makehuman/data/targets
             LICENSE.md
             LICENSE.ASSETS.md
           sparse-checkout-cone-mode: true
 
-      - name: Copy CC0 base mesh
+      - name: Copy CC0 base mesh and morph targets
         run: |
           rm -rf experiments/makehuman-v5
           mkdir -p experiments/makehuman-v5
           cp _makehuman/makehuman/data/3dobjs/base.obj experiments/makehuman-v5/base.obj
+          cp -R _makehuman/makehuman/data/targets experiments/makehuman-v5/targets
           cp _makehuman/LICENSE.md experiments/makehuman-v5/LICENSE.md
           cp _makehuman/LICENSE.ASSETS.md experiments/makehuman-v5/LICENSE.ASSETS.md
-          printf 'MakeHuman v1.3.0 base.obj, upstream commit 1f508f6083b2f823dab15de924b3bde72e08d77c\n' > experiments/makehuman-v5/README.txt
+          printf 'MakeHuman v1.3.0 base.obj + target files for browser morph prototype.\n' > experiments/makehuman-v5/README.txt
 
-      - name: Commit base mesh
+      - name: Commit morph assets
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -48,7 +50,7 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Add MakeHuman v5 CC0 base mesh'
+            git commit -m 'Add MakeHuman morph targets for v6'
             git pull --rebase origin main
             git push origin main
           fi
