@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {skeletonAPI as api} from './skeleton-v14.js';
-import {createSkeletonMechanicsV16} from './skeleton-mechanics-v16.js';
-const mechanics=createSkeletonMechanicsV16(api),badge=document.getElementById('badge');
+import {createSkeletonMechanicsV19} from './skeleton-mechanics-v19.js';
+const mechanics=createSkeletonMechanicsV19(api),badge=document.getElementById('badge');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const poses={
  rest:()=>{},
@@ -9,37 +9,14 @@ const poses={
  flex_180:()=>mechanics.setArmPose('L',{shoulderFlexion:180}),
  abd_90:()=>mechanics.setArmPose('L',{shoulderAbduction:90}),
  abd_180:()=>mechanics.setArmPose('L',{shoulderAbduction:180}),
- neck_flex_25:()=>mechanics.setTorsoPose({neckFlexion:25}),
- neck_flex_50:()=>mechanics.setTorsoPose({neckFlexion:50}),
- neck_ext_20:()=>mechanics.setTorsoPose({neckFlexion:-20}),
- neck_ext_45:()=>mechanics.setTorsoPose({neckFlexion:-45}),
- neck_rot_35:()=>mechanics.setTorsoPose({neckRotation:35}),
- neck_rot_70:()=>mechanics.setTorsoPose({neckRotation:70}),
- neck_side_20:()=>mechanics.setTorsoPose({neckSide:20}),
- neck_side_35:()=>mechanics.setTorsoPose({neckSide:35}),
- head_nod_20:()=>mechanics.setTorsoPose({headFlexion:20}),
- neck_combo:()=>mechanics.setTorsoPose({neckFlexion:18,neckRotation:45,neckSide:12}),
- thor_flex_25:()=>mechanics.setTorsoPose({thoracicFlexion:25}),
- thor_ext_15:()=>mechanics.setTorsoPose({thoracicFlexion:-15}),
- thor_rot_30:()=>mechanics.setTorsoPose({thoracicRotation:30}),
- thor_side_20:()=>mechanics.setTorsoPose({thoracicSide:20}),
- lumbar_flex_40:()=>mechanics.setTorsoPose({lumbarFlexion:40}),
- lumbar_ext_25:()=>mechanics.setTorsoPose({lumbarFlexion:-25}),
- lumbar_side_20:()=>mechanics.setTorsoPose({lumbarSide:20}),
- lumbar_rot_10:()=>mechanics.setTorsoPose({lumbarRotation:10}),
- spine_combo:()=>mechanics.setTorsoPose({lumbarFlexion:18,lumbarSide:8,thoracicFlexion:12,thoracicRotation:22,neckRotation:-25}),
- knee_15:()=>mechanics.setLegPose('L',{kneeFlexion:15}),
- knee_30:()=>mechanics.setLegPose('L',{kneeFlexion:30}),
- knee_60:()=>mechanics.setLegPose('L',{kneeFlexion:60}),
- knee_90:()=>mechanics.setLegPose('L',{kneeFlexion:90}),
- knee_120:()=>mechanics.setLegPose('L',{kneeFlexion:120}),
- knee_145:()=>mechanics.setLegPose('L',{kneeFlexion:145}),
- hip_flex_90:()=>mechanics.setLegPose('L',{hipFlexion:90}),
- hip_abd_40:()=>mechanics.setLegPose('L',{hipAbduction:40}),
- hip_rot_35:()=>mechanics.setLegPose('L',{hipRotation:35})
+ neck_flex_25:()=>mechanics.setTorsoPose({neckFlexion:25}),neck_flex_50:()=>mechanics.setTorsoPose({neckFlexion:50}),neck_ext_20:()=>mechanics.setTorsoPose({neckFlexion:-20}),neck_ext_45:()=>mechanics.setTorsoPose({neckFlexion:-45}),neck_rot_35:()=>mechanics.setTorsoPose({neckRotation:35}),neck_rot_70:()=>mechanics.setTorsoPose({neckRotation:70}),neck_side_20:()=>mechanics.setTorsoPose({neckSide:20}),neck_side_35:()=>mechanics.setTorsoPose({neckSide:35}),head_nod_20:()=>mechanics.setTorsoPose({headFlexion:20}),neck_combo:()=>mechanics.setTorsoPose({neckFlexion:18,neckRotation:45,neckSide:12}),
+ thor_flex_25:()=>mechanics.setTorsoPose({thoracicFlexion:25}),thor_ext_15:()=>mechanics.setTorsoPose({thoracicFlexion:-15}),thor_rot_30:()=>mechanics.setTorsoPose({thoracicRotation:30}),thor_side_20:()=>mechanics.setTorsoPose({thoracicSide:20}),lumbar_flex_40:()=>mechanics.setTorsoPose({lumbarFlexion:40}),lumbar_ext_25:()=>mechanics.setTorsoPose({lumbarFlexion:-25}),lumbar_side_20:()=>mechanics.setTorsoPose({lumbarSide:20}),lumbar_rot_10:()=>mechanics.setTorsoPose({lumbarRotation:10}),spine_combo:()=>mechanics.setTorsoPose({lumbarFlexion:18,lumbarSide:8,thoracicFlexion:12,thoracicRotation:22,neckRotation:-25}),
+ knee_15:()=>mechanics.setLegPose('L',{kneeFlexion:15}),knee_30:()=>mechanics.setLegPose('L',{kneeFlexion:30}),knee_60:()=>mechanics.setLegPose('L',{kneeFlexion:60}),knee_90:()=>mechanics.setLegPose('L',{kneeFlexion:90}),knee_120:()=>mechanics.setLegPose('L',{kneeFlexion:120}),knee_145:()=>mechanics.setLegPose('L',{kneeFlexion:145}),
+ hip_flex_90:()=>mechanics.setLegPose('L',{hipFlexion:90}),hip_abd_40:()=>mechanics.setLegPose('L',{hipAbduction:40}),hip_rot_35:()=>mechanics.setLegPose('L',{hipRotation:35}),
+ ankle_df_10:()=>mechanics.setLegPose('L',{ankleFlexion:10}),ankle_df_20:()=>mechanics.setLegPose('L',{ankleFlexion:20}),ankle_pf_20:()=>mechanics.setLegPose('L',{ankleFlexion:-20}),ankle_pf_40:()=>mechanics.setLegPose('L',{ankleFlexion:-40}),subtalar_inv_15:()=>mechanics.setLegPose('L',{subtalarInversion:15}),subtalar_evr_10:()=>mechanics.setLegPose('L',{subtalarInversion:-10}),ankle_combo_pronation:()=>mechanics.setLegPose('L',{ankleFlexion:15,subtalarInversion:-8,subtalarRotation:-5}),ankle_combo_supination:()=>mechanics.setLegPose('L',{ankleFlexion:-20,subtalarInversion:12,subtalarRotation:6})
 };
-const names=['spine_S1','spine_L5','spine_L4','spine_L3','spine_L2','spine_L1','spine_T12','spine_T9','spine_T7','spine_T5','spine_T3','spine_T1','neck_C7','neck_C6','neck_C5','neck_C4','neck_C3','neck_C2','neck_C1','head','sc_L','ac_L','shoulder_L','elbow_L','wrist_L','hip_L','knee_L','ankle_L'];
+const names=['spine_S1','spine_L5','spine_L4','spine_L3','spine_L2','spine_L1','spine_T12','spine_T9','spine_T7','spine_T5','spine_T3','spine_T1','neck_C7','neck_C6','neck_C5','neck_C4','neck_C3','neck_C2','neck_C1','head','sc_L','ac_L','shoulder_L','elbow_L','wrist_L','hip_L','knee_L','ankle_L','subtalar_L'];
 function stateObject(o){if(!o)return null;const p=o.getWorldPosition(new THREE.Vector3()),q=o.getWorldQuaternion(new THREE.Quaternion()),e=new THREE.Euler().setFromQuaternion(q,'XYZ');return {p:[p.x,p.y,p.z],r:[e.x,e.y,e.z]};}
-function diag(name){const joints={};for(const n of names){const j=api.getJoint(n);if(j)joints[n]=stateObject(j);}const patellaL=api.getJoint('hip_L')?.getObjectByName('patellaL');return{name,skeletonVersion:api.skeletonVersion,mechanicsVersion:'1.8.0',joints,landmarks:{patellaL:stateObject(patellaL)},segments:{upperarm:api.getSegment('upperarm_L')?.length,forearm:api.getSegment('forearm_L')?.length,clavicle:api.getSegment('clavicle_L')?.length,thigh:api.getSegment('thigh_L')?.length,shin:api.getSegment('shin_L')?.length,lumbar:api.getSegment('lumbar')?.length,thoracic:api.getSegment('thoracic')?.length,cervical:api.getSegment('cervical')?.length}};}
+function diag(name){const joints={};for(const n of names){const j=api.getJoint(n);if(j)joints[n]=stateObject(j);}const patellaL=api.getJoint('hip_L')?.getObjectByName('patellaL'),heelL=api.getJoint('subtalar_L')?.getObjectByName('heel_L'),talusL=api.getJoint('subtalar_L')?.getObjectByName('talus_L');return{name,skeletonVersion:api.skeletonVersion,mechanicsVersion:mechanics.mechanicsVersion??'1.9.0',joints,landmarks:{patellaL:stateObject(patellaL),heelL:stateObject(heelL),talusL:stateObject(talusL)},segments:{upperarm:api.getSegment('upperarm_L')?.length,forearm:api.getSegment('forearm_L')?.length,clavicle:api.getSegment('clavicle_L')?.length,thigh:api.getSegment('thigh_L')?.length,shin:api.getSegment('shin_L')?.length,lumbar:api.getSegment('lumbar')?.length,thoracic:api.getSegment('thoracic')?.length,cervical:api.getSegment('cervical')?.length}};}
 window.anatomyV14={poses:Object.keys(poses),async setPose(name){if(!poses[name])throw new Error('unknown pose '+name);mechanics.reset();poses[name]();api.jointRoot.updateMatrixWorld(true);badge.textContent='v1.4 anatomy · '+name;await sleep(180);return diag(name)},diagnostics:()=>diag('current')};
 window.__ANATOMY_V14_READY__=true;badge.textContent='v1.4 anatomy · ready';
