@@ -1,0 +1,44 @@
+name: Anatomy regression
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'character/skeleton-v13.js'
+      - 'character/skeleton-mechanics-contract-v01.js'
+      - 'character/anatomy-regression-test.*'
+      - 'tests/anatomy-screenshots.mjs'
+      - '.github/workflows/anatomy-regression.yml'
+permissions:
+  contents: write
+concurrency:
+  group: anatomy-regression
+  cancel-in-progress: true
+jobs:
+  screenshots:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for GitHub Pages deployment
+        run: sleep 45
+      - name: Capture anatomy poses
+        run: npm run test:anatomy
+      - name: Commit latest anatomy report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add anatomy-test-output/latest
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "test: update anatomy regression screenshots"
+          git push
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anatomy-regression-latest
+          path: anatomy-test-output/latest
+          retention-days: 14
