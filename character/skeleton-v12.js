@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { scaledAnthropometry } from './anthropometry-v01.js';
 
 // Build v1.2 strictly on top of v1.1: feet and the rest of the frozen rig remain unchanged.
 let capturedScene=null;
@@ -11,6 +12,7 @@ if(!scene) throw new Error('Skeleton v1.2: base scene not captured');
 const root=scene.children.find(o=>o.isGroup&&o.children.length>40);
 if(!root) throw new Error('Skeleton v1.2: rig root not found');
 
+const A=scaledAnthropometry(1.75);
 const boneMat=new THREE.MeshStandardMaterial({color:0xd7dbe7});
 const frameMat=new THREE.MeshStandardMaterial({color:0x8a95ae});
 const endMat=new THREE.MeshStandardMaterial({color:0x7cc7ff});
@@ -18,17 +20,36 @@ const handGroup=new THREE.Group();handGroup.name='hands-v12-anatomical';root.add
 function n(x,y,z,r=.005,mat=frameMat){const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),mat);m.position.set(x,y,z);handGroup.add(m);return m;}
 function b(a,c,r=.0035,mat=boneMat){const v=c.position.clone().sub(a.position);const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,1,8),mat);m.position.copy(a.position).add(c.position).multiplyScalar(.5);m.scale.set(1,v.length(),1);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());handGroup.add(m);return m;}
 
-// Locate the existing v1.0/v1.1 wrist and hand-tip markers geometrically. Old hand sticks are hidden only below each wrist.
+// Reconstruct the exact wrist target used by the frozen v1.0 rig.
+// This avoids confusing the elbow with the wrist: their X positions differ by only ~10 mm.
+const ankle=A.ankleJointHeight;
+const knee=ankle+A.tibia;
+const hip=knee+A.femur;
+const s1=hip+.125,l1=s1+.18,t12=l1+.022,t1=t12+.30;
+const t3Index=9; // T12..T1 => T3 is the 10th thoracic node.
+const t3T=(t3Index+1)/12;
+const t3Y=t12+(t1-t12)*t3T;
+const shoulderY=t3Y+.01;
+const expectedWristY=shoulderY-A.humerus-A.radius;
+const expectedWristAbsX=A.shoulderJointHalfWidth+.035;
+const expectedWristZ=.010;
+
 const meshes=[];root.traverse(o=>{if(o.isMesh)meshes.push(o)});
 for(const side of [-1,1]){
-  const candidates=meshes.filter(o=>o.geometry?.type==='SphereGeometry'&&Math.sign(o.position.x)===side&&o.position.y>.45&&o.position.y<1.25);
-  const wrist=candidates.sort((a,b)=>Math.abs(Math.abs(a.position.x)-.20)-Math.abs(Math.abs(b.position.x)-.20))[0];
+  const target=new THREE.Vector3(side*expectedWristAbsX,expectedWristY,expectedWristZ);
+  const wrist=meshes
+    .filter(o=>o.geometry?.type==='SphereGeometry'&&Math.sign(o.position.x)===side&&o.position.y>.75&&o.position.y<1.05)
+    .sort((a,b)=>a.position.distanceToSquared(target)-b.position.distanceToSquared(target))[0];
   if(!wrist) continue;
   const wx=wrist.position.x, wy=wrist.position.y, wz=wrist.position.z;
-  root.traverse(o=>{if(!o.isMesh||o===wrist)return;if(Math.sign(o.position.x)!==side)return;if(o.position.y<wy-.012&&o.position.y>wy-.24&&Math.abs(o.position.x-wx)<.09)o.visible=false;});
+
+  // Hide only the old simplified hand below the true distal wrist. Preserve radius/ulna.
+  root.traverse(o=>{if(!o.isMesh||o===wrist)return;if(Math.sign(o.position.x)!==side)return;
+    if(o.position.y<wy-.012&&o.position.y>wy-.24&&Math.abs(o.position.x-wx)<.09)o.visible=false;
+  });
 
   // Eight carpals in two compact rows. Proximal: scaphoid/lunate/triquetrum/pisiform.
-  // Distal: trapezium/trapezoid/capitate/hamate. The palm is not a flat fan: it has a shallow transverse arch.
+  // Distal: trapezium/trapezoid/capitate/hamate. The palm has a shallow transverse arch.
   const rowY=[wy-.018,wy-.040];
   const lateral=[-.018,-.006,.007,.019];
   const prox=[],dist=[];
@@ -36,6 +57,7 @@ for(const side of [-1,1]){
   for(let i=0;i<4;i++){const arch=Math.abs(i-1.5)*.004;dist.push(n(wx+side*lateral[i]*1.08,rowY[1],wz+arch,.0055));}
   for(let i=0;i<3;i++)b(prox[i],prox[i+1],.0028,frameMat);
   for(let i=0;i<3;i++)b(dist[i],dist[i+1],.0028,frameMat);
+  b(wrist,prox[1],.0033,frameMat);b(wrist,prox[2],.0033,frameMat);
   b(prox[0],dist[0],.0027,frameMat);b(prox[1],dist[1],.0027,frameMat);b(prox[2],dist[2],.0027,frameMat);b(prox[3],dist[3],.0027,frameMat);
 
   // Five metacarpals. III is longest/central; II and IV slightly shorter, V shorter. I diverges for the thumb.
