@@ -7,7 +7,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0d12);
 
 const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.01, 100);
-camera.position.set(2.8, 1.55, 5.0);
+camera.position.set(2.7, 1.55, 4.8);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -47,28 +47,28 @@ const MAT_BONE = new THREE.MeshStandardMaterial({ color: 0xd7dbe7, roughness: .6
 const MAT_JOINT = new THREE.MeshStandardMaterial({ color: 0xf0a65b, roughness: .58, metalness: .03 });
 const MAT_END = new THREE.MeshStandardMaterial({ color: 0x7cc7ff, roughness: .52, metalness: .04 });
 const MAT_CORE = new THREE.MeshStandardMaterial({ color: 0xb8a8ff, roughness: .58, metalness: .03 });
+const MAT_FRAME = new THREE.MeshStandardMaterial({ color: 0x8a95ae, roughness: .72, metalness: .02 });
 
+const A = scaledAnthropometry(1.75);
 const nodes = {};
 const bones = [];
 
-function sphere(name, p, radius = .038, material = MAT_JOINT) {
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 14), material);
-  mesh.position.copy(p);
+function addNode(name, xyz, radius = 0.025, material = MAT_JOINT) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 18, 12), material);
+  mesh.position.set(...xyz);
   mesh.name = name;
   skeletonRoot.add(mesh);
   nodes[name] = mesh;
-  return mesh;
 }
 
-function cylinder(name, aName, bName, radius = .018, material = MAT_BONE) {
+function addBone(name, aName, bName, radius = 0.014, material = MAT_BONE) {
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 1, 12, 1, false), material);
   mesh.name = name;
   skeletonRoot.add(mesh);
   bones.push({ mesh, aName, bName });
-  return mesh;
 }
 
-function updateBone(b) {
+function syncBone(b) {
   const a = nodes[b.aName].position;
   const c = nodes[b.bName].position;
   const mid = a.clone().add(c).multiplyScalar(.5);
@@ -78,185 +78,234 @@ function updateBone(b) {
   b.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), c.clone().sub(a).normalize());
 }
 
-const BODY = scaledAnthropometry(1.75);
+function syncBones() { bones.forEach(syncBone); }
 
-function buildLandmarks(b = BODY) {
-  const H = b.stature;
+function buildLandmarks() {
+  const H = A.stature;
+  const ankleY = A.ankleJointHeight;
+  const kneeY = ankleY + A.tibia;
+  const hipY = kneeY + A.femur;
 
-  // Long-bone positions are now derived from measured bone lengths rather than
-  // independent height percentages. This keeps femur:tibia and humerus:forearm
-  // relationships anatomically coherent when stature changes.
-  const ankleY = b.ankleJointHeight;
-  const kneeY = ankleY + b.tibia;
-  const hipY = kneeY + b.femur;
-  const pelvisY = hipY + H * 0.012;
+  const pelvisCenterY = hipY + A.pelvisHeight * 0.35;
+  const pelvisTopY = pelvisCenterY + A.pelvisHeight * 0.42;
+  const pelvisBottomY = pelvisCenterY - A.pelvisHeight * 0.42;
 
+  const ribBottomY = pelvisTopY + H * 0.075;
+  const ribTopY = ribBottomY + A.ribCageHeight;
+  const ribMidY = (ribTopY + ribBottomY) * 0.5;
+
+  const neckBaseY = ribTopY + H * 0.018;
+  const neckTopY = neckBaseY + A.neckLength;
   const crownY = H;
-  const headCenterY = crownY - b.headHeight * 0.50;
-  const chinY = crownY - b.headHeight;
-  const neckTopY = chinY + b.headHeight * 0.12;
+  const headCenterY = crownY - A.headHeight * 0.50;
 
-  // Shoulder height is constrained by the upper-limb chain so the wrist falls
-  // near the greater-trochanter region in neutral stance.
-  const wristTargetY = hipY - H * 0.015;
-  const shoulderY = wristTargetY + b.humerus + b.radius;
-  const neckBaseY = shoulderY + H * 0.010;
+  const shoulderY = ribTopY - A.scapulaHeight * 0.16;
+  const elbowY = shoulderY - A.humerus;
+  const wristY = elbowY - A.radius;
+  const handY = wristY - A.hand * 0.48;
+  const fingerY = wristY - A.hand;
 
-  const sacrumY = pelvisY + (neckBaseY - pelvisY) * 0.15;
-  const lumbarLowY = pelvisY + (neckBaseY - pelvisY) * 0.30;
-  const lumbarHighY = pelvisY + (neckBaseY - pelvisY) * 0.46;
-  const thoracicLowY = pelvisY + (neckBaseY - pelvisY) * 0.62;
-  const thoracicMidY = pelvisY + (neckBaseY - pelvisY) * 0.78;
-  const thoracicHighY = pelvisY + (neckBaseY - pelvisY) * 0.94;
-
-  const elbowY = shoulderY - b.humerus;
-  const wristY = elbowY - b.radius;
-  const palmCenterY = wristY - b.hand * 0.48;
-  const fingerY = wristY - b.hand;
-
-  const hipHalf = b.hipJointHalfWidth;
-  const shoulderHalf = b.shoulderJointHalfWidth;
-  const clavicleInnerHalf = Math.max(0.055, shoulderHalf - b.clavicle);
+  const px = A.pelvisWidth * 0.5;
+  const pz = A.pelvisDepth * 0.5;
+  const rx = A.ribCageWidth * 0.5;
+  const rz = A.ribCageDepth * 0.5;
+  const ux = A.upperThoraxWidth * 0.5;
+  const hipX = A.hipCenterHalfWidth;
+  const shoulderX = A.shoulderJointHalfWidth;
 
   return {
-    pelvis: [0, pelvisY, -0.014],
-    sacrum: [0, sacrumY, -0.024],
-    lumbarLow: [0, lumbarLowY, -0.016],
-    lumbarHigh: [0, lumbarHighY, 0.000],
-    thoracicLow: [0, thoracicLowY, 0.018],
-    thoracicMid: [0, thoracicMidY, 0.024],
-    thoracicHigh: [0, thoracicHighY, 0.012],
-    neckBase: [0, neckBaseY, -0.002],
-    neckTop: [0, neckTopY, 0.002],
-    head: [0, headCenterY, 0.008],
-    crown: [0, crownY, 0.008],
+    pelvisCenter: [0, pelvisCenterY, 0],
+    pelvisTopL: [-px, pelvisTopY, -pz * .05],
+    pelvisTopR: [ px, pelvisTopY, -pz * .05],
+    pelvisFrontL: [-px * .78, pelvisCenterY,  pz],
+    pelvisFrontR: [ px * .78, pelvisCenterY,  pz],
+    pelvisBackL: [-px * .72, pelvisCenterY, -pz],
+    pelvisBackR: [ px * .72, pelvisCenterY, -pz],
+    pelvisBottomL: [-px * .55, pelvisBottomY, 0],
+    pelvisBottomR: [ px * .55, pelvisBottomY, 0],
+    sacrum: [0, pelvisCenterY + A.pelvisHeight * .18, -pz * .62],
+    hipL: [-hipX, hipY, A.hipCenterDepth],
+    hipR: [ hipX, hipY, A.hipCenterDepth],
 
-    hipL: [-hipHalf, hipY, 0],
-    hipR: [ hipHalf, hipY, 0],
-    kneeL: [-hipHalf * .92, kneeY, 0.014],
-    kneeR: [ hipHalf * .92, kneeY, 0.014],
-    ankleL: [-hipHalf * .86, ankleY, 0],
-    ankleR: [ hipHalf * .86, ankleY, 0],
-    heelL: [-hipHalf * .86, H * .022, -b.foot * .22],
-    heelR: [ hipHalf * .86, H * .022, -b.foot * .22],
-    toeL: [-hipHalf * .86, H * .020, b.foot * .78],
-    toeR: [ hipHalf * .86, H * .020, b.foot * .78],
+    lumbarLow: [0, pelvisTopY + H * .035, -0.018],
+    lumbarHigh: [0, ribBottomY - H * .025, -0.004],
+    thoracicLow: [0, ribBottomY + A.ribCageHeight * .22, 0.012],
+    thoracicMid: [0, ribMidY, 0.022],
+    thoracicHigh: [0, ribTopY - A.ribCageHeight * .18, 0.012],
+    neckBase: [0, neckBaseY, -0.004],
+    neckTop: [0, neckTopY, 0],
+    head: [0, headCenterY, 0.006],
+    crown: [0, crownY, 0.006],
 
-    clavicleL: [-clavicleInnerHalf, shoulderY + H * .006, 0.005],
-    clavicleR: [ clavicleInnerHalf, shoulderY + H * .006, 0.005],
-    shoulderL: [-shoulderHalf, shoulderY, 0],
-    shoulderR: [ shoulderHalf, shoulderY, 0],
-    elbowL: [-shoulderHalf - H * .022, elbowY, 0.010],
-    elbowR: [ shoulderHalf + H * .022, elbowY, 0.010],
-    wristL: [-shoulderHalf - H * .030, wristY, 0.018],
-    wristR: [ shoulderHalf + H * .030, wristY, 0.018],
-    handL: [-shoulderHalf - H * .032, palmCenterY, 0.022],
-    handR: [ shoulderHalf + H * .032, palmCenterY, 0.022],
-    fingerL: [-shoulderHalf - H * .033, fingerY, 0.024],
-    fingerR: [ shoulderHalf + H * .033, fingerY, 0.024],
+    ribLowL: [-rx * .86, ribBottomY, 0],
+    ribLowR: [ rx * .86, ribBottomY, 0],
+    ribLowFront: [0, ribBottomY, rz * .78],
+    ribLowBack: [0, ribBottomY, -rz * .70],
+    ribMidL: [-rx, ribMidY, 0],
+    ribMidR: [ rx, ribMidY, 0],
+    ribMidFront: [0, ribMidY, rz],
+    ribMidBack: [0, ribMidY, -rz * .86],
+    ribTopL: [-ux, ribTopY, 0],
+    ribTopR: [ ux, ribTopY, 0],
+    ribTopFront: [0, ribTopY, rz * .64],
+    ribTopBack: [0, ribTopY, -rz * .62],
+    sternumTop: [0, ribTopY - A.ribCageHeight * .08, rz * .67],
+    sternumBottom: [0, ribBottomY + A.ribCageHeight * .18, rz * .80],
+
+    scapulaMedialL: [-ux * .63, shoulderY - A.scapulaHeight * .28, -A.scapulaDepth],
+    scapulaMedialR: [ ux * .63, shoulderY - A.scapulaHeight * .28, -A.scapulaDepth],
+    scapulaInferiorL: [-ux * .78, shoulderY - A.scapulaHeight, -A.scapulaDepth * .82],
+    scapulaInferiorR: [ ux * .78, shoulderY - A.scapulaHeight, -A.scapulaDepth * .82],
+    glenoidL: [-shoulderX, shoulderY, -0.006],
+    glenoidR: [ shoulderX, shoulderY, -0.006],
+    clavicleMedialL: [-0.018, ribTopY - .008, rz * .48],
+    clavicleMedialR: [ 0.018, ribTopY - .008, rz * .48],
+    clavicleL: [-A.clavicle * .72, shoulderY + .012, 0.018],
+    clavicleR: [ A.clavicle * .72, shoulderY + .012, 0.018],
+    shoulderL: [-shoulderX, shoulderY, 0],
+    shoulderR: [ shoulderX, shoulderY, 0],
+
+    elbowL: [-shoulderX - .025, elbowY, .008],
+    elbowR: [ shoulderX + .025, elbowY, .008],
+    wristL: [-shoulderX - .035, wristY, .014],
+    wristR: [ shoulderX + .035, wristY, .014],
+    handL: [-shoulderX - .037, handY, .018],
+    handR: [ shoulderX + .037, handY, .018],
+    fingerL: [-shoulderX - .039, fingerY, .020],
+    fingerR: [ shoulderX + .039, fingerY, .020],
+
+    kneeL: [-hipX * .90, kneeY, .012],
+    kneeR: [ hipX * .90, kneeY, .012],
+    ankleL: [-hipX * .86, ankleY, 0],
+    ankleR: [ hipX * .86, ankleY, 0],
+    heelL: [-hipX * .86, H * .022, -A.foot * .22],
+    heelR: [ hipX * .86, H * .022, -A.foot * .22],
+    toeL: [-hipX * .86, H * .020, A.foot * .78],
+    toeR: [ hipX * .86, H * .020, A.foot * .78],
   };
 }
 
 const P = buildLandmarks();
 
-for (const [name, v] of Object.entries(P)) {
-  const end = /crown|toe|heel|finger/.test(name);
-  const core = /pelvis|sacrum|lumbar|thoracic|neckBase|neckTop|head/.test(name);
+for (const [name, xyz] of Object.entries(P)) {
+  let radius = A.stature * .012;
+  let material = MAT_JOINT;
 
-  let radius = BODY.stature * 0.020;
-  if (name === 'head') radius = BODY.headHeight * 0.47;
-  if (name === 'pelvis') radius = BODY.stature * 0.032;
-  if (/shoulder|hip/.test(name)) radius = BODY.stature * 0.023;
-  if (/knee|elbow/.test(name)) radius = BODY.stature * 0.021;
-  if (/ankle|wrist|hand/.test(name)) radius = BODY.stature * 0.018;
-  if (end) radius = BODY.stature * 0.016;
-  if (name === 'crown') radius = BODY.stature * 0.012;
+  if (/pelvis|sacrum|lumbar|thoracic|neck|head/.test(name)) material = MAT_CORE;
+  if (/rib|sternum|scapula|clavicle/.test(name)) material = MAT_FRAME;
+  if (/toe|heel|finger|crown/.test(name)) material = MAT_END;
 
-  sphere(name, new THREE.Vector3(...v), radius, end ? MAT_END : (core ? MAT_CORE : MAT_JOINT));
+  if (name === 'head') radius = A.headHeight * .42;
+  else if (/hip|shoulder|glenoid/.test(name)) radius = A.stature * .018;
+  else if (/knee|elbow/.test(name)) radius = A.stature * .016;
+  else if (/ankle|wrist/.test(name)) radius = A.stature * .013;
+  else if (/pelvisCenter|sacrum/.test(name)) radius = A.stature * .020;
+  else if (/rib|scapula|clavicle|sternum/.test(name)) radius = A.stature * .009;
+  else if (/toe|heel|finger|crown/.test(name)) radius = A.stature * .010;
+
+  addNode(name, xyz, radius, material);
 }
 
 [
-  ['pelvis','sacrum'], ['sacrum','lumbarLow'], ['lumbarLow','lumbarHigh'],
-  ['lumbarHigh','thoracicLow'], ['thoracicLow','thoracicMid'], ['thoracicMid','thoracicHigh'],
-  ['thoracicHigh','neckBase'], ['neckBase','neckTop'], ['neckTop','head'], ['head','crown']
-].forEach((x, i) => cylinder('spine' + i, x[0], x[1], i < 7 ? .019 : .015));
+  ['pelvisTopL','pelvisFrontL'], ['pelvisFrontL','pelvisBottomL'], ['pelvisBottomL','pelvisBackL'], ['pelvisBackL','pelvisTopL'],
+  ['pelvisTopR','pelvisFrontR'], ['pelvisFrontR','pelvisBottomR'], ['pelvisBottomR','pelvisBackR'], ['pelvisBackR','pelvisTopR'],
+  ['pelvisTopL','pelvisTopR'], ['pelvisBottomL','pelvisBottomR'], ['pelvisBackL','sacrum'], ['pelvisBackR','sacrum'],
+  ['pelvisCenter','hipL'], ['pelvisCenter','hipR']
+].forEach((x, i) => addBone('pelvisFrame' + i, x[0], x[1], .011, MAT_FRAME));
 
-cylinder('pelvisL','pelvis','hipL',.022);
-cylinder('pelvisR','pelvis','hipR',.022);
+[
+  ['sacrum','lumbarLow'], ['lumbarLow','lumbarHigh'], ['lumbarHigh','thoracicLow'],
+  ['thoracicLow','thoracicMid'], ['thoracicMid','thoracicHigh'], ['thoracicHigh','neckBase'],
+  ['neckBase','neckTop'], ['neckTop','head'], ['head','crown']
+].forEach((x, i) => addBone('spine' + i, x[0], x[1], i < 6 ? .015 : .012));
 
-for (const s of ['L','R']) {
-  cylinder('femur'+s,'hip'+s,'knee'+s,.023);
-  cylinder('tibia'+s,'knee'+s,'ankle'+s,.020);
-  cylinder('rearFoot'+s,'ankle'+s,'heel'+s,.017);
-  cylinder('foot'+s,'ankle'+s,'toe'+s,.020);
+for (const level of ['Low', 'Mid', 'Top']) {
+  const l = 'rib' + level + 'L';
+  const r = 'rib' + level + 'R';
+  const f = 'rib' + level + 'Front';
+  const b = 'rib' + level + 'Back';
+  addBone('rib' + level + 'LF', l, f, .008, MAT_FRAME);
+  addBone('rib' + level + 'RF', r, f, .008, MAT_FRAME);
+  addBone('rib' + level + 'LB', l, b, .008, MAT_FRAME);
+  addBone('rib' + level + 'RB', r, b, .008, MAT_FRAME);
 }
+addBone('sternum','sternumTop','sternumBottom',.010,MAT_FRAME);
+addBone('thoraxFrontTop','sternumTop','ribTopFront',.007,MAT_FRAME);
+addBone('thoraxFrontBottom','sternumBottom','ribLowFront',.007,MAT_FRAME);
+addBone('thoraxBackLow','thoracicLow','ribLowBack',.007,MAT_FRAME);
+addBone('thoraxBackMid','thoracicMid','ribMidBack',.007,MAT_FRAME);
+addBone('thoraxBackTop','thoracicHigh','ribTopBack',.007,MAT_FRAME);
 
-cylinder('clavicleCenterL','neckBase','clavicleL',.016);
-cylinder('clavicleCenterR','neckBase','clavicleR',.016);
-for (const s of ['L','R']) {
-  cylinder('clavicle'+s,'clavicle'+s,'shoulder'+s,.017);
-  cylinder('humerus'+s,'shoulder'+s,'elbow'+s,.020);
-  cylinder('forearm'+s,'elbow'+s,'wrist'+s,.017);
-  cylinder('palm'+s,'wrist'+s,'hand'+s,.019);
-  cylinder('handEnd'+s,'hand'+s,'finger'+s,.014);
+for (const s of ['L', 'R']) {
+  addBone('clavicleMedial' + s, 'sternumTop', 'clavicleMedial' + s, .010, MAT_FRAME);
+  addBone('clavicle' + s, 'clavicleMedial' + s, 'clavicle' + s, .011, MAT_BONE);
+  addBone('clavicleDistal' + s, 'clavicle' + s, 'glenoid' + s, .010, MAT_BONE);
+  addBone('scapulaUpper' + s, 'scapulaMedial' + s, 'glenoid' + s, .009, MAT_FRAME);
+  addBone('scapulaLowerA' + s, 'scapulaMedial' + s, 'scapulaInferior' + s, .009, MAT_FRAME);
+  addBone('scapulaLowerB' + s, 'scapulaInferior' + s, 'glenoid' + s, .009, MAT_FRAME);
+  addBone('glenoidToShoulder' + s, 'glenoid' + s, 'shoulder' + s, .009, MAT_FRAME);
+
+  addBone('femur' + s, 'hip' + s, 'knee' + s, .020, MAT_BONE);
+  addBone('tibia' + s, 'knee' + s, 'ankle' + s, .017, MAT_BONE);
+  addBone('foot' + s, 'ankle' + s, 'toe' + s, .016, MAT_BONE);
+  addBone('heel' + s, 'ankle' + s, 'heel' + s, .012, MAT_BONE);
+
+  addBone('humerus' + s, 'shoulder' + s, 'elbow' + s, .017, MAT_BONE);
+  addBone('radius' + s, 'elbow' + s, 'wrist' + s, .014, MAT_BONE);
+  addBone('palm' + s, 'wrist' + s, 'hand' + s, .014, MAT_BONE);
+  addBone('handEnd' + s, 'hand' + s, 'finger' + s, .011, MAT_BONE);
 }
-
-function syncBones() { bones.forEach(updateBone); }
 
 const base = {};
 for (const [name, mesh] of Object.entries(nodes)) base[name] = mesh.position.clone();
 
 function resetPose() {
-  for (const [name, v] of Object.entries(base)) nodes[name].position.copy(v);
+  for (const [name, p] of Object.entries(base)) nodes[name].position.copy(p);
 }
 
 function pose(name) {
   resetPose();
 
   if (name === 'relaxed') {
-    const shift = 0.025;
-    ['pelvis','sacrum','lumbarLow'].forEach(n => nodes[n].position.x += shift);
-    nodes.lumbarHigh.position.x += shift * .6;
-    nodes.thoracicLow.position.x += shift * .3;
-    nodes.shoulderL.position.y -= .018;
-
-    nodes.elbowL.position.add(new THREE.Vector3(.020, -.015, .060));
-    nodes.wristL.position.add(new THREE.Vector3(.055, -.010, .090));
-    nodes.handL.position.add(new THREE.Vector3(.060, -.008, .095));
-    nodes.fingerL.position.add(new THREE.Vector3(.060, -.008, .100));
-
-    nodes.elbowR.position.add(new THREE.Vector3(-.015, 0, -.040));
-    nodes.wristR.position.add(new THREE.Vector3(-.035, .005, -.065));
-    nodes.handR.position.add(new THREE.Vector3(-.038, .005, -.070));
-    nodes.fingerR.position.add(new THREE.Vector3(-.040, .005, -.075));
-
-    nodes.kneeL.position.x -= .012;
-    nodes.ankleL.position.x -= .018;
+    const dx = .018;
+    for (const n of ['pelvisCenter','sacrum','pelvisTopL','pelvisTopR','pelvisFrontL','pelvisFrontR','pelvisBackL','pelvisBackR','pelvisBottomL','pelvisBottomR']) {
+      nodes[n].position.x += dx;
+    }
+    nodes.lumbarLow.position.x += dx * .8;
+    nodes.lumbarHigh.position.x += dx * .5;
+    nodes.thoracicLow.position.x += dx * .25;
+    nodes.shoulderL.position.y -= .012;
+    nodes.glenoidL.position.y -= .010;
+    nodes.scapulaMedialL.position.y -= .008;
+    nodes.elbowL.position.z += .050;
+    nodes.wristL.position.z += .075;
+    nodes.handL.position.z += .080;
+    nodes.fingerL.position.z += .085;
+    nodes.kneeL.position.x -= .010;
+    nodes.ankleL.position.x -= .015;
   }
 
   if (name === 'step') {
-    nodes.pelvis.position.z = .010;
-    nodes.hipL.position.z = .045;
-    nodes.kneeL.position.z = .125;
-    nodes.ankleL.position.z = .200;
-    nodes.heelL.position.z = .140;
-    nodes.toeL.position.z = .340;
+    nodes.hipL.position.z += .030;
+    nodes.kneeL.position.z += .120;
+    nodes.ankleL.position.z += .190;
+    nodes.heelL.position.z += .190;
+    nodes.toeL.position.z += .205;
 
-    nodes.hipR.position.z = -.035;
-    nodes.kneeR.position.z = -.100;
-    nodes.ankleR.position.z = -.150;
-    nodes.heelR.position.z = -.205;
-    nodes.toeR.position.z = .015;
+    nodes.hipR.position.z -= .025;
+    nodes.kneeR.position.z -= .090;
+    nodes.ankleR.position.z -= .135;
+    nodes.heelR.position.z -= .135;
+    nodes.toeR.position.z -= .115;
 
-    nodes.elbowL.position.z = -.065;
-    nodes.wristL.position.z = -.125;
-    nodes.handL.position.z = -.145;
-    nodes.fingerL.position.z = -.160;
-
-    nodes.elbowR.position.z = .070;
-    nodes.wristR.position.z = .135;
-    nodes.handR.position.z = .155;
-    nodes.fingerR.position.z = .170;
+    nodes.elbowL.position.z -= .055;
+    nodes.wristL.position.z -= .105;
+    nodes.handL.position.z -= .120;
+    nodes.fingerL.position.z -= .130;
+    nodes.elbowR.position.z += .055;
+    nodes.wristR.position.z += .105;
+    nodes.handR.position.z += .120;
+    nodes.fingerR.position.z += .130;
   }
 
   syncBones();
