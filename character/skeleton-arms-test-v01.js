@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js?v=20260812-1924';
+import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js?v=20260812-1933';
 
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
