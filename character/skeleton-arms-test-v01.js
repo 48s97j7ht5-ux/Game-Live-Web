@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js?v=20260812-1835';
+import { createSkeletonMechanicsV1 } from './skeleton-mechanics-contract-v01.js?v=20260812-1924';
 
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
@@ -31,7 +31,7 @@ const outputs={};for(const k of Object.keys(fields))outputs[k]=document.getEleme
 const status=document.getElementById('mechanicsStatus');
 function read(){return Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,+v.value]));}
 function show(v){for(const k of Object.keys(outputs))outputs[k].textContent=`${v[k]}°`;}
-function apply(){const v=read();mechanics.reset();const out=mechanics.setArmPose('L',v);syncDebug();show(out);const m=api.getRestMetrics();status.textContent=`OK · SC→AC→scapula→GH · upper ${(m.segments.upperarm_L*1000).toFixed(0)} mm`;}
+function apply(){const v=read();mechanics.reset();const out=mechanics.setArmPose('L',v);syncDebug();show(out);const m=api.getRestMetrics();status.textContent=`OK · scapula contact-slide · SC→AC→ST→GH · upper ${(m.segments.upperarm_L*1000).toFixed(0)} mm`;}
 for(const f of Object.values(fields))f.addEventListener('input',()=>{try{apply();}catch(e){status.textContent=`ERROR · ${e.message}`;console.error(e);}});
 document.getElementById('resetMechanics').addEventListener('click',()=>{for(const f of Object.values(fields))f.value='0';apply();});
 apply();
