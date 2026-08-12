@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Mechanics v1 for Skeleton Contract v1. */
-export const MECHANICS_VERSION='1.5.1';
+export const MECHANICS_VERSION='1.5.2';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const LIMITS=Object.freeze({
@@ -15,6 +15,7 @@ const LIMITS=Object.freeze({
  head:{flexion:[-20,25],rotation:[-8,8]}
 });
 const clamp=(v,[a,b])=>Math.max(a,Math.min(b,Number(v)||0)),rad=THREE.MathUtils.degToRad;
+const smooth01=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
 const LUMBAR=['spine_L5','spine_L4','spine_L3','spine_L2','spine_L1'];
 const THORACIC=['spine_T12','spine_T11','spine_T10','spine_T9','spine_T8','spine_T7','spine_T6','spine_T5','spine_T4','spine_T3','spine_T2','spine_T1'];
 const CERVICAL=['neck_C7','neck_C6','neck_C5','neck_C4','neck_C3','neck_C2'];
@@ -38,15 +39,20 @@ function placeScapulaOnThorax(scap,side,upwardDeg,flexShare){
  const sign=side==='L'?-1:1;
  const pivot=scapulaContactPivot(scap,side);
  const rest=scap.userData.contactRestPosition;
- const posteriorTilt=upwardDeg*(.16+.08*flexShare);
- const externalRotation=upwardDeg*(.06+.03*flexShare);
- // Most of the shoulder-girdle elevation is now true scapular upward rotation,
- // not clavicular elevation. This keeps the GH centre away from the neck.
- const localUpward=upwardDeg*.80;
+ const abdShare=1-flexShare;
+ // Flexion needs more posterior tilt/external rotation; abduction is dominated by upward rotation.
+ const posteriorTilt=upwardDeg*(.22*flexShare+.14*abdShare);
+ const externalRotation=upwardDeg*(.11*flexShare+.065*abdShare);
+ const localUpward=upwardDeg*(.96+.03*abdShare);
  scap.rotation.set(rad(-posteriorTilt),rad(sign*externalRotation),rad(sign*localUpward));
- // Rotate around the blade's thoracic contact centre, then allow only a small slide.
+ // Rotate around the blade's thoracic contact centre. Translation stays deliberately tiny:
+ // the blade glides over the rib cage instead of leaving it.
  const rotatedPivot=pivot.clone().applyQuaternion(scap.quaternion);
- const slide=new THREE.Vector3(sign*upwardDeg*.00004,upwardDeg*.00008,-upwardDeg*flexShare*.000025);
+ const slide=new THREE.Vector3(
+  sign*upwardDeg*(.000025+.000020*abdShare),
+  upwardDeg*(.000045+.000020*abdShare),
+  -upwardDeg*(.000020+.000020*flexShare)
+ );
  scap.position.copy(rest).add(pivot).add(slide).sub(rotatedPivot);
 }
 
@@ -67,12 +73,16 @@ export class SkeletonMechanicsV1{
   const sign=side==='L'?-1:1;
   const activeFlex=Math.max(0,p.shoulderFlexion),activeAbd=Math.max(0,p.shoulderAbduction);
   const elevation=Math.min(180,Math.hypot(activeFlex,activeAbd));
-  // Scapular contribution grows after the setting phase but is capped conservatively.
-  const scapUp=Math.min(52,Math.max(0,elevation-30)*.35);
-  const ghScale=elevation>.001?(elevation-scapUp)/elevation:1;
-  // Keep clavicular elevation small; most upward rotation belongs to the scapula itself.
-  const clavicleUp=scapUp*.10,acUp=scapUp*.10;
   const flexShare=elevation>.001?activeFlex/elevation:0;
+  const abdShare=1-flexShare;
+  // Smooth scapular rhythm: little motion in the setting phase, then a continuous S-curve.
+  // Abduction receives slightly more upward rotation than pure flexion.
+  const scapMax=50*flexShare+55*abdShare;
+  const scapProgress=smooth01((elevation-25)/155);
+  const scapUp=scapMax*scapProgress;
+  const ghScale=elevation>.001?(elevation-scapUp)/elevation:1;
+  // SC/AC stay small; they guide the girdle rather than lifting the whole shoulder toward the ear.
+  const clavicleUp=scapUp*(.075+.015*abdShare),acUp=scapUp*(.075+.020*abdShare);
   sc.rotation.set(0,0,rad(sign*clavicleUp));
   ac.rotation.set(0,0,rad(sign*acUp));
   placeScapulaOnThorax(scap,side,scapUp,flexShare);
