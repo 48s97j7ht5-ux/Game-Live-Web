@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Mechanics v1 for Skeleton Contract v1. */
-export const MECHANICS_VERSION='1.3.0';
+export const MECHANICS_VERSION='1.4.0';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const LIMITS=Object.freeze({
@@ -22,10 +22,6 @@ const W_LUMBAR_FLEX=[.18,.20,.22,.21,.19],W_LUMBAR_SIDE=[.16,.19,.22,.22,.21],W_
 const W_THOR_FLEX=[.12,.12,.11,.10,.09,.08,.08,.07,.07,.06,.05,.05],W_THOR_SIDE=[.10,.10,.10,.09,.09,.09,.08,.08,.08,.07,.06,.06],W_THOR_ROT=[.07,.08,.09,.10,.10,.10,.10,.09,.08,.07,.06,.06];
 const W_CERV_FLEX=[.12,.16,.21,.22,.18,.11],W_CERV_SIDE=[.13,.17,.20,.20,.17,.13],W_CERV_ROT=[.05,.05,.06,.06,.06,.07];
 
-function applyDistributed(api,names,weights,xDeg=0,yDeg=0,zDeg=0){
- for(let i=0;i<names.length;i++){const j=api.getJoint(names[i]);if(!j)throw new Error(`missing spine joint ${names[i]}`);j.rotation.set(rad(xDeg*weights[i]),rad(yDeg*weights[i]),rad(zDeg*weights[i]));}
-}
-
 export class SkeletonMechanicsV1{
  constructor(api){
   if(!api||api.contractVersion!==REQUIRED_CONTRACT_VERSION)throw new Error(`Mechanics v1 requires skeleton contract ${REQUIRED_CONTRACT_VERSION}`);
@@ -37,19 +33,34 @@ export class SkeletonMechanicsV1{
  setLegPose(side,values={}){if(side!=='L'&&side!=='R')throw new Error('side must be L or R');const p=this.legs[side];p.hipFlexion=clamp(values.hipFlexion??p.hipFlexion,LIMITS.hip.flexion);p.hipAbduction=clamp(values.hipAbduction??p.hipAbduction,LIMITS.hip.abduction);p.hipRotation=clamp(values.hipRotation??p.hipRotation,LIMITS.hip.rotation);p.kneeFlexion=clamp(values.kneeFlexion??p.kneeFlexion,LIMITS.knee.flexion);p.ankleFlexion=clamp(values.ankleFlexion??p.ankleFlexion,LIMITS.ankle.flexion);p.ankleInversion=clamp(values.ankleInversion??p.ankleInversion,LIMITS.ankle.inversion);this._applyLeg(side,p);return {...p}}
  _applyLeg(side,p){const hip=this.api.getJoint(`hip_${side}`),knee=this.api.getJoint(`knee_${side}`),ankle=this.api.getJoint(`ankle_${side}`);if(!hip||!knee||!ankle)throw new Error(`missing leg joints ${side}`);hip.rotation.set(rad(-p.hipFlexion),rad(p.hipRotation),rad(side==='L'?p.hipAbduction:-p.hipAbduction));knee.rotation.set(rad(p.kneeFlexion),0,0);ankle.rotation.set(rad(-p.ankleFlexion),0,rad(side==='L'?p.ankleInversion:-p.ankleInversion));this.api.jointRoot.updateMatrixWorld(true)}
  setArmPose(side,values={}){if(side!=='L'&&side!=='R')throw new Error('side must be L or R');const p=this.arms[side];p.shoulderFlexion=clamp(values.shoulderFlexion??p.shoulderFlexion,LIMITS.shoulder.flexion);p.shoulderAbduction=clamp(values.shoulderAbduction??p.shoulderAbduction,LIMITS.shoulder.abduction);p.shoulderRotation=clamp(values.shoulderRotation??p.shoulderRotation,LIMITS.shoulder.rotation);p.elbowFlexion=clamp(values.elbowFlexion??p.elbowFlexion,LIMITS.elbow.flexion);p.wristFlexion=clamp(values.wristFlexion??p.wristFlexion,LIMITS.wrist.flexion);p.wristDeviation=clamp(values.wristDeviation??p.wristDeviation,LIMITS.wrist.deviation);this._applyArm(side,p);return {...p}}
- _applyArm(side,p){const shoulder=this.api.getJoint(`shoulder_${side}`),elbow=this.api.getJoint(`elbow_${side}`),wrist=this.api.getJoint(`wrist_${side}`);if(!shoulder||!elbow||!wrist)throw new Error(`missing arm joints ${side}`);shoulder.rotation.set(rad(-p.shoulderFlexion),rad(p.shoulderRotation),rad(side==='L'?-p.shoulderAbduction:p.shoulderAbduction));elbow.rotation.set(rad(-p.elbowFlexion),0,0);wrist.rotation.set(rad(-p.wristFlexion),0,rad(side==='L'?-p.wristDeviation:p.wristDeviation));this.api.jointRoot.updateMatrixWorld(true)}
+ _applyArm(side,p){
+  const sc=this.api.getJoint(`sc_${side}`),ac=this.api.getJoint(`ac_${side}`),scap=this.api.getJoint(`scapula_${side}`),shoulder=this.api.getJoint(`shoulder_${side}`),elbow=this.api.getJoint(`elbow_${side}`),wrist=this.api.getJoint(`wrist_${side}`);
+  if(!sc||!ac||!scap||!shoulder||!elbow||!wrist)throw new Error(`missing shoulder-complex joints ${side}`);
+  const sign=side==='L'?-1:1;
+  const activeFlex=Math.max(0,p.shoulderFlexion),activeAbd=Math.max(0,p.shoulderAbduction);
+  const elevation=Math.min(180,Math.hypot(activeFlex,activeAbd));
+  // Scapular setting phase first, then a progressive scapulothoracic contribution.
+  // This approaches the classic ~2:1 GH:scapular rhythm without pretending it is constant.
+  const scapUp=Math.min(58,Math.max(0,elevation-30)*.37);
+  const ghScale=elevation>.001?(elevation-scapUp)/elevation:1;
+  const clavicleUp=scapUp*.25,acUp=scapUp*.35,stUp=scapUp*.40;
+  const flexShare=elevation>.001?activeFlex/elevation:0;
+  sc.rotation.set(0,0,rad(sign*clavicleUp));
+  ac.rotation.set(0,0,rad(sign*acUp));
+  // Scapulothoracic pseudo-joint: upward rotation plus modest posterior tilt/external rotation.
+  scap.rotation.set(rad(-scapUp*.16*flexShare),rad(sign*scapUp*.10*flexShare),rad(sign*stUp));
+  shoulder.rotation.set(rad(-p.shoulderFlexion*ghScale),rad(p.shoulderRotation),rad(sign*p.shoulderAbduction*ghScale));
+  elbow.rotation.set(rad(-p.elbowFlexion),0,0);
+  wrist.rotation.set(rad(-p.wristFlexion),0,rad(side==='L'?-p.wristDeviation:p.wristDeviation));
+  this.api.jointRoot.updateMatrixWorld(true);
+ }
  setTorsoPose(values={}){const p=this.torso;for(const [k,lim] of [['lumbarFlexion',LIMITS.lumbar.flexion],['lumbarSide',LIMITS.lumbar.side],['lumbarRotation',LIMITS.lumbar.rotation],['thoracicFlexion',LIMITS.thoracic.flexion],['thoracicSide',LIMITS.thoracic.side],['thoracicRotation',LIMITS.thoracic.rotation],['neckFlexion',LIMITS.cervical.flexion],['neckSide',LIMITS.cervical.side],['neckRotation',LIMITS.cervical.rotation],['headFlexion',LIMITS.head.flexion],['headRotation',LIMITS.head.rotation]])p[k]=clamp(values[k]??p[k],lim);this._applyTorso(p);return {...p}}
  _applyTorso(p){
-  // Lumbar: distributed mainly in flexion/side-bend; axial rotation intentionally small.
   for(let i=0;i<LUMBAR.length;i++){const j=this.api.getJoint(LUMBAR[i]);if(!j)throw new Error(`missing spine joint ${LUMBAR[i]}`);j.rotation.set(rad(-p.lumbarFlexion*W_LUMBAR_FLEX[i]),rad(p.lumbarRotation*W_LUMBAR_ROT[i]),rad(-p.lumbarSide*W_LUMBAR_SIDE[i]));}
-  // Thorax: twelve small contributions create a curve instead of one hinge.
   for(let i=0;i<THORACIC.length;i++){const j=this.api.getJoint(THORACIC[i]);if(!j)throw new Error(`missing spine joint ${THORACIC[i]}`);j.rotation.set(rad(-p.thoracicFlexion*W_THOR_FLEX[i]),rad(p.thoracicRotation*W_THOR_ROT[i]),rad(-p.thoracicSide*W_THOR_SIDE[i]));}
-  // Subaxial neck C7-C2: flexion and side-bending distributed here; only ~35% of requested axial rotation.
   for(let i=0;i<CERVICAL.length;i++){const j=this.api.getJoint(CERVICAL[i]);if(!j)throw new Error(`missing spine joint ${CERVICAL[i]}`);j.rotation.set(rad(-p.neckFlexion*W_CERV_FLEX[i]),rad(p.neckRotation*W_CERV_ROT[i]),rad(-p.neckSide*W_CERV_SIDE[i]));}
-  // Atlanto-axial C1-C2 supplies the dominant share of neck axial rotation.
   const c1=this.api.getJoint('neck_C1'),head=this.api.getJoint('head');if(!c1||!head)throw new Error('missing upper cervical/head joints');
   c1.rotation.set(rad(-p.neckFlexion*.04),rad(p.neckRotation*.65),rad(-p.neckSide*.04));
-  // Atlanto-occipital joint: primarily nodding; only minimal axial rotation.
   head.rotation.set(rad(-p.headFlexion),rad(p.headRotation),0);
   this.api.jointRoot.updateMatrixWorld(true);
  }
