@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Mechanics v1 for Skeleton Contract v1. */
-export const MECHANICS_VERSION='1.4.0';
+export const MECHANICS_VERSION='1.5.0';
 export const REQUIRED_CONTRACT_VERSION=1;
 
 const LIMITS=Object.freeze({
@@ -22,6 +22,33 @@ const W_LUMBAR_FLEX=[.18,.20,.22,.21,.19],W_LUMBAR_SIDE=[.16,.19,.22,.22,.21],W_
 const W_THOR_FLEX=[.12,.12,.11,.10,.09,.08,.08,.07,.07,.06,.05,.05],W_THOR_SIDE=[.10,.10,.10,.09,.09,.09,.08,.08,.08,.07,.06,.06],W_THOR_ROT=[.07,.08,.09,.10,.10,.10,.10,.09,.08,.07,.06,.06];
 const W_CERV_FLEX=[.12,.16,.21,.22,.18,.11],W_CERV_SIDE=[.13,.17,.20,.20,.17,.13],W_CERV_ROT=[.05,.05,.06,.06,.06,.07];
 
+function scapulaContactPivot(scap,side){
+ if(scap.userData.contactPivot)return scap.userData.contactPivot;
+ const names=[`scMed${side}`,`scInf${side}`,`scAc${side}`,`scGlen${side}`];
+ const pts=names.map(n=>scap.getObjectByName(n)).filter(Boolean);
+ const pivot=new THREE.Vector3();
+ if(pts.length){for(const p of pts)pivot.add(p.position);pivot.multiplyScalar(1/pts.length)}
+ else pivot.set(side==='L'?.055:-.055,-.055,-.055);
+ scap.userData.contactPivot=pivot.clone();
+ scap.userData.contactRestPosition=scap.position.clone();
+ return scap.userData.contactPivot;
+}
+
+function placeScapulaOnThorax(scap,side,upwardDeg,flexShare){
+ const sign=side==='L'?-1:1;
+ const pivot=scapulaContactPivot(scap,side);
+ const rest=scap.userData.contactRestPosition;
+ const posteriorTilt=upwardDeg*(.20+.10*flexShare);
+ const externalRotation=upwardDeg*(.08+.04*flexShare);
+ const localUpward=upwardDeg*.40;
+ scap.rotation.set(rad(-posteriorTilt),rad(sign*externalRotation),rad(sign*localUpward));
+ // Keep the anatomical contact centre on the thoracic wall while the blade rotates.
+ // r = r0 + pivot + slide - R*pivot rotates around the contact centre instead of AC.
+ const rotatedPivot=pivot.clone().applyQuaternion(scap.quaternion);
+ const slide=new THREE.Vector3(sign*upwardDeg*.00010,upwardDeg*.00028,-upwardDeg*flexShare*.00005);
+ scap.position.copy(rest).add(pivot).add(slide).sub(rotatedPivot);
+}
+
 export class SkeletonMechanicsV1{
  constructor(api){
   if(!api||api.contractVersion!==REQUIRED_CONTRACT_VERSION)throw new Error(`Mechanics v1 requires skeleton contract ${REQUIRED_CONTRACT_VERSION}`);
@@ -39,16 +66,14 @@ export class SkeletonMechanicsV1{
   const sign=side==='L'?-1:1;
   const activeFlex=Math.max(0,p.shoulderFlexion),activeAbd=Math.max(0,p.shoulderAbduction);
   const elevation=Math.min(180,Math.hypot(activeFlex,activeAbd));
-  // Scapular setting phase first, then a progressive scapulothoracic contribution.
-  // This approaches the classic ~2:1 GH:scapular rhythm without pretending it is constant.
+  // Setting phase first, then progressive scapulothoracic contribution.
   const scapUp=Math.min(58,Math.max(0,elevation-30)*.37);
   const ghScale=elevation>.001?(elevation-scapUp)/elevation:1;
-  const clavicleUp=scapUp*.25,acUp=scapUp*.35,stUp=scapUp*.40;
+  const clavicleUp=scapUp*.25,acUp=scapUp*.35;
   const flexShare=elevation>.001?activeFlex/elevation:0;
   sc.rotation.set(0,0,rad(sign*clavicleUp));
   ac.rotation.set(0,0,rad(sign*acUp));
-  // Scapulothoracic pseudo-joint: upward rotation plus modest posterior tilt/external rotation.
-  scap.rotation.set(rad(-scapUp*.16*flexShare),rad(sign*scapUp*.10*flexShare),rad(sign*stUp));
+  placeScapulaOnThorax(scap,side,scapUp,flexShare);
   shoulder.rotation.set(rad(-p.shoulderFlexion*ghScale),rad(p.shoulderRotation),rad(sign*p.shoulderAbduction*ghScale));
   elbow.rotation.set(rad(-p.elbowFlexion),0,0);
   wrist.rotation.set(rad(-p.wristFlexion),0,rad(side==='L'?-p.wristDeviation:p.wristDeviation));
@@ -64,7 +89,7 @@ export class SkeletonMechanicsV1{
   head.rotation.set(rad(-p.headFlexion),rad(p.headRotation),0);
   this.api.jointRoot.updateMatrixWorld(true);
  }
- reset(){this.api.resetPose();for(const s of ['L','R']){for(const k of Object.keys(this.legs[s]))this.legs[s][k]=0;for(const k of Object.keys(this.arms[s]))this.arms[s][k]=0}for(const k of Object.keys(this.torso))this.torso[k]=0}
+ reset(){this.api.resetPose();for(const s of ['L','R']){for(const k of Object.keys(this.legs[s]))this.legs[s][k]=0;for(const k of Object.keys(this.arms[s]))this.arms[s][k]=0;const scap=this.api.getJoint(`scapula_${s}`);if(scap?.userData.contactRestPosition)scap.position.copy(scap.userData.contactRestPosition)}for(const k of Object.keys(this.torso))this.torso[k]=0;this.api.jointRoot.updateMatrixWorld(true)}
  getJointWorld(name){const j=this.api.getJoint(name);if(!j)throw new Error(`unknown joint ${name}`);return j.getWorldPosition(new THREE.Vector3())}
 }
 export function createSkeletonMechanicsV1(api){return new SkeletonMechanicsV1(api)}
