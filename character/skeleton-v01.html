@@ -5,38 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0d12" />
   <title>Character Engine — Skeleton v0.1</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0b0d12; color: #eef2ff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    #app { position: fixed; inset: 0; }
-    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    .hud {
-      position: fixed; z-index: 5; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); top: max(12px, env(safe-area-inset-top));
-      display: flex; justify-content: space-between; gap: 10px; pointer-events: none;
-    }
-    .panel { pointer-events: auto; background: rgba(10,12,18,.78); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 28px rgba(0,0,0,.28); }
-    .title { font-size: 13px; font-weight: 700; letter-spacing: .02em; }
-    .sub { margin-top: 3px; font-size: 11px; line-height: 1.35; color: #aab1c5; }
-    .buttons { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-    button { appearance: none; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07); color: #eef2ff; padding: 7px 9px; border-radius: 9px; font-size: 12px; font-weight: 600; }
-    button:active { transform: scale(.98); background: rgba(255,255,255,.14); }
-    .legend { position: fixed; z-index: 5; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); font-size: 11px; color: #aab1c5; pointer-events: none; }
-    .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin:0 4px 0 8px; vertical-align:1px; }
-    .dot:first-child { margin-left:0; }
-    @media (max-width: 640px) {
-      .hud { align-items: flex-start; }
-      .panel.info { max-width: 48vw; }
-      .buttons { max-width: 48vw; }
-      button { padding: 7px 8px; }
-    }
-  </style>
+  <link rel="stylesheet" href="./skeleton-v01.css" />
 </head>
 <body>
   <div id="app"></div>
+
   <div class="hud">
     <div class="panel info">
       <div class="title">Skeleton v0.1</div>
-      <div class="sub">Цилиндры — кости · сферы — суставы/концы<br>Пальцем: вращение · двумя: масштаб</div>
+      <div class="sub">Параметрический взрослый скелет<br>Пальцем: вращение · двумя: масштаб</div>
     </div>
     <div class="panel buttons">
       <button data-pose="neutral">Стойка</button>
@@ -44,6 +21,7 @@
       <button data-pose="step">Шаг</button>
     </div>
   </div>
+
   <div class="panel legend">
     <span class="dot" style="background:#d7dbe7"></span>кость
     <span class="dot" style="background:#f0a65b"></span>сустав
@@ -58,199 +36,6 @@
     }
   }
   </script>
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-    const container = document.getElementById('app');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0d12);
-
-    const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.01, 100);
-    camera.position.set(3.2, 1.8, 5.8);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-    controls.target.set(0, 1.05, 0);
-    controls.minDistance = 2.2;
-    controls.maxDistance = 9;
-    controls.enablePan = false;
-
-    scene.add(new THREE.HemisphereLight(0xdde8ff, 0x1d2330, 2.2));
-    const key = new THREE.DirectionalLight(0xffffff, 2.2);
-    key.position.set(4, 6, 5);
-    scene.add(key);
-
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(2.25, 64),
-      new THREE.MeshStandardMaterial({ color: 0x151923, roughness: 1, metalness: 0 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
-    scene.add(ground);
-
-    const grid = new THREE.GridHelper(4, 20, 0x2a3140, 0x1a202b);
-    grid.position.y = 0.002;
-    scene.add(grid);
-
-    const skeletonRoot = new THREE.Group();
-    scene.add(skeletonRoot);
-
-    const MAT_BONE = new THREE.MeshStandardMaterial({ color: 0xd7dbe7, roughness: .68, metalness: .05 });
-    const MAT_JOINT = new THREE.MeshStandardMaterial({ color: 0xf0a65b, roughness: .58, metalness: .03 });
-    const MAT_END = new THREE.MeshStandardMaterial({ color: 0x7cc7ff, roughness: .52, metalness: .04 });
-    const MAT_CORE = new THREE.MeshStandardMaterial({ color: 0xb8a8ff, roughness: .58, metalness: .03 });
-
-    const nodes = {};
-    const bones = [];
-
-    function sphere(name, p, radius = .055, material = MAT_JOINT) {
-      const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 18, 12), material);
-      mesh.position.copy(p);
-      mesh.name = name;
-      skeletonRoot.add(mesh);
-      nodes[name] = mesh;
-      return mesh;
-    }
-
-    function cylinder(name, aName, bName, radius = .027, material = MAT_BONE) {
-      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 1, 12, 1, false), material);
-      mesh.name = name;
-      skeletonRoot.add(mesh);
-      bones.push({ mesh, aName, bName });
-      return mesh;
-    }
-
-    function updateBone(b) {
-      const a = nodes[b.aName].position;
-      const c = nodes[b.bName].position;
-      const mid = a.clone().add(c).multiplyScalar(.5);
-      const len = a.distanceTo(c);
-      b.mesh.position.copy(mid);
-      b.mesh.scale.set(1, len, 1);
-      b.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), c.clone().sub(a).normalize());
-    }
-
-    // ---- Anatomical landmarks (metres, approximate rig proportions) ----
-    const P = {
-      pelvis: [0, 1.03, 0],
-      sacrum: [0, 1.11, 0],
-      lumbar1: [0, 1.23, 0],
-      lumbar2: [0, 1.34, 0],
-      thoracic1: [0, 1.46, 0],
-      thoracic2: [0, 1.58, 0],
-      neckBase: [0, 1.69, 0],
-      neckTop: [0, 1.78, 0],
-      head: [0, 1.90, 0],
-      crown: [0, 2.02, 0],
-
-      hipL: [-.13, 1.02, 0], hipR: [.13, 1.02, 0],
-      kneeL: [-.14, .60, .015], kneeR: [.14, .60, .015],
-      ankleL: [-.14, .16, 0], ankleR: [.14, .16, 0],
-      heelL: [-.14, .08, -.035], heelR: [.14, .08, -.035],
-      toeL: [-.14, .065, .19], toeR: [.14, .065, .19],
-
-      clavicleL: [-.10, 1.65, 0], clavicleR: [.10, 1.65, 0],
-      shoulderL: [-.27, 1.62, 0], shoulderR: [.27, 1.62, 0],
-      elbowL: [-.55, 1.35, .01], elbowR: [.55, 1.35, .01],
-      wristL: [-.67, 1.10, .02], wristR: [.67, 1.10, .02],
-      handL: [-.69, .99, .04], handR: [.69, .99, .04],
-      fingerL: [-.70, .91, .055], fingerR: [.70, .91, .055]
-    };
-
-    for (const [name, v] of Object.entries(P)) {
-      const end = /crown|toe|heel|finger/.test(name);
-      const core = /pelvis|sacrum|lumbar|thoracic|neckBase|neckTop|head/.test(name);
-      sphere(name, new THREE.Vector3(...v), name === 'head' ? .105 : (name === 'pelvis' ? .075 : .052), end ? MAT_END : (core ? MAT_CORE : MAT_JOINT));
-    }
-
-    // spine
-    [['pelvis','sacrum'],['sacrum','lumbar1'],['lumbar1','lumbar2'],['lumbar2','thoracic1'],['thoracic1','thoracic2'],['thoracic2','neckBase'],['neckBase','neckTop'],['neckTop','head'],['head','crown']]
-      .forEach((x,i)=>cylinder('spine'+i, x[0], x[1], i < 6 ? .029 : .023));
-
-    // pelvis bridge
-    cylinder('pelvisL','pelvis','hipL',.032); cylinder('pelvisR','pelvis','hipR',.032);
-
-    // legs
-    for (const s of ['L','R']) {
-      cylinder('femur'+s,'hip'+s,'knee'+s,.034);
-      cylinder('tibia'+s,'knee'+s,'ankle'+s,.029);
-      cylinder('rearFoot'+s,'ankle'+s,'heel'+s,.025);
-      cylinder('foot'+s,'ankle'+s,'toe'+s,.030);
-    }
-
-    // shoulder girdle + arms
-    cylinder('clavicleCenterL','neckBase','clavicleL',.022);
-    cylinder('clavicleCenterR','neckBase','clavicleR',.022);
-    for (const s of ['L','R']) {
-      cylinder('clavicle'+s,'clavicle'+s,'shoulder'+s,.025);
-      cylinder('humerus'+s,'shoulder'+s,'elbow'+s,.029);
-      cylinder('forearm'+s,'elbow'+s,'wrist'+s,.024);
-      cylinder('palm'+s,'wrist'+s,'hand'+s,.027);
-      cylinder('handEnd'+s,'hand'+s,'finger'+s,.019);
-    }
-
-    function syncBones(){ bones.forEach(updateBone); }
-
-    const base = {};
-    for (const [name, mesh] of Object.entries(nodes)) base[name] = mesh.position.clone();
-
-    function resetPose() {
-      for (const [name, v] of Object.entries(base)) nodes[name].position.copy(v);
-    }
-
-    function pose(name) {
-      resetPose();
-      if (name === 'relaxed') {
-        nodes.pelvis.position.x = .025;
-        nodes.sacrum.position.x = .015;
-        nodes.lumbar1.position.x = .005;
-        nodes.shoulderL.position.y -= .025;
-        nodes.elbowL.position.set(-.49,1.31,.08);
-        nodes.wristL.position.set(-.56,1.08,.10);
-        nodes.handL.position.set(-.57,.98,.11);
-        nodes.fingerL.position.set(-.575,.90,.12);
-        nodes.elbowR.position.set(.50,1.34,-.05);
-        nodes.wristR.position.set(.59,1.11,-.08);
-        nodes.handR.position.set(.60,1.01,-.09);
-        nodes.fingerR.position.set(.61,.93,-.10);
-        nodes.kneeL.position.x -= .015;
-        nodes.ankleL.position.x -= .025;
-        nodes.kneeR.position.x += .012;
-      }
-      if (name === 'step') {
-        nodes.pelvis.position.set(.02,1.04,.01);
-        nodes.hipL.position.z = .04; nodes.kneeL.position.set(-.13,.64,.16); nodes.ankleL.position.set(-.13,.17,.23); nodes.heelL.position.set(-.13,.08,.17); nodes.toeL.position.set(-.13,.07,.39);
-        nodes.hipR.position.z = -.035; nodes.kneeR.position.set(.14,.58,-.12); nodes.ankleR.position.set(.14,.16,-.18); nodes.heelR.position.set(.14,.08,-.22); nodes.toeR.position.set(.14,.065,.02);
-        nodes.elbowL.position.set(-.51,1.37,-.08); nodes.wristL.position.set(-.58,1.15,-.16); nodes.handL.position.set(-.59,1.05,-.19); nodes.fingerL.position.set(-.60,.97,-.21);
-        nodes.elbowR.position.set(.51,1.34,.10); nodes.wristR.position.set(.58,1.12,.19); nodes.handR.position.set(.59,1.02,.22); nodes.fingerR.position.set(.60,.94,.24);
-      }
-      syncBones();
-    }
-
-    document.querySelectorAll('[data-pose]').forEach(btn => btn.addEventListener('click', () => pose(btn.dataset.pose)));
-
-    syncBones();
-
-    function resize() {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-      renderer.setSize(innerWidth, innerHeight);
-    }
-    addEventListener('resize', resize, { passive: true });
-
-    renderer.setAnimationLoop(() => {
-      controls.update();
-      renderer.render(scene, camera);
-    });
-  </script>
+  <script type="module" src="./skeleton-v01.js"></script>
 </body>
 </html>
