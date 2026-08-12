@@ -1,4 +1,9 @@
-const baseUrl=new URL('./skeleton-v09.js',import.meta.url);let src=await(await fetch(baseUrl)).text();
+const moduleBase=new URL('./skeleton-v09.js',location.href).href;
+const baseUrl=new URL('./skeleton-v09.js',location.href);let src=await(await fetch(baseUrl)).text();
+// skeleton-v09 is itself a source-transform wrapper. When evaluated from a Blob,
+// its import.meta.url would be blob:, so relative URLs inside it would fail.
+// Pin those resolutions to the real GitHub Pages module URL before evaluation.
+src=src.replaceAll('import.meta.url',JSON.stringify(moduleBase));
 // Final rig baseline: keep researched long-bone lengths, correct structural relationships
 // that matter for the body envelope: hip axis, femoral shaft, knee, fibula, forearm, foot.
 src=src.replaceAll('Диагностика v0.9','Диагностика v1.0');
