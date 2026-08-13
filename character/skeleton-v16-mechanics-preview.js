@@ -1,4 +1,5 @@
 import {createSkeletonMechanicsV23} from './skeleton-mechanics-v23.js?v=20260813-arm-solver';
+import {createBodyVolumeV1} from './character-body-volume-v1.js?v=20260813-body-volume-v1';
 
 let capturedScene=null;
 const THREE=await import('three');
@@ -8,6 +9,8 @@ const mod=await import('./skeleton-v16.js?v=20260813-arm-solver');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
 const mechanics=createSkeletonMechanicsV23(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
+const bodyVolume=createBodyVolumeV1(api,{opacity:.42});window.bodyVolume=bodyVolume;
+const title=document.querySelector('.info .title'),subtitle=document.querySelector('.info .sub');if(title)title.textContent='Body Volume v1';if(subtitle)subtitle.innerHTML='чистый анатомический объём · обычный взрослый<br>Skeleton 1.6 · Mechanics 2.3';
 
 const definitions={
  arm:[
@@ -46,11 +49,18 @@ function apply(group){
 }
 function loadSide(){const state=mechanics.getState();sync('arm',state.arms[sideEl.value]);sync('leg',state.legs[sideEl.value])}
 sideEl.addEventListener('change',loadSide);
+const bodyToggle=document.getElementById('toggleBodyVolume'),skeletonToggle=document.getElementById('toggleSkeletonLayer'),bodyOpacity=document.getElementById('bodyOpacity');
+let bodyVisible=true,skeletonVisible=true;
+function syncLayerButtons(){bodyToggle?.classList.toggle('active',bodyVisible);skeletonToggle?.classList.toggle('active',skeletonVisible)}
+if(bodyToggle)bodyToggle.onclick=()=>{bodyVisible=!bodyVisible;bodyVolume.setVisible(bodyVisible);syncLayerButtons()};
+if(skeletonToggle)skeletonToggle.onclick=()=>{skeletonVisible=!skeletonVisible;bodyVolume.setSkeletonVisible(skeletonVisible);syncLayerButtons()};
+if(bodyOpacity)bodyOpacity.addEventListener('input',()=>bodyVolume.setOpacity(Number(bodyOpacity.value)));
+syncLayerButtons();
 document.getElementById('resetMechanics').onclick=()=>{mechanics.reset();for(const f of Object.values(fields)){f.input.value='0';f.out.textContent=f.key==='protrusion'||f.key==='lateral'?'0 мм':'0°'}status.textContent='нейтральная поза'};
 document.getElementById('groundMechanics').onclick=()=>{mechanics.groundToFloor();status.textContent='стопы опущены к полу'};
 const mechanicsPanel=document.getElementById('mechanicsPanel'),panelToggle=document.getElementById('toggleMechanicsPanel');
 function setPanelCompact(compact){mechanicsPanel.classList.toggle('compact',compact);panelToggle.textContent=compact?'Развернуть':'Свернуть'}
 panelToggle.onclick=()=>setPanelCompact(!mechanicsPanel.classList.contains('compact'));
 if(matchMedia('(max-width:900px)').matches)setPanelCompact(true);
-const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.3 coordinated arm</span></div><div class="row"><span>Shoulder</span><span>swing + axial twist</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
+const bodyDiagnostics=bodyVolume.getDiagnostics(),metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.3 coordinated arm</span></div><div class="row"><span>Body volume</span><span>v1 · ${bodyDiagnostics.partCount} analytic parts</span></div><div class="row"><span>Scapula cover</span><span>mobile soft-tissue pads</span></div><div class="row"><span>Shoulder</span><span>swing + axial twist</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';
