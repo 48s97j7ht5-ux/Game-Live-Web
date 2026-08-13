@@ -82,10 +82,10 @@ function buildShoulderGirdle(side){
  // Anatomical scapula: superior angle (T2), root of the spine (T3), inferior angle (T7),
  // glenoid, acromion and coracoid are separate landmarks. The old four-point kite
  // conflated the superior angle with the medial border and placed the inferior angle at T8.
- const scapMedX=sx-.006-A.scapulaWidth,scSupY=spineWorld.T2.y+.004;
- const scSup=new THREE.Vector3(g*scapMedX,scSupY,-.116);
- const scMed=new THREE.Vector3(g*(scapMedX+.003),spineWorld.T3.y-.010,-.118);
- const scInf=new THREE.Vector3(g*(scapMedX+.012),scSupY-A.scapulaHeight,-.103);
+ const scapDepthSpan=.060,scapTransverse=Math.sqrt(A.scapulaWidth*A.scapulaWidth-scapDepthSpan*scapDepthSpan),scapMedX=sx-.006-scapTransverse,scSupY=spineWorld.T2.y+.004;
+ const scSup=new THREE.Vector3(g*scapMedX,scSupY,-.078);
+ const scMed=new THREE.Vector3(g*scapMedX,spineWorld.T3.y-.010,-.078);
+ const scInf=new THREE.Vector3(g*(scapMedX+.012),scSupY-A.scapulaHeight,-.070);
  const scAc=acW.clone();
  const scGlen=new THREE.Vector3(g*(sx-.006),sy-.020,-.018);
  const scCor=new THREE.Vector3(g*(sx-.032),sy+.002,.006);
@@ -149,11 +149,21 @@ function getGeometryMetrics(){root.updateMatrixWorld(true);return{
  scapula_width_L:landmarkDistance('scMedL','scGlenL'),
  hand_L:farthestFrom('wrist_L',['thumb_tip_L','finger_L_1_2','finger_L_2_2','finger_L_3_2','finger_L_4_2']),
  foot_L:farthestFrom('heel_L',['tip_L_0','tip_L_1','tip_L_2','tip_L_3','tip_L_4']),
- componentChecks:{sacrum:!!named.get('sacrumMid'),siPair:!!joints.get('si_L')&&!!joints.get('si_R'),costalCartilage:!!named.get('costal_cartilage_r1L'),forearmRotation:!!joints.get('forearm_rotation_L')&&!!joints.get('forearm_rotation_R'),threeCuneiforms:!!named.get('cuneiform_medial_L')&&!!named.get('cuneiform_intermediate_L')&&!!named.get('cuneiform_lateral_L'),mandible:!!joints.get('jaw')}
+ componentChecks:{sacrum:!!named.get('sacrumMid'),siPair:!!joints.get('si_L')&&!!joints.get('si_R'),costalCartilage:!!root.getObjectByName('costal_cartilage_r1L'),forearmRotation:!!joints.get('forearm_rotation_L')&&!!joints.get('forearm_rotation_R'),threeCuneiforms:!!named.get('cuneiform_medial_L')&&!!named.get('cuneiform_intermediate_L')&&!!named.get('cuneiform_lateral_L'),mandible:!!joints.get('jaw')}
 }}
+function validateGeometry(){const m=getGeometryMetrics(),checks={
+ clavicle:Math.abs(m.clavicle_L-A.clavicle)<=.003,
+ cervical:Math.abs(m.cervical_T1_C1-A.neckLength)<=.005,
+ atlasSkull:m.c1_head_gap<=.030,
+ scapulaHeight:Math.abs(m.scapula_height_L-A.scapulaHeight)<=.005,
+ scapulaWidth:Math.abs(m.scapula_width_L-A.scapulaWidth)<=.005,
+ hand:Math.abs(m.hand_L-A.hand)<=.008,
+ foot:Math.abs(m.foot_L-A.foot)<=.005,
+ ...m.componentChecks
+};return{pass:Object.values(checks).every(Boolean),checks,metrics:m}}
 function getRestMetrics(){const segments={};for(const n of Object.keys(SEGMENTS))segments[n]=getSegment(n)?.length??null;return{stature,segments,geometry:getGeometryMetrics()}}
 function rebuildRestPose({stature:newStature=stature}={}){if(Math.abs(newStature-stature)>.000001)throw new Error('Skeleton v1.5: stature rebuild after geometry validation');resetPose();return getRestMetrics()}
-const api=Object.freeze({contractVersion:SKELETON_CONTRACT_VERSION,skeletonVersion:SKELETON_VERSION,jointNames:Object.freeze([...joints.keys()]),segmentNames:Object.freeze(Object.keys(SEGMENTS)),jointRoot:root,getJoint,getSegment,getGeometryMetrics,getRestMetrics,rebuildRestPose,resetPose});root.userData.skeletonAPI=api;scene.userData.skeletonContractVersion=1;scene.userData.skeletonVersion=SKELETON_VERSION;
+const api=Object.freeze({contractVersion:SKELETON_CONTRACT_VERSION,skeletonVersion:SKELETON_VERSION,jointNames:Object.freeze([...joints.keys()]),segmentNames:Object.freeze(Object.keys(SEGMENTS)),jointRoot:root,getJoint,getSegment,getGeometryMetrics,validateGeometry,getRestMetrics,rebuildRestPose,resetPose});root.userData.skeletonAPI=api;scene.userData.skeletonContractVersion=1;scene.userData.skeletonVersion=SKELETON_VERSION;
 
 const gravity=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,H+.05,0)]),new THREE.LineBasicMaterial({color:0xff7f7f}));scene.add(gravity);
 metrics.innerHTML=`<h3>Диагностика v1.5</h3><div class="row"><span>Рост</span><span>1750 мм</span></div><div class="row"><span>Architecture</span><span>standalone dynamic</span></div><div class="row"><span>Contract</span><span>v1</span></div><div class="row"><span>Limbs</span><span>native L/R</span></div><div class="row"><span>Spine</span><span>25 native vertebral joints</span></div><div class="row"><span>Shoulders</span><span>SC → AC → scapula/ST → GH</span></div>`;
