@@ -18,5 +18,42 @@
       0.8142820570428024,
       0.18476509386232057
     ]
+  },
+  "body": {
+    "version": "1.0.0",
+    "stature": 1.75,
+    "partCount": 71,
+    "coverage": {
+      "head": 1,
+      "neck": 1,
+      "chest": 1,
+      "upperBack": 2,
+      "abdomen": 1,
+      "pelvis": 3,
+      "upperArms": 4,
+      "forearms": 4,
+      "hands": 34,
+      "thighs": 2,
+      "lowerLegs": 4,
+      "feet": 14
+    },
+    "scapula": {
+      "L": {
+        "pass": true,
+        "maxNormalizedRadius": 0.7904074902589594
+      },
+      "R": {
+        "pass": true,
+        "maxNormalizedRadius": 0.7904074902589594
+      }
+    },
+    "checks": {
+      "contract": true,
+      "completeZones": true,
+      "bilateralLimbs": true,
+      "scapulaCovered": true,
+      "partCount": true
+    },
+    "pass": true
   }
 }
