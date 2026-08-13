@@ -55,5 +55,45 @@
       "partCount": true
     },
     "pass": true
+  },
+  "muscles": {
+    "version": "1.0.0",
+    "muscleCount": 50,
+    "sides": {
+      "L": 25,
+      "R": 25
+    },
+    "regions": [
+      "shoulderGirdle",
+      "chestToArm",
+      "backToArm",
+      "scapularStabilizers",
+      "shoulder",
+      "rotatorCuff",
+      "upperArm",
+      "forearm"
+    ],
+    "maxVolumeError": 0,
+    "maxStretch": 1,
+    "minStretch": 1,
+    "checks": {
+      "contract": true,
+      "muscleCount": true,
+      "bilateral": true,
+      "finite": true,
+      "volumeConservation": true,
+      "ordinaryThickness": true
+    },
+    "pass": true
+  },
+  "biceps": {
+    "name": "biceps_short",
+    "side": "L",
+    "region": "upperArm",
+    "restLength": 0.35662367130620654,
+    "currentLength": 0.30244085074313143,
+    "stretchRatio": 0.8480672346717212,
+    "thicknessScale": 1.0858875598283622,
+    "volumeRatio": 0.9999999999999998
   }
 }
