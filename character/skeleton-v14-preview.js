@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import {createSkeletonMechanicsV20} from 'https://cdn.jsdelivr.net/gh/48s97j7ht5-ux/Game-Live-Web@c2c8f96b2d61f2440e3aa8b0bf5a1dd7db432da5/character/skeleton-mechanics-v20.js';
+import {createSkeletonMechanicsV20} from './skeleton-mechanics-v20.js?v=20260813-scapula1';
 
 let capturedScene=null;
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('https://cdn.jsdelivr.net/gh/48s97j7ht5-ux/Game-Live-Web@c2c8f96b2d61f2440e3aa8b0bf5a1dd7db432da5/character/skeleton-v14.js');
+const mod=await import('./skeleton-v14.js?v=20260813-scapula1');
 THREE.Scene.prototype.add=originalSceneAdd;
 
 const scene=capturedScene,api=mod.skeletonAPI;
