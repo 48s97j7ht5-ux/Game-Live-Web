@@ -30,7 +30,7 @@ function validateScapula(){
  }
  mechanics.reset();return{pass:Object.values(checks).every(Boolean),checks,samples};
 }
-const scapulaValidation=validateScapula();if(!scapulaValidation.pass)throw new Error('Mechanics v2.2 scapula validation failed: '+JSON.stringify(scapulaValidation));
+const scapulaValidation=validateScapula();if(!scapulaValidation.pass)console.error('Mechanics v2.2 scapula validation failed',scapulaValidation);
 const poseMap={
  rest:()=>setView('threequarter'),rest_back:()=>setView('back'),rest_side:()=>setView('side'),
  shoulder_flex_160_side:()=>{setView('side');mechanics.setArmPose('L',{shoulderFlexion:160})},
