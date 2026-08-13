@@ -12,8 +12,16 @@ await ui.goto('https://48s97j7ht5-ux.github.io/Game-Live-Web/character/skeleton-
 await ui.waitForFunction(()=>window.__MECHANICS_READY__===true);
 const body=await ui.evaluate(()=>window.bodyVolume?.getDiagnostics());
 if(!body?.pass||body.partCount<50||!body.scapula.L.pass||!body.scapula.R.pass)throw new Error('body volume regression: '+JSON.stringify(body));
+const muscles=await ui.evaluate(()=>window.muscleVolume?.getDiagnostics());
+if(!muscles?.pass||muscles.muscleCount!==50||muscles.sides.L!==25||muscles.sides.R!==25)throw new Error('muscle volume regression: '+JSON.stringify(muscles));
 const opacity=ui.locator('#bodyOpacity');await opacity.fill('0.72');await opacity.dispatchEvent('input');await ui.waitForTimeout(120);
 await ui.screenshot({path:`${out}/ui_body_volume_rest.png`,fullPage:false});
+await ui.click('[data-view="side"]');
+await ui.evaluate(()=>window.skeletonMechanics.setArmPose('L',{shoulderFlexion:35,elbowFlexion:120,forearmRotation:20}));await ui.waitForTimeout(250);
+const biceps=await ui.evaluate(()=>window.muscleVolume.getMuscle('biceps_short','L'));
+if(!(biceps.currentLength<biceps.restLength&&biceps.thicknessScale>1.04&&Math.abs(1-biceps.volumeRatio)<=.02))throw new Error('muscle shortening/bulging regression: '+JSON.stringify(biceps));
+await ui.screenshot({path:`${out}/ui_muscle_elbow_flex_120.png`,fullPage:false});
+await ui.evaluate(()=>window.skeletonMechanics.reset());
 const initiallyCompact=await ui.locator('#mechanicsPanel').evaluate(el=>el.classList.contains('compact'));
 await ui.click('#toggleMechanicsPanel');
 const flex=ui.locator('#armControls input').first();await flex.fill('160');await flex.dispatchEvent('input');await ui.waitForTimeout(250);
@@ -24,5 +32,5 @@ await flex.fill('46');await flex.dispatchEvent('input');const abduction=ui.locat
 const shoulder=await ui.evaluate(()=>window.skeletonMechanics.getShoulderDiagnostics('L'));
 if(shoulder.directionError>.05||shoulder.automaticExternalRotation<25)throw new Error('coordinated shoulder UI regression: '+JSON.stringify(shoulder));
 await ui.screenshot({path:`${out}/ui_mobile_shoulder_diagonal_145.png`,fullPage:false});
-await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera,shoulder,body},null,2));
+await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera,shoulder,body,muscles,biceps},null,2));
 await browser.close();console.log(`Captured ${poses.length} anatomy poses to ${out}`);
