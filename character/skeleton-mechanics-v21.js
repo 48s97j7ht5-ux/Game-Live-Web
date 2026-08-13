@@ -29,7 +29,7 @@ export const ORDINARY_ADULT_ROM=Object.freeze({
  subtalar:Object.freeze({inversion:[-10,25],rotation:[-10,10]}),
  toes:Object.freeze({flexion:[-45,35]}),
  pelvis:Object.freeze({tilt:[-10,15],side:[-8,8],rotation:[-10,10]}),
- lumbar:Object.freeze({flexion:[-15,35],side:[-20,20],rotation:[-8,8]}),
+ lumbar:Object.freeze({flexion:[-15,30],side:[-20,20],rotation:[-8,8]}),
  thoracic:Object.freeze({flexion:[-15,30],side:[-20,20],rotation:[-30,30]}),
  neck:Object.freeze({flexion:[-45,45],side:[-35,35],rotation:[-65,65]}),
  head:Object.freeze({flexion:[-15,15],rotation:[-10,10]}),
@@ -131,7 +131,7 @@ export class SkeletonMechanicsV21{
   p.neckFlexion=bounded(req.neckFlexion,ORDINARY_ADULT_ROM.neck.flexion);p.neckSide=bounded(req.neckSide,ORDINARY_ADULT_ROM.neck.side);p.neckRotation=bounded(req.neckRotation,ORDINARY_ADULT_ROM.neck.rotation);
   p.headFlexion=bounded(req.headFlexion,ORDINARY_ADULT_ROM.head.flexion);p.headRotation=bounded(req.headRotation,ORDINARY_ADULT_ROM.head.rotation);
   // Large spinal movements share a common capsuloligamentous envelope.
-  let q=(Math.max(0,p.lumbarFlexion)/35)**2+(Math.abs(p.lumbarSide)/20)**2+(Math.abs(p.lumbarRotation)/8)**2;if(q>1){const k=1/Math.sqrt(q);p.lumbarFlexion*=k;p.lumbarSide*=k;p.lumbarRotation*=k}
+  let q=(Math.max(0,p.lumbarFlexion)/30)**2+(Math.abs(p.lumbarSide)/20)**2+(Math.abs(p.lumbarRotation)/8)**2;if(q>1){const k=1/Math.sqrt(q);p.lumbarFlexion*=k;p.lumbarSide*=k;p.lumbarRotation*=k}
   q=(Math.max(0,p.thoracicFlexion)/30)**2+(Math.abs(p.thoracicSide)/20)**2+(Math.abs(p.thoracicRotation)/30)**2;if(q>1){const k=1/Math.sqrt(q);p.thoracicFlexion*=k;p.thoracicSide*=k;p.thoracicRotation*=k}
   q=(Math.abs(p.neckFlexion)/45)**2+(Math.abs(p.neckSide)/35)**2+(Math.abs(p.neckRotation)/65)**2;if(q>1){const k=1/Math.sqrt(q);p.neckFlexion*=k;p.neckSide*=k;p.neckRotation*=k}
   for(const k of Object.keys(p))this._constraint(`torso.${k}`,Number(req[k])||0,p[k]);
