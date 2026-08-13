@@ -1,6 +1,7 @@
 import {createSkeletonMechanicsV23} from './skeleton-mechanics-v23.js?v=20260813-arm-solver';
 import {createBodyVolumeV1} from './character-body-volume-v1.js?v=20260813-body-volume-v1';
 import {createMuscleVolumeV1} from './character-muscle-volume-v1.js?v=20260813-muscle-volume-v1';
+import {createBodySurfaceV1} from './character-body-surface-v1.js?v=20260813-body-surface-v1';
 
 let capturedScene=null;
 const THREE=await import('three');
@@ -10,10 +11,12 @@ const mod=await import('./skeleton-v16.js?v=20260813-arm-solver');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
 const mechanics=createSkeletonMechanicsV23(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
-const bodyVolume=createBodyVolumeV1(api,{opacity:.42});window.bodyVolume=bodyVolume;
-const muscleVolume=createMuscleVolumeV1(api,{opacity:.90});window.muscleVolume=muscleVolume;
-for(const method of ['setArmPose','setLegPose','setTorsoPose','setJawPose','setBodyPose','groundToFloor','reset']){const original=mechanics[method]?.bind(mechanics);if(original)mechanics[method]=(...args)=>{const result=original(...args);muscleVolume.update();return result}}
-const title=document.querySelector('.info .title'),subtitle=document.querySelector('.info .sub');if(title)title.textContent='Muscle Volume v1';if(subtitle)subtitle.innerHTML='плечевой пояс и руки · обычный взрослый<br>Skeleton 1.6 · Mechanics 2.3 · Body Volume 1';
+const bodyVolume=createBodyVolumeV1(api,{opacity:.42,visible:false});window.bodyVolume=bodyVolume;
+const muscleVolume=createMuscleVolumeV1(api,{opacity:.90,visible:false});window.muscleVolume=muscleVolume;
+const bodySurface=createBodySurfaceV1(api,{opacity:1,visible:true});window.bodySurface=bodySurface;
+bodyVolume.setSkeletonVisible(false);
+for(const method of ['setArmPose','setLegPose','setTorsoPose','setJawPose','setBodyPose','groundToFloor','reset']){const original=mechanics[method]?.bind(mechanics);if(original)mechanics[method]=(...args)=>{const result=original(...args);muscleVolume.update();bodySurface.update();return result}}
+const title=document.querySelector('.info .title'),subtitle=document.querySelector('.info .sub');if(title)title.textContent='Body Surface v1';if(subtitle)subtitle.innerHTML='единая внешняя оболочка · эталон 400 px<br>Skeleton 1.6 · Mechanics 2.3 · 29 деформаторов';
 
 const definitions={
  arm:[
@@ -52,12 +55,14 @@ function apply(group){
 }
 function loadSide(){const state=mechanics.getState();sync('arm',state.arms[sideEl.value]);sync('leg',state.legs[sideEl.value])}
 sideEl.addEventListener('change',loadSide);
-const bodyToggle=document.getElementById('toggleBodyVolume'),muscleToggle=document.getElementById('toggleMuscleVolume'),skeletonToggle=document.getElementById('toggleSkeletonLayer'),bodyOpacity=document.getElementById('bodyOpacity');
-let bodyVisible=true,muscleVisible=true,skeletonVisible=true;
-function syncLayerButtons(){bodyToggle?.classList.toggle('active',bodyVisible);muscleToggle?.classList.toggle('active',muscleVisible);skeletonToggle?.classList.toggle('active',skeletonVisible)}
+const surfaceToggle=document.getElementById('toggleBodySurface'),bodyToggle=document.getElementById('toggleBodyVolume'),muscleToggle=document.getElementById('toggleMuscleVolume'),skeletonToggle=document.getElementById('toggleSkeletonLayer'),surfaceOpacity=document.getElementById('surfaceOpacity'),bodyOpacity=document.getElementById('bodyOpacity');
+let surfaceVisible=true,bodyVisible=false,muscleVisible=false,skeletonVisible=false;
+function syncLayerButtons(){surfaceToggle?.classList.toggle('active',surfaceVisible);bodyToggle?.classList.toggle('active',bodyVisible);muscleToggle?.classList.toggle('active',muscleVisible);skeletonToggle?.classList.toggle('active',skeletonVisible)}
+if(surfaceToggle)surfaceToggle.onclick=()=>{surfaceVisible=!surfaceVisible;bodySurface.setVisible(surfaceVisible);syncLayerButtons()};
 if(bodyToggle)bodyToggle.onclick=()=>{bodyVisible=!bodyVisible;bodyVolume.setVisible(bodyVisible);syncLayerButtons()};
 if(muscleToggle)muscleToggle.onclick=()=>{muscleVisible=!muscleVisible;muscleVolume.setVisible(muscleVisible);syncLayerButtons()};
 if(skeletonToggle)skeletonToggle.onclick=()=>{skeletonVisible=!skeletonVisible;bodyVolume.setSkeletonVisible(skeletonVisible);syncLayerButtons()};
+if(surfaceOpacity)surfaceOpacity.addEventListener('input',()=>bodySurface.setOpacity(Number(surfaceOpacity.value)));
 if(bodyOpacity)bodyOpacity.addEventListener('input',()=>bodyVolume.setOpacity(Number(bodyOpacity.value)));
 syncLayerButtons();
 document.getElementById('resetMechanics').onclick=()=>{mechanics.reset();for(const f of Object.values(fields)){f.input.value='0';f.out.textContent=f.key==='protrusion'||f.key==='lateral'?'0 мм':'0°'}status.textContent='нейтральная поза'};
@@ -66,5 +71,5 @@ const mechanicsPanel=document.getElementById('mechanicsPanel'),panelToggle=docum
 function setPanelCompact(compact){mechanicsPanel.classList.toggle('compact',compact);panelToggle.textContent=compact?'Развернуть':'Свернуть'}
 panelToggle.onclick=()=>setPanelCompact(!mechanicsPanel.classList.contains('compact'));
 if(matchMedia('(max-width:900px)').matches)setPanelCompact(true);
-const bodyDiagnostics=bodyVolume.getDiagnostics(),muscleDiagnostics=muscleVolume.getDiagnostics(),metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.3 coordinated arm</span></div><div class="row"><span>Body volume</span><span>v1 · ${bodyDiagnostics.partCount} analytic parts</span></div><div class="row"><span>Muscles</span><span>v1 · ${muscleDiagnostics.muscleCount} dynamic paths</span></div><div class="row"><span>Muscle volume</span><span>length ↔ thickness coupling</span></div><div class="row"><span>Scapula cover</span><span>mobile soft-tissue pads</span></div><div class="row"><span>Shoulder</span><span>swing + axial twist</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
+const surfaceDiagnostics=bodySurface.getDiagnostics(),bodyDiagnostics=bodyVolume.getDiagnostics(),muscleDiagnostics=muscleVolume.getDiagnostics(),metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.3 coordinated arm</span></div><div class="row"><span>Body surface</span><span>v1 · ${surfaceDiagnostics.deformerCount} deformers</span></div><div class="row"><span>Surface mesh</span><span>${surfaceDiagnostics.mesh.triangleCount} triangles · ${surfaceDiagnostics.shadeSteps} shades</span></div><div class="row"><span>Art target</span><span>${surfaceDiagnostics.targetPixelHeight} px character</span></div><div class="row"><span>Body volume</span><span>v1 · ${bodyDiagnostics.partCount} analytic parts</span></div><div class="row"><span>Muscles</span><span>experimental · ${muscleDiagnostics.muscleCount} paths</span></div><div class="row"><span>Shoulder</span><span>swing + axial twist</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';
