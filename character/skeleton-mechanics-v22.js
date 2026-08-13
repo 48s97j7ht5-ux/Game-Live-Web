@@ -10,9 +10,8 @@ export function createSkeletonMechanicsV22(api){
   const scap=api.getJoint(`scapula_${side}`);
   if(!scap)throw new Error('side must be L or R');
   const d=scap.userData.lastScapulaMechanics;
-  return d?{upward:d.upward,posterior:d.posterior,external:d.external,acGap:d.acGap,maxContactGap:d.maxContactGap,contactGaps:{...d.contactGaps}}:null;
+  return d?{upward:d.upward,posterior:d.posterior,external:d.external,acGap:d.acGap,maxContactGap:d.maxContactGap,meanContactGap:d.meanContactGap,contactGaps:{...d.contactGaps}}:null;
  };
  mechanics.mechanicsVersion=MECHANICS_VERSION;
  return mechanics;
 }
-
