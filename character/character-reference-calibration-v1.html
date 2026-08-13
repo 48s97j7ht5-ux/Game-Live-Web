@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#0b0d12">
+ <title>Reference Calibration v1 · Skeleton 1.6</title>
+ <link rel="stylesheet" href="./skeleton-v09.css">
+ <style>
+  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0d12;color:#eef2fa;font-family:system-ui,-apple-system,sans-serif}#app{display:none}.hidden-host{display:none!important}
+  .topbar{position:fixed;z-index:20;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(930px,calc(100vw - 16px));padding:9px;background:rgba(18,22,31,.96);border:1px solid #30384a;border-radius:12px;box-shadow:0 12px 34px #0008;backdrop-filter:blur(12px)}
+  .toprow,.views,.switches{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}.toprow{justify-content:space-between;margin-bottom:7px}.title{font-weight:750;font-size:14px}.sub{font-size:11px;color:#9eabc1}.views button,.switches button,.reset{padding:6px 9px;border:1px solid #3c465a;border-radius:8px;background:#222938;color:#edf2fb;font-weight:650}.views button.active,.switches button.active{background:#39455b;border-color:#7183a7}.switches label{display:flex;align-items:center;gap:5px;font-size:11px;color:#c8d2e3}.switches input[type=range]{width:82px}.switches{margin-top:7px}
+  #stage{position:fixed;inset:150px 0 54px;display:grid;place-items:center;pointer-events:none}.reference-frame{position:relative;width:320px;height:440px;max-width:calc(100vw - 20px);background:#f4f0e8;border:1px solid #687085;border-radius:3px;box-shadow:0 22px 60px #0009;overflow:hidden}#calibrationCanvas{display:block;width:320px;height:440px;max-width:100%;image-rendering:pixelated}
+  .status{position:fixed;z-index:12;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:12px;align-items:center;white-space:nowrap;padding:7px 10px;border:1px solid #30384a;border-radius:9px;background:#12161fe8;font-size:11px;color:#cbd5e7}.status strong{color:#8fd6ff}
+  .measurements{position:fixed;z-index:18;right:max(10px,env(safe-area-inset-right));bottom:max(54px,calc(env(safe-area-inset-bottom) + 46px));width:248px;max-height:360px;overflow:auto;padding:8px;border:1px solid #30384a;border-radius:10px;background:#12161ff0;font-size:11px}.measurements summary{cursor:pointer;font-weight:750}.measurements table{width:100%;border-collapse:collapse;margin-top:7px}.measurements th,.measurements td{padding:4px;border-top:1px solid #2e3647;text-align:right;font-variant-numeric:tabular-nums}.measurements th:first-child,.measurements td:first-child{text-align:left}.note{margin:7px 2px 1px;color:#91a0b8;line-height:1.35}
+  @media(max-width:720px){.topbar{top:max(6px,env(safe-area-inset-top));padding:7px}.toprow{margin-bottom:5px}.sub{display:none}.views button,.switches button,.reset{padding:5px 7px;font-size:11px}.switches{gap:4px;margin-top:5px}.switches label span{display:none}.switches label::before{content:attr(data-short);font-size:10px;color:#9eabc1}.switches input[type=range]{width:53px}#stage{inset:142px 0 48px}.measurements{width:225px;right:8px;bottom:48px}.status{font-size:10px;gap:6px}.reference-frame{transform:scale(min(1,calc((100vw - 20px)/320)));transform-origin:center}}
+  @media(max-height:700px){#stage{inset:128px 0 40px}.reference-frame{transform:scale(.82)}.status{display:none}.measurements{bottom:8px}}
+ </style>
+</head>
+<body>
+ <div id="app"></div><div id="metrics" class="hidden-host"></div><div id="labels" class="hidden-host"></div>
+ <header class="topbar">
+  <div class="toprow"><div><div class="title">Reference Calibration v1</div><div class="sub">нормализованный turnaround 400 px · Skeleton v1.6</div></div><button id="resetCalibration" class="reset" type="button">Сбросить</button></div>
+  <nav class="views" aria-label="Ракурс"><button data-calibration-view="front">Спереди</button><button data-calibration-view="frontThree">¾ спереди</button><button data-calibration-view="side">Профиль</button><button data-calibration-view="rearThree">¾ сзади</button><button data-calibration-view="back">Сзади</button></nav>
+  <div class="switches"><button id="toggleReference" type="button">Референс</button><button id="toggleSkeleton" type="button">Скелет</button><button id="toggleSections" type="button">Уровни</button><label data-short="Р"><span>Реф.</span><input id="referenceOpacity" aria-label="Прозрачность референса" type="range" min="0" max="1" value="0.72" step="0.02"></label><label data-short="С"><span>Скелет</span><input id="skeletonOpacity" aria-label="Прозрачность скелета" type="range" min="0.15" max="1" value="0.92" step="0.02"></label><label data-short="М"><span>Масштаб</span><input id="skeletonScale" aria-label="Масштаб скелета" type="range" min="0.88" max="1.12" value="1" step="0.002"></label><label data-short="X"><span>X</span><input id="skeletonX" aria-label="Смещение скелета по горизонтали" type="range" min="-60" max="60" value="0" step="1"></label><label data-short="Y"><span>Y</span><input id="skeletonY" aria-label="Смещение скелета по вертикали" type="range" min="-60" max="60" value="0" step="1"></label></div>
+ </header>
+ <main id="stage"><div class="reference-frame"><canvas id="calibrationCanvas" width="320" height="440"></canvas></div></main>
+ <details class="measurements"><summary>Сечения референса</summary><div id="measurementTable"></div><div class="note">Ширина берётся с фронта, глубина — из профиля. Это исходные пиксельные оценки для будущих эллиптических объёмов.</div></details>
+ <div class="status"><span>Референс <strong>400 px</strong></span><span>Скелет <strong id="skeletonPixelHeight">400 px</strong></span><span id="viewStatus">фронт · 0°</span></div>
+ <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
+ <script type="module" src="./character-reference-calibration-v1.js?v=20260813-reference-calibration-v1"></script>
+</body>
+</html>

@@ -58,6 +58,7 @@ function apply(group){
 function loadSide(){const state=mechanics.getState();sync('arm',state.arms[sideEl.value]);sync('leg',state.legs[sideEl.value])}
 sideEl.addEventListener('change',loadSide);
 const contourToggle=document.getElementById('toggleCharacterContour'),surfaceToggle=document.getElementById('toggleBodySurface'),bodyToggle=document.getElementById('toggleBodyVolume'),muscleToggle=document.getElementById('toggleMuscleVolume'),skeletonToggle=document.getElementById('toggleSkeletonLayer'),surfaceOpacity=document.getElementById('surfaceOpacity'),bodyOpacity=document.getElementById('bodyOpacity');
+document.getElementById('openReferenceCalibration')?.addEventListener('click',()=>location.href='./character-reference-calibration-v1.html?v=20260813-reference-calibration-v1');
 let contourVisible=true,surfaceVisible=false,bodyVisible=false,muscleVisible=false,skeletonVisible=false;
 function syncLayerButtons(){contourToggle?.classList.toggle('active',contourVisible);surfaceToggle?.classList.toggle('active',surfaceVisible);bodyToggle?.classList.toggle('active',bodyVisible);muscleToggle?.classList.toggle('active',muscleVisible);skeletonToggle?.classList.toggle('active',skeletonVisible)}
 if(contourToggle)contourToggle.onclick=()=>{contourVisible=!contourVisible;characterContour.setVisible(contourVisible);syncLayerButtons()};

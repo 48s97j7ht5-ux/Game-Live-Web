@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 const base=process.env.ANATOMY_URL||'https://48s97j7ht5-ux.github.io/Game-Live-Web/character/anatomy-regression-test.html';
 const previewBase=process.env.PREVIEW_URL||'https://48s97j7ht5-ux.github.io/Game-Live-Web/character/skeleton-v16-mechanics-preview.html';
+const calibrationBase=process.env.CALIBRATION_URL||'https://48s97j7ht5-ux.github.io/Game-Live-Web/character/character-reference-calibration-v1.html';
 const out='anatomy-test-output/latest';await fs.rm(out,{recursive:true,force:true});await fs.mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:900,height:1100},deviceScaleFactor:1});
 await page.goto(base,{waitUntil:'networkidle'});await page.waitForFunction(()=>window.__ANATOMY_READY__===true);
@@ -53,4 +54,5 @@ const mobileLayout=await mobile.evaluate(()=>{
 });
 if(mobileLayout.documentWidth>391||!mobileLayout.controlsInside||!mobileLayout.mechanicsInside||!mobileLayout.compact||!mobileLayout.surfacePass||!mobileLayout.contourPass||mobileLayout.contourHeight!==400)throw new Error('390 px mobile regression: '+JSON.stringify(mobileLayout));
 await mobile.screenshot({path:`${out}/ui_character_contour_mobile_390.png`,fullPage:false});
+const calibration=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});await calibration.goto(`${calibrationBase}?v=reference-calibration-regression`,{waitUntil:'networkidle'});await calibration.waitForFunction(()=>window.__REFERENCE_CALIBRATION_READY__===true);const calibrationValidation=await calibration.evaluate(()=>window.referenceCalibration.validate());if(!calibrationValidation.pass||!calibrationValidation.checks.viewCount||!calibrationValidation.checks.targetHeight||calibrationValidation.measurements.length!==8)throw new Error('reference calibration regression: '+JSON.stringify(calibrationValidation));await calibration.screenshot({path:`${out}/ui_reference_calibration_front_390.png`,fullPage:false});await calibration.evaluate(()=>window.referenceCalibration.setView('side'));await calibration.waitForTimeout(100);await calibration.screenshot({path:`${out}/ui_reference_calibration_side_390.png`,fullPage:false});
 await browser.close();console.log(`Captured ${poses.length} anatomy poses to ${out}`);
