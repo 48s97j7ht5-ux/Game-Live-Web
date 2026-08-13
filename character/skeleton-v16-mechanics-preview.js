@@ -1,13 +1,13 @@
-import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-camera1';
+import {createSkeletonMechanicsV22} from './skeleton-mechanics-v22.js?v=20260813-scapula2';
 
 let capturedScene=null;
 const THREE=await import('three');
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v16.js?v=20260813-camera1');
+const mod=await import('./skeleton-v16.js?v=20260813-scapula2');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
-const mechanics=createSkeletonMechanicsV21(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
+const mechanics=createSkeletonMechanicsV22(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
 
 const definitions={
  arm:[
@@ -52,5 +52,5 @@ const mechanicsPanel=document.getElementById('mechanicsPanel'),panelToggle=docum
 function setPanelCompact(compact){mechanicsPanel.classList.toggle('compact',compact);panelToggle.textContent=compact?'Развернуть':'Свернуть'}
 panelToggle.onclick=()=>setPanelCompact(!mechanicsPanel.classList.contains('compact'));
 if(matchMedia('(max-width:900px)').matches)setPanelCompact(true);
-const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.1 ordinary adult</span></div><div class="row"><span>Axes</span><span>major joints + digits + jaw</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
+const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.2 scapular contact</span></div><div class="row"><span>Axes</span><span>major joints + digits + jaw</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';
