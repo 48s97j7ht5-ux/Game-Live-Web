@@ -4,5 +4,19 @@
     "x": 4.700000000000001,
     "y": 1.15,
     "z": 2.877919977996281e-16
+  },
+  "shoulder": {
+    "elevation": 144.5164350515193,
+    "plane": 18.560322319785133,
+    "glenohumeralSwing": 97.13176309699004,
+    "automaticExternalRotation": 34.749728687077635,
+    "appliedAxialRotation": 34.749728687077635,
+    "axialInternalLimit": -23.53740293605307,
+    "directionError": 0,
+    "direction": [
+      -0.5502786491116934,
+      0.8142820570428024,
+      0.18476509386232057
+    ]
   }
 }
