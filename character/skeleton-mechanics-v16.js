@@ -44,10 +44,10 @@ function solveScapula(api,side,elevation,planeShare){const scap=api.getJoint(`sc
  // the requested thoracic contact depth so the realised blade, not merely the
  // unconstrained target, is centred on the rib-cage surface.
  for(let iteration=0;iteration<5;iteration++){setShoulderChainWorldPose(sc,ac,scap,model,targetPivot,frame.q);api.jointRoot.updateMatrixWorld(true);if(iteration===4)break;let meanGap=0;for(const name of model.contactNames){const point=landmark(scap,name),surface=thoraxSurface(model,point.x,point.y);meanGap+=(point.z-surface.z)-model.restContactOffsets[name]}meanGap/=model.contactNames.length;targetPivot.z-=clamp(meanGap,-.025,.025)}
- const actualPivot=scap.localToWorld(model.pivotLocal.clone()),contactGaps={};let maxContactGap=0;
- for(const name of model.contactNames){const point=landmark(scap,name),surface=thoraxSurface(model,point.x,point.y),gap=(point.z-surface.z)-model.restContactOffsets[name];contactGaps[name]=gap;maxContactGap=Math.max(maxContactGap,Math.abs(gap))}
+ const actualPivot=scap.localToWorld(model.pivotLocal.clone()),contactGaps={};let maxContactGap=0,meanContactGap=0;
+ for(const name of model.contactNames){const point=landmark(scap,name),surface=thoraxSurface(model,point.x,point.y),gap=(point.z-surface.z)-model.restContactOffsets[name];contactGaps[name]=gap;meanContactGap+=gap;maxContactGap=Math.max(maxContactGap,Math.abs(gap))}meanContactGap/=model.contactNames.length;
  const acromion=landmark(scap,`scAc${side}`),acGap=acromion?acromion.distanceTo(worldPoint(ac)):0;
- const result={upward,posterior,external,pivot:actualPivot,gh:worldPoint(gh),acGap,maxContactGap,contactGaps};scap.userData.lastScapulaMechanics=result;return result}
+ const result={upward,posterior,external,pivot:actualPivot,gh:worldPoint(gh),acGap,maxContactGap,meanContactGap,contactGaps};scap.userData.lastScapulaMechanics=result;return result}
 
 function initKnee(api,side){const hip=api.getJoint(`hip_${side}`),knee=api.getJoint(`knee_${side}`);if(!hip||!knee)throw new Error(`v1.8 missing knee chain ${side}`);if(knee.userData.kneeModel)return knee.userData.kneeModel;const patella=hip.getObjectByName(`patella${side}`);if(!patella)throw new Error(`v1.8 requires femur-relative patella${side}`);const model={patella,restPatellaPosition:patella.position.clone(),restPatellaQuaternion:patella.quaternion.clone(),restVector:patella.position.clone().sub(knee.position),sideSign:side==='L'?-1:1};knee.userData.kneeModel=model;return model}
 function solveKnee(api,side,flexion){const knee=api.getJoint(`knee_${side}`),model=initKnee(api,side),sign=model.sideSign,f=clamp(flexion,0,145);
