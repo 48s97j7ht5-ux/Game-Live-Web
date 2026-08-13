@@ -1,5 +1,5 @@
-import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-full2';
-const mod=await import('./skeleton-v16.js?v=20260813-full2');
+import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-full3';
+const mod=await import('./skeleton-v16.js?v=20260813-full3');
 const api=mod.skeletonAPI,mechanics=createSkeletonMechanicsV21(api);
 const geometryValidation=api.validateGeometry?.();if(geometryValidation&&!geometryValidation.pass)throw new Error('Skeleton v1.6 geometry validation failed: '+JSON.stringify(geometryValidation.checks));
 const badge=document.getElementById('testBadge'),sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -10,6 +10,8 @@ function validateLimits(){
  checks.shoulderEnvelope=Math.hypot(Math.max(0,r.shoulderFlexion),Math.max(0,r.shoulderAbduction))<=160.001;checks.armLimits=r.shoulderRotation<=75&&r.elbowFlexion<=145&&r.forearmRotation>=-75&&r.fingerCurl<=100;checks.wristEnvelope=(r.wristFlexion/70)**2+(r.wristDeviation/30)**2<=1.001;
  r=mechanics.setLegPose('L',{kneeFlexion:0,hipFlexion:999,ankleFlexion:999,subtalarInversion:999,subtalarRotation:999});checks.straightKneeCoupling=r.hipFlexion<=90.001&&r.ankleFlexion<=13.001;checks.subtalarEnvelope=(r.subtalarInversion/25)**2+(r.subtalarRotation/10)**2<=1.001;
  r=mechanics.setLegPose('L',{kneeFlexion:138,hipFlexion:999,ankleFlexion:999});checks.flexedKneeRelease=r.hipFlexion<=120.001&&r.ankleFlexion<=20.001;
+ mechanics.reset();mechanics.setLegPose('L',{hipAbduction:40});let hip=mechanics.getJointWorld('hip_L'),ankle=mechanics.getJointWorld('ankle_L');checks.abductionDirection=ankle.x<hip.x;
+ mechanics.reset();mechanics.setLegPose('L',{kneeFlexion:90});let knee=mechanics.getJointWorld('knee_L');ankle=mechanics.getJointWorld('ankle_L');checks.kneeDirection=ankle.z<knee.z;
  r=mechanics.setTorsoPose({lumbarFlexion:999,lumbarSide:999,lumbarRotation:999,thoracicFlexion:999,thoracicSide:999,thoracicRotation:999,neckFlexion:999,neckSide:999,neckRotation:999});checks.lumbarEnvelope=(Math.max(0,r.lumbarFlexion)/30)**2+(Math.abs(r.lumbarSide)/20)**2+(Math.abs(r.lumbarRotation)/8)**2<=1.001;checks.thoracicEnvelope=(Math.max(0,r.thoracicFlexion)/30)**2+(Math.abs(r.thoracicSide)/20)**2+(Math.abs(r.thoracicRotation)/30)**2<=1.001;checks.neckEnvelope=(Math.abs(r.neckFlexion)/45)**2+(Math.abs(r.neckSide)/35)**2+(Math.abs(r.neckRotation)/65)**2<=1.001;
  r=mechanics.setJawPose({open:999,protrusion:999,lateral:999});checks.jawLimits=r.open===35&&r.protrusion===6&&r.lateral===6;
  mechanics.reset();return{pass:Object.values(checks).every(Boolean),checks};
@@ -60,4 +62,3 @@ const important=['sc_L','ac_L','shoulder_L','elbow_L','forearm_rotation_L','wris
 function diagnostics(name){const joints={};for(const n of important){try{const p=mechanics.getJointWorld(n);joints[n]=[p.x,p.y,p.z]}catch{}}const segments={};for(const n of api.segmentNames){const s=api.getSegment(n);if(s)segments[n]=s.length}return{name,mechanicsVersion:mechanics.mechanicsVersion,skeletonVersion:api.skeletonVersion,joints,segments,state:mechanics.getState(),geometry:api.getGeometryMetrics?.()??null,geometryValidation,limitValidation}}
 window.anatomyTest={poses:Object.keys(poseMap),async setPose(name){if(!poseMap[name])throw new Error('unknown pose '+name);mechanics.reset();poseMap[name]();api.jointRoot.updateMatrixWorld(true);badge.textContent='anatomy regression · '+name;await sleep(220);return diagnostics(name)},diagnostics:()=>diagnostics('current'),reset:()=>mechanics.reset()};
 window.__ANATOMY_READY__=true;badge.textContent='anatomy regression · ready';
-
