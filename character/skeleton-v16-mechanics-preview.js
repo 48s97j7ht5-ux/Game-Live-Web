@@ -1,10 +1,10 @@
-import {createSkeletonMechanicsV22} from './skeleton-mechanics-v22.js?v=20260813-scapula2';
+import {createSkeletonMechanicsV22} from './skeleton-mechanics-v22.js?v=20260813-scapula-final';
 
 let capturedScene=null;
 const THREE=await import('three');
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v16.js?v=20260813-scapula2');
+const mod=await import('./skeleton-v16.js?v=20260813-scapula-final');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
 const mechanics=createSkeletonMechanicsV22(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
