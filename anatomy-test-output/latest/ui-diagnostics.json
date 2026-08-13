@@ -131,7 +131,7 @@
           0.2842289719626168
         ]
       },
-      "buildMs": 275.9000000000233
+      "buildMs": 314
     },
     "landmarkClearance": {
       "head": -0.0602875320135951,
@@ -156,6 +156,42 @@
       "finite": true,
       "landmarksInside": true,
       "pixelTarget": true
+    },
+    "pass": true
+  },
+  "contour": {
+    "version": "1.0.0",
+    "stature": 1.75,
+    "targetPixelHeight": 400,
+    "canvas": {
+      "width": 320,
+      "height": 440
+    },
+    "view": {
+      "frontness": 0.7036366654692084
+    },
+    "raster": {
+      "bounds": {
+        "x": 108,
+        "y": 20,
+        "width": 104,
+        "height": 400
+      },
+      "sourcePixels": 52404,
+      "outputPixels": 24625,
+      "actualHeight": 400,
+      "actualWidth": 104,
+      "hardEdges": true,
+      "components": 1,
+      "clipped": false
+    },
+    "checks": {
+      "contract": true,
+      "finite": true,
+      "pixelTarget": true,
+      "hardEdges": true,
+      "nonEmpty": true,
+      "componentEnvelope": true
     },
     "pass": true
   },
