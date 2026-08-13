@@ -1,13 +1,13 @@
-import {createSkeletonMechanicsV22} from './skeleton-mechanics-v22.js?v=20260813-scapula-final';
+import {createSkeletonMechanicsV23} from './skeleton-mechanics-v23.js?v=20260813-arm-solver';
 
 let capturedScene=null;
 const THREE=await import('three');
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v16.js?v=20260813-scapula-final');
+const mod=await import('./skeleton-v16.js?v=20260813-arm-solver');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
-const mechanics=createSkeletonMechanicsV22(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
+const mechanics=createSkeletonMechanicsV23(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
 
 const definitions={
  arm:[
@@ -42,7 +42,7 @@ function values(group){const v={};for(const [id,f] of Object.entries(fields))if(
 function sync(group,state){for(const f of Object.values(fields))if(f.group===group&&state[f.key]!==undefined){f.input.value=String(Math.round(state[f.key]*10)/10);f.out.textContent=(Math.round(state[f.key]*10)/10)+(f.key==='protrusion'||f.key==='lateral'?' мм':'°')}}
 function apply(group){
  let result;if(group==='arm')result=mechanics.setArmPose(sideEl.value,values(group));if(group==='leg')result=mechanics.setLegPose(sideEl.value,values(group));if(group==='torso')result=mechanics.setTorsoPose(values(group));if(group==='jaw')result=mechanics.setJawPose(values(group));
- sync(group,result);const n=result.constraints?.length??0;status.textContent=n?`ограничено: ${n}`:'в пределах нормы';
+ sync(group,result);const n=result.constraints?.length??0;if(n)status.textContent=`ограничено: ${n}`;else if(group==='arm'&&result.automaticShoulderRotation>0)status.textContent=`автоповорот плеча +${Math.round(result.automaticShoulderRotation)}°`;else status.textContent='в пределах нормы';
 }
 function loadSide(){const state=mechanics.getState();sync('arm',state.arms[sideEl.value]);sync('leg',state.legs[sideEl.value])}
 sideEl.addEventListener('change',loadSide);
@@ -52,5 +52,5 @@ const mechanicsPanel=document.getElementById('mechanicsPanel'),panelToggle=docum
 function setPanelCompact(compact){mechanicsPanel.classList.toggle('compact',compact);panelToggle.textContent=compact?'Развернуть':'Свернуть'}
 panelToggle.onclick=()=>setPanelCompact(!mechanicsPanel.classList.contains('compact'));
 if(matchMedia('(max-width:900px)').matches)setPanelCompact(true);
-const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.2 scapular contact</span></div><div class="row"><span>Axes</span><span>major joints + digits + jaw</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
+const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.3 coordinated arm</span></div><div class="row"><span>Shoulder</span><span>swing + axial twist</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';

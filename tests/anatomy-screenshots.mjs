@@ -16,5 +16,9 @@ const flex=ui.locator('#armControls input').first();await flex.fill('160');await
 const camera=await ui.evaluate(()=>{const p=window.__SKELETON_CAMERA__.position;return{x:p.x,y:p.y,z:p.z}});
 if(!initiallyCompact||Math.abs(camera.x)<4||Math.abs(camera.z)>.25)throw new Error('mobile smart-view regression: '+JSON.stringify({initiallyCompact,camera}));
 await ui.screenshot({path:`${out}/ui_mobile_shoulder_flex_160.png`,fullPage:false});
-await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera},null,2));
+await flex.fill('46');await flex.dispatchEvent('input');const abduction=ui.locator('#armControls input').nth(1);await abduction.fill('137');await abduction.dispatchEvent('input');await ui.waitForTimeout(250);
+const shoulder=await ui.evaluate(()=>window.skeletonMechanics.getShoulderDiagnostics('L'));
+if(shoulder.directionError>.05||shoulder.automaticExternalRotation<25)throw new Error('coordinated shoulder UI regression: '+JSON.stringify(shoulder));
+await ui.screenshot({path:`${out}/ui_mobile_shoulder_diagonal_145.png`,fullPage:false});
+await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera,shoulder},null,2));
 await browser.close();console.log(`Captured ${poses.length} anatomy poses to ${out}`);
