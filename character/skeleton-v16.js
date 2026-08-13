@@ -86,12 +86,16 @@ function buildShoulderGirdle(side){
  const scSup=new THREE.Vector3(g*scapMedX,scSupY,-.078);
  const scMed=new THREE.Vector3(g*scapMedX,spineWorld.T3.y-.010,-.078);
  const scInf=new THREE.Vector3(g*(scapMedX+.012),scSupY-A.scapulaHeight,-.070);
+ const scBorderMid=scSup.clone().lerp(scInf,.50);
  const scAc=acW.clone();
  const scGlen=new THREE.Vector3(g*(sx-.006),sy-.020,-.018);
  const scCor=new THREE.Vector3(g*(sx-.032),sy+.002,.006);
- for(const [n,p,r] of [['scSup',scSup,.009],['scMed',scMed,.010],['scInf',scInf,.010],['scAc',scAc,.010],['scGlen',scGlen,.011],['scCor',scCor,.008]])wn(scapula,n+side,...p.toArray(),r,MAT.frame);
- wb(scapula,`scSup_scMed${side}`,scSup,scMed,.007,MAT.frame);
- wb(scapula,`scMed_scInf${side}`,scMed,scInf,.007,MAT.frame);
+ for(const [n,p,r] of [['scSup',scSup,.009],['scBorderMid',scBorderMid,.008],['scMed',scMed,.010],['scInf',scInf,.010],['scAc',scAc,.010],['scGlen',scGlen,.011],['scCor',scCor,.008]])wn(scapula,n+side,...p.toArray(),r,MAT.frame);
+ // Keep the thoracic contact border distinct from the posteriorly projecting
+ // root of the scapular spine. Treating scMed as a contact landmark made a
+ // normal bony prominence look like the whole blade had left the rib cage.
+ wb(scapula,`scSup_scBorderMid${side}`,scSup,scBorderMid,.007,MAT.frame);
+ wb(scapula,`scBorderMid_scInf${side}`,scBorderMid,scInf,.007,MAT.frame);
  wb(scapula,`scInf_scGlen${side}`,scInf,scGlen,.007,MAT.frame);
  wb(scapula,`scGlen_scSup${side}`,scGlen,scSup,.0065,MAT.frame);
  // Scapular spine reaches the acromion; the coracoid projects anteriorly without
