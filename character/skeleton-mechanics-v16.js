@@ -28,7 +28,25 @@ function thoraxSurface(model,x,y){const {centerZ,rx,rz,zBias}=model.thorax,nx=cl
 function surfaceNormal(model,p){const {centerZ,rx,rz,zBias}=model.thorax,cz=centerZ+zBias;return new THREE.Vector3(p.x/(rx*rx),0,(p.z-cz)/(rz*rz)).normalize()}
 function setScapulaWorldPose(scap,model,desiredPivotWorld,worldQuat){const parent=scap.parent;parent.updateMatrixWorld(true);const invParent=parent.matrixWorld.clone().invert(),parentQuat=parent.getWorldQuaternion(new THREE.Quaternion());scap.quaternion.copy(parentQuat.clone().invert().multiply(worldQuat));scap.updateMatrixWorld(true);const rotatedPivot=model.pivotLocal.clone().applyQuaternion(scap.quaternion),desiredLocal=desiredPivotWorld.clone().applyMatrix4(invParent);scap.position.copy(desiredLocal).sub(rotatedPivot);scap.updateMatrixWorld(true)}
 function buildScapulaQuaternion(model,pivot,upward,posterior,external,restOffset){const sign=model.sideSign,n=surfaceNormal(model,pivot),up=new THREE.Vector3(0,1,0),tangentX=new THREE.Vector3().crossVectors(up,n).normalize();if(sign<0)tangentX.negate();const tangentY=new THREE.Vector3().crossVectors(n,tangentX).normalize(),qBase=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(tangentX,tangentY,n)),q=qBase.clone().multiply(new THREE.Quaternion().setFromAxisAngle(n,rad(sign*upward))).multiply(new THREE.Quaternion().setFromAxisAngle(tangentX,rad(-posterior))).multiply(new THREE.Quaternion().setFromAxisAngle(tangentY,rad(sign*external)));if(restOffset)q.multiply(restOffset);return {q,qBase}}
-function solveScapula(api,side,elevation,planeShare){const scap=api.getJoint(`scapula_${side}`),gh=api.getJoint(`shoulder_${side}`),model=initShoulder(api,side),sign=model.sideSign,p=smooth((elevation-20)/160),upward=(51+3*(1-planeShare))*p,posterior=(16+5*planeShare)*p,external=(8+5*planeShare)*p,y=model.restPivotWorld.y+.018*p;let x=model.restPivotWorld.x+sign*.020*p,pivot=thoraxSurface(model,x,y),frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);if(!model.restOffset){model.restOffset=frame.qBase.clone().invert().multiply(model.restQuaternion.clone());frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset)}setScapulaWorldPose(scap,model,pivot,frame.q);api.jointRoot.updateMatrixWorld(true);const desiredGHx=model.restGH.x+sign*.010*p,currentGHx=worldPoint(gh).x,correction=clamp(desiredGHx-currentGHx,-.060,.060);if(Math.abs(correction)>.0005){x+=correction;pivot=thoraxSurface(model,x,y);frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);setScapulaWorldPose(scap,model,pivot,frame.q);api.jointRoot.updateMatrixWorld(true)}return {upward,posterior,external,pivot,ghX:worldPoint(gh).x,targetGHx:desiredGHx}}
+function solveScapula(api,side,elevation,planeShare){const scap=api.getJoint(`scapula_${side}`),gh=api.getJoint(`shoulder_${side}`),model=initShoulder(api,side),sign=model.sideSign,p=smooth((elevation-20)/160),upward=(51+3*(1-planeShare))*p,posterior=(16+5*planeShare)*p,external=(8+5*planeShare)*p,y=model.restPivotWorld.y+.018*p;let x=model.restPivotWorld.x+sign*.020*p,pivot=thoraxSurface(model,x,y),frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset);if(!model.restOffset){model.restOffset=frame.qBase.clone().invert().multiply(model.restQuaternion.clone());frame=buildScapulaQuaternion(model,pivot,upward,posterior,external,model.restOffset)}setScapulaWorldPose(scap,model,pivot,frame.q);api.jointRoot.updateMatrixWorld(true);
+ // Upward rotation alone makes the glenoid orbit around the blade centre. Without
+ // compensating scapular translation that orbit drags GH far medially/anteriorly.
+ // Keep the joint centre on a conservative physiological path: mainly superior,
+ // slightly lateral, and only modestly anterior (more in flexion than abduction).
+ const desiredGH=new THREE.Vector3(
+  model.restGH.x+sign*.012*p,
+  model.restGH.y+.060*p,
+  model.restGH.z+(.012+.012*planeShare)*p
+ );
+ const currentGH=worldPoint(gh),worldCorrection=desiredGH.clone().sub(currentGH);
+ worldCorrection.x=clamp(worldCorrection.x,-.090,.090);
+ worldCorrection.y=clamp(worldCorrection.y,-.080,.080);
+ worldCorrection.z=clamp(worldCorrection.z,-.120,.120);
+ const parentWorldQ=scap.parent.getWorldQuaternion(new THREE.Quaternion());
+ scap.position.add(worldCorrection.applyQuaternion(parentWorldQ.invert()));
+ api.jointRoot.updateMatrixWorld(true);
+ const correctedPivot=scap.localToWorld(model.pivotLocal.clone());
+ return {upward,posterior,external,pivot:correctedPivot,ghX:worldPoint(gh).x,targetGHx:desiredGH.x}}
 
 function initKnee(api,side){const hip=api.getJoint(`hip_${side}`),knee=api.getJoint(`knee_${side}`);if(!hip||!knee)throw new Error(`v1.8 missing knee chain ${side}`);if(knee.userData.kneeModel)return knee.userData.kneeModel;const patella=hip.getObjectByName(`patella${side}`);if(!patella)throw new Error(`v1.8 requires femur-relative patella${side}`);const model={patella,restPatellaPosition:patella.position.clone(),restPatellaQuaternion:patella.quaternion.clone(),restVector:patella.position.clone().sub(knee.position),sideSign:side==='L'?-1:1};knee.userData.kneeModel=model;return model}
 function solveKnee(api,side,flexion){const knee=api.getJoint(`knee_${side}`),model=initKnee(api,side),sign=model.sideSign,f=clamp(flexion,0,145);
