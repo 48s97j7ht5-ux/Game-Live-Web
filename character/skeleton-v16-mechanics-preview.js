@@ -21,7 +21,7 @@ const definitions={
  ],
  torso:[
   ['pelvisTilt','Наклон таза',-10,15],['pelvisSide','Перекос таза',-8,8],['pelvisRotation','Поворот таза',-10,10],
-  ['lumbarFlexion','Поясница сгиб',-15,35],['lumbarSide','Поясница вбок',-20,20],['lumbarRotation','Поясница поворот',-8,8],
+  ['lumbarFlexion','Поясница сгиб',-15,30],['lumbarSide','Поясница вбок',-20,20],['lumbarRotation','Поясница поворот',-8,8],
   ['thoracicFlexion','Грудной сгиб',-15,30],['thoracicSide','Грудной вбок',-20,20],['thoracicRotation','Грудной поворот',-30,30],
   ['neckFlexion','Шея сгиб',-45,45],['neckSide','Шея вбок',-35,35],['neckRotation','Шея поворот',-65,65],['headFlexion','Голова сгиб',-15,15],['headRotation','Голова поворот',-10,10]
  ],
@@ -43,4 +43,3 @@ document.getElementById('resetMechanics').onclick=()=>{mechanics.reset();for(con
 document.getElementById('groundMechanics').onclick=()=>{mechanics.groundToFloor();status.textContent='стопы опущены к полу'};
 const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.1 ordinary adult</span></div><div class="row"><span>Axes</span><span>major joints + digits + jaw</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';
-
