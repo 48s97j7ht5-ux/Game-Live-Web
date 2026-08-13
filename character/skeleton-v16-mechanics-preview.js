@@ -1,10 +1,10 @@
-import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-full3';
+import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-camera1';
 
 let capturedScene=null;
 const THREE=await import('three');
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v16.js?v=20260813-full3');
+const mod=await import('./skeleton-v16.js?v=20260813-camera1');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
 const mechanics=createSkeletonMechanicsV21(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
@@ -28,7 +28,14 @@ const definitions={
  jaw:[['open','Открытие',0,35],['protrusion','Вперёд, мм',-2,6],['lateral','Вбок, мм',-6,6]]
 };
 const fields={};
-function build(group,id){const root=document.getElementById(id);for(const [key,label,min,max] of definitions[group]){const row=document.createElement('label');row.className='control-row';row.innerHTML=`<span>${label}</span><input type="range" min="${min}" max="${max}" value="0" step="1"><span class="value">0°</span>`;const input=row.querySelector('input'),out=row.querySelector('.value');fields[group+':'+key]={input,out,key,group};input.addEventListener('input',()=>apply(group));root.appendChild(row)}}
+function chooseView(view){document.querySelector(`[data-view="${view}"]`)?.click()}
+function smartView(group,key){
+ if(group==='arm'&&key==='shoulderFlexion')chooseView('side');
+ else if(group==='arm'&&key==='shoulderAbduction')chooseView('front');
+ else if(group==='leg'&&(key==='hipFlexion'||key==='kneeFlexion'||key==='ankleFlexion'||key==='toeFlexion'))chooseView('side');
+ else if(group==='leg'&&key==='hipAbduction')chooseView('front');
+}
+function build(group,id){const root=document.getElementById(id);for(const [key,label,min,max] of definitions[group]){const row=document.createElement('label');row.className='control-row';row.innerHTML=`<span>${label}</span><input type="range" min="${min}" max="${max}" value="0" step="1"><span class="value">0°</span>`;const input=row.querySelector('input'),out=row.querySelector('.value');fields[group+':'+key]={input,out,key,group};input.addEventListener('input',()=>{smartView(group,key);apply(group)});root.appendChild(row)}}
 build('arm','armControls');build('leg','legControls');build('torso','torsoControls');build('jaw','jawControls');
 const sideEl=document.getElementById('mechanicsSide'),status=document.getElementById('mechanicsStatus');
 function values(group){const v={};for(const [id,f] of Object.entries(fields))if(f.group===group)v[f.key]=Number(f.input.value);return v}
@@ -41,5 +48,9 @@ function loadSide(){const state=mechanics.getState();sync('arm',state.arms[sideE
 sideEl.addEventListener('change',loadSide);
 document.getElementById('resetMechanics').onclick=()=>{mechanics.reset();for(const f of Object.values(fields)){f.input.value='0';f.out.textContent=f.key==='protrusion'||f.key==='lateral'?'0 мм':'0°'}status.textContent='нейтральная поза'};
 document.getElementById('groundMechanics').onclick=()=>{mechanics.groundToFloor();status.textContent='стопы опущены к полу'};
+const mechanicsPanel=document.getElementById('mechanicsPanel'),panelToggle=document.getElementById('toggleMechanicsPanel');
+function setPanelCompact(compact){mechanicsPanel.classList.toggle('compact',compact);panelToggle.textContent=compact?'Развернуть':'Свернуть'}
+panelToggle.onclick=()=>setPanelCompact(!mechanicsPanel.classList.contains('compact'));
+if(matchMedia('(max-width:900px)').matches)setPanelCompact(true);
 const metrics=document.getElementById('metrics');metrics.insertAdjacentHTML('beforeend',`<div class="row"><span>Mechanics</span><span>v2.1 ordinary adult</span></div><div class="row"><span>Axes</span><span>major joints + digits + jaw</span></div><div class="row"><span>Limits</span><span>active coupled ROM</span></div>`);
 window.__MECHANICS_READY__=true;status.textContent='в пределах нормы';
