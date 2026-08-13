@@ -1,10 +1,12 @@
-name: Anatomy regression
+name: Anatomy v1.4 regression
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'character/skeleton-v13.js'
-      - 'character/skeleton-mechanics-contract-v01.js'
+      - 'character/skeleton-v14.js'
+      - 'character/skeleton-mechanics-v16.js'
+      - 'character/skeleton-mechanics-v19.js'
+      - 'character/skeleton-mechanics-v20.js'
       - 'character/anatomy-regression-test.*'
       - 'tests/anatomy-screenshots.mjs'
       - '.github/workflows/anatomy-regression.yml'
