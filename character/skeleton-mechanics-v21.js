@@ -112,7 +112,12 @@ export class SkeletonMechanicsV21{
   p.toeFlexion=bounded(req.toeFlexion,ORDINARY_ADULT_ROM.toes.flexion);
   if(p.ankleFlexion<-35&&p.toeFlexion<0)p.toeFlexion=Math.max(p.toeFlexion,-25);
   for(const k of Object.keys(p))this._constraint(`leg.${side}.${k}`,Number(req[k])||0,p[k]);
-  this.legacy.setLegPose(side,{hipFlexion:p.hipFlexion,hipAbduction:p.hipAbduction,hipRotation:p.hipRotation,kneeFlexion:p.kneeFlexion,ankleFlexion:p.ankleFlexion,subtalarInversion:p.subtalarInversion,subtalarRotation:p.subtalarRotation});
+  // Legacy v2.0 used the opposite frontal-plane sign. v2.1 defines positive
+  // abduction as movement away from the body's midline on both sides.
+  this.legacy.setLegPose(side,{hipFlexion:p.hipFlexion,hipAbduction:-p.hipAbduction,hipRotation:p.hipRotation,kneeFlexion:p.kneeFlexion,ankleFlexion:p.ankleFlexion,subtalarInversion:p.subtalarInversion,subtalarRotation:p.subtalarRotation});
+  // Knee flexion must carry the heel posteriorly. Preserve the screw-home axial
+  // component solved by v2.0, but correct its sagittal hinge direction.
+  const knee=this.api.getJoint(`knee_${side}`);knee.rotation.x=rad(-p.kneeFlexion);
   this._applyToes(side,p.toeFlexion);this.api.jointRoot.updateMatrixWorld(true);return{...p,constraints:copy(this.lastConstraints)}
  }
  _applyToes(side,angle){
