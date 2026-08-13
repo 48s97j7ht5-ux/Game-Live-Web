@@ -1,10 +1,10 @@
-import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-full1';
+import {createSkeletonMechanicsV21} from './skeleton-mechanics-v21.js?v=20260813-full3';
 
 let capturedScene=null;
 const THREE=await import('three');
 const originalSceneAdd=THREE.Scene.prototype.add;
 THREE.Scene.prototype.add=function(...objects){if(!capturedScene)capturedScene=this;return originalSceneAdd.apply(this,objects);};
-const mod=await import('./skeleton-v16.js?v=20260813-full1');
+const mod=await import('./skeleton-v16.js?v=20260813-full3');
 THREE.Scene.prototype.add=originalSceneAdd;
 const scene=capturedScene,api=mod.skeletonAPI;if(!scene||!api)throw new Error('Skeleton v1.6 preview: API missing');
 const mechanics=createSkeletonMechanicsV21(api);window.skeletonAPI=api;window.skeletonMechanics=mechanics;
