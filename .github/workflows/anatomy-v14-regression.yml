@@ -4,7 +4,7 @@ on:
   push:
     branches: ['dev/skeleton-v1.4']
     paths:
-      - 'character/skeleton-mechanics-v16.js'
+      - 'character/skeleton-mechanics-v*.js'
       - 'character/anatomy-regression-v14.*'
       - 'tests/anatomy-v14-screenshots.mjs'
       - 'tools/build-skeleton-v14.mjs'
