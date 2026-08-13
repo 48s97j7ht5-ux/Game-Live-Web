@@ -138,9 +138,22 @@ function getJoint(name){return joints.get(name)||null}
 const SEGMENTS={thigh_L:['hip_L','knee_L'],shin_L:['knee_L','ankle_L'],thigh_R:['hip_R','knee_R'],shin_R:['knee_R','ankle_R'],upperarm_L:['shoulder_L','elbow_L'],forearm_L:['elbow_L','wrist_L'],upperarm_R:['shoulder_R','elbow_R'],forearm_R:['elbow_R','wrist_R'],clavicle_L:['sc_L','ac_L'],clavicle_R:['sc_R','ac_R'],lumbar:['spine_S1','spine_T12'],thoracic:['spine_T12','spine_T1'],cervical:['spine_T1','neck_C1']};
 function getSegment(name){const d=SEGMENTS[name];if(!d)return null;const a=getJoint(d[0]),b=getJoint(d[1]);if(!a||!b)return null;const start=a.getWorldPosition(new THREE.Vector3()),end=b.getWorldPosition(new THREE.Vector3());return{name,a:d[0],b:d[1],start,end,length:start.distanceTo(end)}}
 function resetPose(){for(const j of joints.values())j.quaternion.identity();root.updateMatrixWorld(true)}
-function getRestMetrics(){const segments={};for(const n of Object.keys(SEGMENTS))segments[n]=getSegment(n)?.length??null;return{stature,segments}}
+function landmarkWorld(name){const o=named.get(name)||joints.get(name);return o?o.getWorldPosition(new THREE.Vector3()):null}
+function landmarkDistance(a,b){const pa=landmarkWorld(a),pb=landmarkWorld(b);return pa&&pb?pa.distanceTo(pb):null}
+function farthestFrom(origin,names){const p=landmarkWorld(origin);if(!p)return null;let d=0;for(const n of names){const q=landmarkWorld(n);if(q)d=Math.max(d,p.distanceTo(q))}return d}
+function getGeometryMetrics(){root.updateMatrixWorld(true);return{
+ clavicle_L:getSegment('clavicle_L')?.length??null,
+ cervical_T1_C1:getSegment('cervical')?.length??null,
+ c1_head_gap:landmarkDistance('neck_C1','head'),
+ scapula_height_L:landmarkDistance('scSupL','scInfL'),
+ scapula_width_L:landmarkDistance('scMedL','scGlenL'),
+ hand_L:farthestFrom('wrist_L',['thumb_tip_L','finger_L_1_2','finger_L_2_2','finger_L_3_2','finger_L_4_2']),
+ foot_L:farthestFrom('heel_L',['tip_L_0','tip_L_1','tip_L_2','tip_L_3','tip_L_4']),
+ componentChecks:{sacrum:!!named.get('sacrumMid'),siPair:!!joints.get('si_L')&&!!joints.get('si_R'),costalCartilage:!!named.get('costal_cartilage_r1L'),forearmRotation:!!joints.get('forearm_rotation_L')&&!!joints.get('forearm_rotation_R'),threeCuneiforms:!!named.get('cuneiform_medial_L')&&!!named.get('cuneiform_intermediate_L')&&!!named.get('cuneiform_lateral_L'),mandible:!!joints.get('jaw')}
+}}
+function getRestMetrics(){const segments={};for(const n of Object.keys(SEGMENTS))segments[n]=getSegment(n)?.length??null;return{stature,segments,geometry:getGeometryMetrics()}}
 function rebuildRestPose({stature:newStature=stature}={}){if(Math.abs(newStature-stature)>.000001)throw new Error('Skeleton v1.5: stature rebuild after geometry validation');resetPose();return getRestMetrics()}
-const api=Object.freeze({contractVersion:SKELETON_CONTRACT_VERSION,skeletonVersion:SKELETON_VERSION,jointNames:Object.freeze([...joints.keys()]),segmentNames:Object.freeze(Object.keys(SEGMENTS)),jointRoot:root,getJoint,getSegment,getRestMetrics,rebuildRestPose,resetPose});root.userData.skeletonAPI=api;scene.userData.skeletonContractVersion=1;scene.userData.skeletonVersion=SKELETON_VERSION;
+const api=Object.freeze({contractVersion:SKELETON_CONTRACT_VERSION,skeletonVersion:SKELETON_VERSION,jointNames:Object.freeze([...joints.keys()]),segmentNames:Object.freeze(Object.keys(SEGMENTS)),jointRoot:root,getJoint,getSegment,getGeometryMetrics,getRestMetrics,rebuildRestPose,resetPose});root.userData.skeletonAPI=api;scene.userData.skeletonContractVersion=1;scene.userData.skeletonVersion=SKELETON_VERSION;
 
 const gravity=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,H+.05,0)]),new THREE.LineBasicMaterial({color:0xff7f7f}));scene.add(gravity);
 metrics.innerHTML=`<h3>Диагностика v1.5</h3><div class="row"><span>Рост</span><span>1750 мм</span></div><div class="row"><span>Architecture</span><span>standalone dynamic</span></div><div class="row"><span>Contract</span><span>v1</span></div><div class="row"><span>Limbs</span><span>native L/R</span></div><div class="row"><span>Spine</span><span>25 native vertebral joints</span></div><div class="row"><span>Shoulders</span><span>SC → AC → scapula/ST → GH</span></div>`;
