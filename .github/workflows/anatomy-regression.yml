@@ -10,6 +10,7 @@ on:
       - 'character/character-body-volume-v1.js'
       - 'character/character-muscle-volume-v1.js'
       - 'character/character-body-surface-v1.js'
+      - 'character/character-contour-v1.js'
       - 'character/skeleton-v16-mechanics-preview.*'
       - 'character/skeleton-mechanics-v16.js'
       - 'character/skeleton-mechanics-v19.js'
