@@ -1,9 +1,10 @@
-name: Anatomy v1.4 regression
+name: Anatomy v1.5 regression
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'character/skeleton-v14.js'
+      - 'character/skeleton-v15.js'
+      - 'character/skeleton-v15-preview.*'
       - 'character/skeleton-mechanics-v16.js'
       - 'character/skeleton-mechanics-v19.js'
       - 'character/skeleton-mechanics-v20.js'
