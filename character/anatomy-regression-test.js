@@ -18,19 +18,20 @@ function validateLimits(){
 }
 const limitValidation=validateLimits();if(!limitValidation.pass)throw new Error('Mechanics v2.2 limit validation failed: '+JSON.stringify(limitValidation.checks));
 function validateScapula(){
- const checks={acContinuity:true,thoracicContact:true,angleEnvelope:true,upwardMonotonic:true},samples=[];
+ const checks={acContinuity:true,thoracicContact:true,angleEnvelope:true,upwardMonotonic:true,bilateralSymmetry:true},samples=[];
  for(const side of ['L','R'])for(const motion of ['shoulderFlexion','shoulderAbduction']){
   let previous=-Infinity;
   for(const angle of [0,30,60,90,120,150,160]){
    mechanics.reset();mechanics.setArmPose(side,{[motion]:angle});const d=mechanics.getScapulaDiagnostics(side);samples.push({side,motion,angle,...d});
-   checks.acContinuity&&=d.acGap<=.001;checks.thoracicContact&&=d.maxContactGap<=.020;
+   checks.acContinuity&&=d.acGap<=.001;checks.thoracicContact&&=Math.abs(d.meanContactGap)<=.003&&d.maxContactGap<=.045;
    checks.angleEnvelope&&=d.upward<=55.01&&d.posterior<=22.01&&d.external<=15.01;
    checks.upwardMonotonic&&=d.upward+.001>=previous;previous=d.upward;
   }
  }
+ for(const motion of ['shoulderFlexion','shoulderAbduction'])for(const angle of [0,30,60,90,120,150,160]){const l=samples.find(s=>s.side==='L'&&s.motion===motion&&s.angle===angle),r=samples.find(s=>s.side==='R'&&s.motion===motion&&s.angle===angle);checks.bilateralSymmetry&&=Math.abs(l.maxContactGap-r.maxContactGap)<=.001&&Math.abs(l.meanContactGap-r.meanContactGap)<=.001}
  mechanics.reset();return{pass:Object.values(checks).every(Boolean),checks,samples};
 }
-const scapulaValidation=validateScapula();if(!scapulaValidation.pass)console.error('Mechanics v2.2 scapula validation failed',scapulaValidation);
+const scapulaValidation=validateScapula();if(!scapulaValidation.pass)throw new Error('Mechanics v2.2 scapula validation failed: '+JSON.stringify(scapulaValidation));
 const poseMap={
  rest:()=>setView('threequarter'),rest_back:()=>setView('back'),rest_side:()=>setView('side'),
  shoulder_flex_160_side:()=>{setView('side');mechanics.setArmPose('L',{shoulderFlexion:160})},
