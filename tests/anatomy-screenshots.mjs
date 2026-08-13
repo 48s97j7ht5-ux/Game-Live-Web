@@ -10,6 +10,10 @@ await fs.writeFile(`${out}/diagnostics.json`,JSON.stringify(report,null,2));
 const ui=await browser.newPage({viewport:{width:829,height:729},deviceScaleFactor:1});
 await ui.goto('https://48s97j7ht5-ux.github.io/Game-Live-Web/character/skeleton-v16-mechanics-preview.html?v=ui-regression',{waitUntil:'networkidle'});
 await ui.waitForFunction(()=>window.__MECHANICS_READY__===true);
+const body=await ui.evaluate(()=>window.bodyVolume?.getDiagnostics());
+if(!body?.pass||body.partCount<50||!body.scapula.L.pass||!body.scapula.R.pass)throw new Error('body volume regression: '+JSON.stringify(body));
+const opacity=ui.locator('#bodyOpacity');await opacity.fill('0.72');await opacity.dispatchEvent('input');await ui.waitForTimeout(120);
+await ui.screenshot({path:`${out}/ui_body_volume_rest.png`,fullPage:false});
 const initiallyCompact=await ui.locator('#mechanicsPanel').evaluate(el=>el.classList.contains('compact'));
 await ui.click('#toggleMechanicsPanel');
 const flex=ui.locator('#armControls input').first();await flex.fill('160');await flex.dispatchEvent('input');await ui.waitForTimeout(250);
@@ -20,5 +24,5 @@ await flex.fill('46');await flex.dispatchEvent('input');const abduction=ui.locat
 const shoulder=await ui.evaluate(()=>window.skeletonMechanics.getShoulderDiagnostics('L'));
 if(shoulder.directionError>.05||shoulder.automaticExternalRotation<25)throw new Error('coordinated shoulder UI regression: '+JSON.stringify(shoulder));
 await ui.screenshot({path:`${out}/ui_mobile_shoulder_diagonal_145.png`,fullPage:false});
-await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera,shoulder},null,2));
+await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera,shoulder,body},null,2));
 await browser.close();console.log(`Captured ${poses.length} anatomy poses to ${out}`);
