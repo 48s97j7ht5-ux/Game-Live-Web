@@ -1,7 +1,9 @@
 import {createSkeletonMechanicsV23} from './skeleton-mechanics-v23.js?v=20260813-arm-solver';
+import {createBodyVolumeV1} from './character-body-volume-v1.js?v=20260813-body-volume-v1';
 const mod=await import('./skeleton-v16.js?v=20260813-arm-solver');
-const api=mod.skeletonAPI,mechanics=createSkeletonMechanicsV23(api);
+const api=mod.skeletonAPI,mechanics=createSkeletonMechanicsV23(api),bodyVolume=createBodyVolumeV1(api,{opacity:.72,visible:false});
 const geometryValidation=api.validateGeometry?.();if(geometryValidation&&!geometryValidation.pass)throw new Error('Skeleton v1.6 geometry validation failed: '+JSON.stringify(geometryValidation.checks));
+const bodyVolumeValidation=bodyVolume.validate();if(!bodyVolumeValidation.pass)throw new Error('Body Volume v1 validation failed: '+JSON.stringify(bodyVolumeValidation.checks));
 const badge=document.getElementById('testBadge'),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function setView(view){const camera=window.__SKELETON_CAMERA__;if(!camera)return;const p=view==='back'?[0,1.15,-4.7]:view==='side'?[4.7,1.15,0]:view==='front'?[0,1.15,4.7]:[3.2,1.35,3.2];camera.position.set(...p);camera.lookAt(0,.9,0);camera.updateProjectionMatrix()}
 function validateLimits(){
@@ -43,6 +45,8 @@ function validateShoulderComplex(){
 const shoulderValidation=validateShoulderComplex();if(!shoulderValidation.pass)throw new Error('Mechanics v2.3 shoulder validation failed: '+JSON.stringify(shoulderValidation));
 const poseMap={
  rest:()=>setView('threequarter'),rest_back:()=>setView('back'),rest_side:()=>setView('side'),
+ body_rest_front:()=>setView('front'),body_rest_back:()=>setView('back'),body_rest_side:()=>setView('side'),
+ body_shoulder_diagonal_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderFlexion:46,shoulderAbduction:137})},
  shoulder_flex_160_side:()=>{setView('side');mechanics.setArmPose('L',{shoulderFlexion:160})},
  shoulder_abd_150_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderAbduction:150})},
  shoulder_diagonal_envelope:()=>{setView('threequarter');mechanics.setArmPose('L',{shoulderFlexion:46,shoulderAbduction:137})},
@@ -85,6 +89,6 @@ const poseMap={
  combined_reach:()=>{mechanics.setArmPose('L',{shoulderFlexion:145,elbowFlexion:15,forearmRotation:20});mechanics.setArmPose('R',{shoulderFlexion:145,elbowFlexion:15,forearmRotation:20});mechanics.setTorsoPose({thoracicFlexion:-8,neckFlexion:-8})}
 };
 const important=['sc_L','ac_L','shoulder_L','elbow_L','forearm_rotation_L','wrist_L','finger_mcp_L_2','hip_L','knee_L','ankle_L','subtalar_L','toe_mtp_L_0','pelvis_center','spine_S1','spine_T12','spine_T1','neck_C1','head','jaw'];
-function diagnostics(name){const joints={};for(const n of important){try{const p=mechanics.getJointWorld(n);joints[n]=[p.x,p.y,p.z]}catch{}}const segments={};for(const n of api.segmentNames){const s=api.getSegment(n);if(s)segments[n]=s.length}return{name,mechanicsVersion:mechanics.mechanicsVersion,skeletonVersion:api.skeletonVersion,joints,segments,state:mechanics.getState(),scapula:{L:mechanics.getScapulaDiagnostics('L'),R:mechanics.getScapulaDiagnostics('R')},shoulder:{L:mechanics.getShoulderDiagnostics('L'),R:mechanics.getShoulderDiagnostics('R')},geometry:api.getGeometryMetrics?.()??null,geometryValidation,limitValidation,scapulaValidation,shoulderValidation}}
-window.anatomyTest={poses:Object.keys(poseMap),async setPose(name){if(!poseMap[name])throw new Error('unknown pose '+name);mechanics.reset();poseMap[name]();api.jointRoot.updateMatrixWorld(true);badge.textContent='anatomy regression · '+name;await sleep(220);return diagnostics(name)},diagnostics:()=>diagnostics('current'),reset:()=>mechanics.reset()};
+function diagnostics(name){const joints={};for(const n of important){try{const p=mechanics.getJointWorld(n);joints[n]=[p.x,p.y,p.z]}catch{}}const segments={};for(const n of api.segmentNames){const s=api.getSegment(n);if(s)segments[n]=s.length}return{name,mechanicsVersion:mechanics.mechanicsVersion,skeletonVersion:api.skeletonVersion,bodyVolumeVersion:bodyVolume.version,joints,segments,state:mechanics.getState(),scapula:{L:mechanics.getScapulaDiagnostics('L'),R:mechanics.getScapulaDiagnostics('R')},shoulder:{L:mechanics.getShoulderDiagnostics('L'),R:mechanics.getShoulderDiagnostics('R')},bodyVolume:bodyVolume.getDiagnostics(),geometry:api.getGeometryMetrics?.()??null,geometryValidation,bodyVolumeValidation,limitValidation,scapulaValidation,shoulderValidation}}
+window.anatomyTest={poses:Object.keys(poseMap),async setPose(name){if(!poseMap[name])throw new Error('unknown pose '+name);mechanics.reset();const showBody=name.startsWith('body_');bodyVolume.setVisible(showBody);bodyVolume.setSkeletonVisible(true);poseMap[name]();api.jointRoot.updateMatrixWorld(true);badge.textContent='anatomy regression · '+name;await sleep(220);return diagnostics(name)},diagnostics:()=>diagnostics('current'),reset:()=>{mechanics.reset();bodyVolume.setVisible(false);bodyVolume.setSkeletonVisible(true)}};
 window.__ANATOMY_READY__=true;badge.textContent='anatomy regression · ready';
