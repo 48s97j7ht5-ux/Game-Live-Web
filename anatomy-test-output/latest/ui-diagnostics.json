@@ -86,6 +86,79 @@
     },
     "pass": true
   },
+  "surface": {
+    "version": "1.0.0",
+    "stature": 1.75,
+    "targetPixelHeight": 400,
+    "deformerCount": 29,
+    "sides": {
+      "L": 12,
+      "R": 12
+    },
+    "zones": [
+      "head",
+      "neck",
+      "torso",
+      "pelvis",
+      "chest",
+      "upperArms",
+      "forearms",
+      "hands",
+      "thighs",
+      "knees",
+      "lowerLegs",
+      "feet"
+    ],
+    "shadeSteps": 5,
+    "voxelSize": 0.027,
+    "mesh": {
+      "triangleCount": 22868,
+      "vertexCount": 11440,
+      "grid": [
+        28,
+        71,
+        23
+      ],
+      "bounds": {
+        "min": [
+          -0.36400000000000005,
+          -0.07400000000000001,
+          -0.29463055555555556
+        ],
+        "max": [
+          0.36400000000000005,
+          1.798,
+          0.2842289719626168
+        ]
+      },
+      "buildMs": 275.9000000000233
+    },
+    "landmarkClearance": {
+      "head": -0.0602875320135951,
+      "shoulder_L": -0.060300330068266274,
+      "shoulder_R": -0.060300330068266274,
+      "elbow_L": -0.04628409090909091,
+      "elbow_R": -0.04628409090909091,
+      "wrist_L": -0.036102272727272726,
+      "wrist_R": -0.036102272727272726,
+      "hip_L": -0.0840597036799685,
+      "hip_R": -0.0840597036799685,
+      "knee_L": -0.06326460514885424,
+      "knee_R": -0.06326460514885424,
+      "ankle_L": -0.039,
+      "ankle_R": -0.039
+    },
+    "checks": {
+      "contract": true,
+      "deformerCount": true,
+      "bilateral": true,
+      "continuousMesh": true,
+      "finite": true,
+      "landmarksInside": true,
+      "pixelTarget": true
+    },
+    "pass": true
+  },
   "biceps": {
     "name": "biceps_short",
     "side": "L",
