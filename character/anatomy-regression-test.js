@@ -1,9 +1,11 @@
 import {createSkeletonMechanicsV23} from './skeleton-mechanics-v23.js?v=20260813-arm-solver';
 import {createBodyVolumeV1} from './character-body-volume-v1.js?v=20260813-body-volume-v1';
+import {createMuscleVolumeV1} from './character-muscle-volume-v1.js?v=20260813-muscle-volume-v1';
 const mod=await import('./skeleton-v16.js?v=20260813-arm-solver');
-const api=mod.skeletonAPI,mechanics=createSkeletonMechanicsV23(api),bodyVolume=createBodyVolumeV1(api,{opacity:.72,visible:false});
+const api=mod.skeletonAPI,mechanics=createSkeletonMechanicsV23(api),bodyVolume=createBodyVolumeV1(api,{opacity:.72,visible:false}),muscleVolume=createMuscleVolumeV1(api,{opacity:.9,visible:false});
 const geometryValidation=api.validateGeometry?.();if(geometryValidation&&!geometryValidation.pass)throw new Error('Skeleton v1.6 geometry validation failed: '+JSON.stringify(geometryValidation.checks));
 const bodyVolumeValidation=bodyVolume.validate();if(!bodyVolumeValidation.pass)throw new Error('Body Volume v1 validation failed: '+JSON.stringify(bodyVolumeValidation.checks));
+const muscleVolumeValidation=muscleVolume.validate();if(!muscleVolumeValidation.pass)throw new Error('Muscle Volume v1 validation failed: '+JSON.stringify(muscleVolumeValidation.checks));
 const badge=document.getElementById('testBadge'),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function setView(view){const camera=window.__SKELETON_CAMERA__;if(!camera)return;const p=view==='back'?[0,1.15,-4.7]:view==='side'?[4.7,1.15,0]:view==='front'?[0,1.15,4.7]:[3.2,1.35,3.2];camera.position.set(...p);camera.lookAt(0,.9,0);camera.updateProjectionMatrix()}
 function validateLimits(){
@@ -43,10 +45,24 @@ function validateShoulderComplex(){
  mechanics.reset();return{pass:Object.values(checks).every(Boolean),checks,samples};
 }
 const shoulderValidation=validateShoulderComplex();if(!shoulderValidation.pass)throw new Error('Mechanics v2.3 shoulder validation failed: '+JSON.stringify(shoulderValidation));
+function validateMuscles(){
+ const checks={count:true,bilateral:true,elbowBulge:true,volumeConservation:true,extremePoseFinite:true},samples=[];
+ mechanics.reset();muscleVolume.update(true);let d=muscleVolume.getDiagnostics();checks.count=d.muscleCount===50;checks.bilateral=d.sides.L===25&&d.sides.R===25&&d.checks.bilateral;
+ const rest=muscleVolume.getMuscle('biceps_short','L');mechanics.setArmPose('L',{elbowFlexion:120});muscleVolume.update(true);const flexed=muscleVolume.getMuscle('biceps_short','L');
+ samples.push({name:'biceps_rest',...rest},{name:'biceps_elbow_120',...flexed});checks.elbowBulge=flexed.currentLength<rest.currentLength&&flexed.thicknessScale>1.04;checks.volumeConservation=Math.abs(1-flexed.volumeRatio)<=.02;
+ for(const pose of [{shoulderAbduction:145},{shoulderFlexion:145},{shoulderFlexion:46,shoulderAbduction:137,elbowFlexion:35,forearmRotation:-60}]){mechanics.reset();mechanics.setArmPose('L',pose);muscleVolume.update(true);d=muscleVolume.getDiagnostics();samples.push({name:'extreme',pose,diagnostics:d});checks.extremePoseFinite&&=d.pass&&d.checks.finite&&d.checks.volumeConservation}
+ mechanics.reset();muscleVolume.update(true);return{pass:Object.values(checks).every(Boolean),checks,samples};
+}
+const muscleValidation=validateMuscles();if(!muscleValidation.pass)throw new Error('Muscle Volume v1 dynamic validation failed: '+JSON.stringify(muscleValidation));
 const poseMap={
  rest:()=>setView('threequarter'),rest_back:()=>setView('back'),rest_side:()=>setView('side'),
  body_rest_front:()=>setView('front'),body_rest_back:()=>setView('back'),body_rest_side:()=>setView('side'),
  body_shoulder_diagonal_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderFlexion:46,shoulderAbduction:137})},
+ muscle_rest_front:()=>setView('front'),muscle_rest_back:()=>setView('back'),
+ muscle_elbow_flex_side:()=>{setView('side');mechanics.setArmPose('L',{shoulderFlexion:35,elbowFlexion:120,forearmRotation:20})},
+ muscle_shoulder_abd_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderAbduction:145})},
+ muscle_diagonal_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderFlexion:46,shoulderAbduction:137})},
+ muscle_pronation_front:()=>{setView('front');mechanics.setArmPose('L',{shoulderFlexion:35,elbowFlexion:90,forearmRotation:-75})},
  shoulder_flex_160_side:()=>{setView('side');mechanics.setArmPose('L',{shoulderFlexion:160})},
  shoulder_abd_150_back:()=>{setView('back');mechanics.setArmPose('L',{shoulderAbduction:150})},
  shoulder_diagonal_envelope:()=>{setView('threequarter');mechanics.setArmPose('L',{shoulderFlexion:46,shoulderAbduction:137})},
@@ -89,6 +105,6 @@ const poseMap={
  combined_reach:()=>{mechanics.setArmPose('L',{shoulderFlexion:145,elbowFlexion:15,forearmRotation:20});mechanics.setArmPose('R',{shoulderFlexion:145,elbowFlexion:15,forearmRotation:20});mechanics.setTorsoPose({thoracicFlexion:-8,neckFlexion:-8})}
 };
 const important=['sc_L','ac_L','shoulder_L','elbow_L','forearm_rotation_L','wrist_L','finger_mcp_L_2','hip_L','knee_L','ankle_L','subtalar_L','toe_mtp_L_0','pelvis_center','spine_S1','spine_T12','spine_T1','neck_C1','head','jaw'];
-function diagnostics(name){const joints={};for(const n of important){try{const p=mechanics.getJointWorld(n);joints[n]=[p.x,p.y,p.z]}catch{}}const segments={};for(const n of api.segmentNames){const s=api.getSegment(n);if(s)segments[n]=s.length}return{name,mechanicsVersion:mechanics.mechanicsVersion,skeletonVersion:api.skeletonVersion,bodyVolumeVersion:bodyVolume.version,joints,segments,state:mechanics.getState(),scapula:{L:mechanics.getScapulaDiagnostics('L'),R:mechanics.getScapulaDiagnostics('R')},shoulder:{L:mechanics.getShoulderDiagnostics('L'),R:mechanics.getShoulderDiagnostics('R')},bodyVolume:bodyVolume.getDiagnostics(),geometry:api.getGeometryMetrics?.()??null,geometryValidation,bodyVolumeValidation,limitValidation,scapulaValidation,shoulderValidation}}
-window.anatomyTest={poses:Object.keys(poseMap),async setPose(name){if(!poseMap[name])throw new Error('unknown pose '+name);mechanics.reset();const showBody=name.startsWith('body_');bodyVolume.setVisible(showBody);bodyVolume.setSkeletonVisible(true);poseMap[name]();api.jointRoot.updateMatrixWorld(true);badge.textContent='anatomy regression · '+name;await sleep(220);return diagnostics(name)},diagnostics:()=>diagnostics('current'),reset:()=>{mechanics.reset();bodyVolume.setVisible(false);bodyVolume.setSkeletonVisible(true)}};
+function diagnostics(name){const joints={};for(const n of important){try{const p=mechanics.getJointWorld(n);joints[n]=[p.x,p.y,p.z]}catch{}}const segments={};for(const n of api.segmentNames){const s=api.getSegment(n);if(s)segments[n]=s.length}return{name,mechanicsVersion:mechanics.mechanicsVersion,skeletonVersion:api.skeletonVersion,bodyVolumeVersion:bodyVolume.version,muscleVolumeVersion:muscleVolume.version,joints,segments,state:mechanics.getState(),scapula:{L:mechanics.getScapulaDiagnostics('L'),R:mechanics.getScapulaDiagnostics('R')},shoulder:{L:mechanics.getShoulderDiagnostics('L'),R:mechanics.getShoulderDiagnostics('R')},bodyVolume:bodyVolume.getDiagnostics(),muscleVolume:muscleVolume.getDiagnostics(),geometry:api.getGeometryMetrics?.()??null,geometryValidation,bodyVolumeValidation,muscleVolumeValidation,limitValidation,scapulaValidation,shoulderValidation,muscleValidation}}
+window.anatomyTest={poses:Object.keys(poseMap),async setPose(name){if(!poseMap[name])throw new Error('unknown pose '+name);mechanics.reset();const showBody=name.startsWith('body_')||name.startsWith('muscle_'),showMuscles=name.startsWith('muscle_');bodyVolume.setVisible(showBody);bodyVolume.setOpacity(showMuscles ? .42 : .72);bodyVolume.setSkeletonVisible(true);muscleVolume.setVisible(showMuscles);poseMap[name]();api.jointRoot.updateMatrixWorld(true);muscleVolume.update(true);badge.textContent='anatomy regression · '+name;await sleep(220);return diagnostics(name)},diagnostics:()=>diagnostics('current'),reset:()=>{mechanics.reset();bodyVolume.setVisible(false);bodyVolume.setSkeletonVisible(true);muscleVolume.setVisible(false);muscleVolume.update(true)}};
 window.__ANATOMY_READY__=true;badge.textContent='anatomy regression · ready';
