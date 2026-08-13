@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "source": "character-turnaround-reference-v1.png",
+  "cellWidth": 256,
+  "cellHeight": 440,
+  "targetHeight": 400,
+  "crownY": 20,
+  "floorY": 420,
+  "views": [
+    {
+      "key": "front",
+      "angle": 0,
+      "sourceBounds": [
+        27,
+        40,
+        152,
+        450
+      ],
+      "normalizedBounds": [
+        66,
+        20,
+        189,
+        420
+      ]
+    },
+    {
+      "key": "frontThree",
+      "angle": 45,
+      "sourceBounds": [
+        180,
+        40,
+        296,
+        452
+      ],
+      "normalizedBounds": [
+        71,
+        20,
+        184,
+        420
+      ]
+    },
+    {
+      "key": "side",
+      "angle": 90,
+      "sourceBounds": [
+        360,
+        40,
+        426,
+        450
+      ],
+      "normalizedBounds": [
+        95,
+        20,
+        160,
+        420
+      ]
+    },
+    {
+      "key": "rearThree",
+      "angle": 135,
+      "sourceBounds": [
+        478,
+        40,
+        596,
+        451
+      ],
+      "normalizedBounds": [
+        70,
+        20,
+        186,
+        420
+      ]
+    },
+    {
+      "key": "back",
+      "angle": 180,
+      "sourceBounds": [
+        624,
+        40,
+        750,
+        447
+      ],
+      "normalizedBounds": [
+        65,
+        20,
+        190,
+        420
+      ]
+    }
+  ]
+}

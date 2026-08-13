@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Body Slicer v1</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0d1118;color:#edf3ff;font-family:system-ui,-apple-system,sans-serif}body{padding:12px}.topbar{position:sticky;top:0;z-index:4;max-width:1120px;margin:0 auto 10px;padding:10px;border:1px solid #30394a;border-radius:12px;background:#151b25ee;backdrop-filter:blur(10px)}.head,.controls,.links{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.head{justify-content:space-between}.title{font-size:16px;font-weight:800}.sub{font-size:11px;color:#9cabc0}.links a,.mode{padding:6px 9px;border:1px solid #3d4a60;border-radius:8px;background:#222b39;color:#edf3ff;text-decoration:none;font-weight:700;font-size:12px}.mode.active{background:#40516d;border-color:#7990b5}.controls{margin-top:9px}.controls label{display:flex;align-items:center;gap:6px;color:#c9d4e6;font-size:12px}.controls input[type=range]{width:180px}.controls .slice{flex:1;min-width:220px}.value{min-width:64px;text-align:right;font-variant-numeric:tabular-nums;color:#7fe4ff}.grid{max-width:1120px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.panel{min-width:0;border:1px solid #2c3545;border-radius:12px;background:#141a23;overflow:hidden}.panel h2{margin:0;padding:8px 10px;border-bottom:1px solid #293242;font-size:12px;color:#cbd7e9}.canvas-wrap{display:grid;place-items:center;min-height:300px;background:radial-gradient(circle at 50% 45%,#222b38,#111720 65%)}canvas{display:block;max-width:100%;height:auto;image-rendering:pixelated}.projection{width:min(100%,256px)}.metrics{max-width:1120px;margin:10px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.metric{padding:8px 10px;border:1px solid #293344;border-radius:9px;background:#131923}.metric b{display:block;color:#7fe4ff;font-size:14px}.metric span{font-size:10px;color:#95a4b8}.note{max-width:1120px;margin:9px auto 0;color:#99a8bc;font-size:11px}.warning{color:#ffbd78}.ready{color:#79e0b0}@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.canvas-wrap{min-height:250px}.metrics{grid-template-columns:repeat(3,1fr)}}@media(max-width:520px){body{padding:6px}.topbar{padding:8px}.sub{display:none}.controls{gap:6px}.controls input[type=range]{width:130px}.grid{gap:6px}.panel h2{padding:6px 8px;font-size:11px}.canvas-wrap{min-height:190px}.metrics{gap:5px}.metric{padding:6px}.metric b{font-size:12px}.links a{padding:5px 7px}.note{padding:0 3px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="head"><div><div class="title">Body Slicer v1</div><div class="sub">Canonical Reference v1 · 400 попиксельных срезов · без старого скелета</div></div><nav class="links"><a href="./character-reference-calibration-v1.html">Калибровка</a><a href="./skeleton-v16-mechanics-preview.html">Старый прототип</a></nav></div>
+    <div class="controls">
+      <label class="slice">Срез <input id="sliceY" type="range" min="0" max="399" value="155"><span id="sliceValue" class="value">155 / 399</span></label>
+      <button id="frontSideMode" class="mode" type="button">2 вида</button><button id="allViewsMode" class="mode active" type="button">Все 5</button>
+      <label>Допуск <input id="tolerance" type="range" min="0" max="8" value="3"><span id="toleranceValue" class="value">3 px</span></label>
+      <label>Поворот <input id="volumeAngle" type="range" min="-70" max="70" value="28"><span id="angleValue" class="value">28°</span></label>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel"><h2>Фронт · ширина X</h2><div class="canvas-wrap"><canvas id="frontCanvas" class="projection" width="256" height="440"></canvas></div></section>
+    <section class="panel"><h2>Профиль · глубина Z</h2><div class="canvas-wrap"><canvas id="sideCanvas" class="projection" width="256" height="440"></canvas></div></section>
+    <section class="panel"><h2>Поперечное сечение XZ</h2><div class="canvas-wrap"><canvas id="sliceCanvas" width="256" height="256"></canvas></div></section>
+    <section class="panel"><h2>Объём, сложенный из срезов</h2><div class="canvas-wrap"><canvas id="volumeCanvas" width="300" height="440"></canvas></div></section>
+  </main>
+
+  <section class="metrics">
+    <div class="metric"><b id="heightPercent">38.8%</b><span>высота от макушки</span></div>
+    <div class="metric"><b id="frontSpan">—</b><span>общий фронтальный диапазон</span></div>
+    <div class="metric"><b id="sideSpan">—</b><span>общая глубина профиля</span></div>
+    <div class="metric"><b id="sliceArea">—</b><span>площадь сечения, px²</span></div>
+    <div class="metric"><b id="coherence">—</b><span>согласованность пяти видов</span></div>
+  </section>
+  <p class="note"><span id="status" class="ready">Подготовка эталонных масок…</span> Голова пока считается черновой: причёска закрывает череп. Тело от шеи до стоп восстанавливается непосредственно из выбранного референса.</p>
+  <script type="module" src="./body-slicer-v1.js?v=20260813-body-slicer-v1"></script>
+</body>
+</html>
