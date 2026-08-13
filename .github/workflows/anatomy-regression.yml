@@ -7,6 +7,7 @@ on:
       - 'character/skeleton-mechanics-v21.js'
       - 'character/skeleton-mechanics-v22.js'
       - 'character/skeleton-mechanics-v23.js'
+      - 'character/character-body-volume-v1.js'
       - 'character/skeleton-v16-mechanics-preview.*'
       - 'character/skeleton-mechanics-v16.js'
       - 'character/skeleton-mechanics-v19.js'
