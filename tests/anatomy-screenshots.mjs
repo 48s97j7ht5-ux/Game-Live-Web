@@ -7,4 +7,14 @@ await page.goto(base,{waitUntil:'networkidle'});await page.waitForFunction(()=>w
 const poses=await page.evaluate(()=>window.anatomyTest.poses);const report=[];
 for(const pose of poses){const diag=await page.evaluate(p=>window.anatomyTest.setPose(p),pose);await page.screenshot({path:`${out}/${pose}.png`,fullPage:false});report.push(diag)}
 await fs.writeFile(`${out}/diagnostics.json`,JSON.stringify(report,null,2));
+const ui=await browser.newPage({viewport:{width:829,height:729},deviceScaleFactor:1});
+await ui.goto('https://48s97j7ht5-ux.github.io/Game-Live-Web/character/skeleton-v16-mechanics-preview.html?v=ui-regression',{waitUntil:'networkidle'});
+await ui.waitForFunction(()=>window.__MECHANICS_READY__===true);
+const initiallyCompact=await ui.locator('#mechanicsPanel').evaluate(el=>el.classList.contains('compact'));
+await ui.click('#toggleMechanicsPanel');
+const flex=ui.locator('#armControls input').first();await flex.fill('160');await flex.dispatchEvent('input');await ui.waitForTimeout(250);
+const camera=await ui.evaluate(()=>{const p=window.__SKELETON_CAMERA__.position;return{x:p.x,y:p.y,z:p.z}});
+if(!initiallyCompact||Math.abs(camera.x)<4||Math.abs(camera.z)>.25)throw new Error('mobile smart-view regression: '+JSON.stringify({initiallyCompact,camera}));
+await ui.screenshot({path:`${out}/ui_mobile_shoulder_flex_160.png`,fullPage:false});
+await fs.writeFile(`${out}/ui-diagnostics.json`,JSON.stringify({initiallyCompact,camera},null,2));
 await browser.close();console.log(`Captured ${poses.length} anatomy poses to ${out}`);
