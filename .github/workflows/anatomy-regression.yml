@@ -13,17 +13,12 @@ on:
       - 'character/character-contour-v1.js'
       - 'character/character-reference-calibration-v1.*'
       - 'character/assets/character-turnaround-reference-v1.png'
-      - 'character/body-slicer-v1.*'
-      - 'character/assets/slicer-reference-v1.*'
-      - 'character/assets/slicer-masks-v1.png'
-      - 'character/tools/build-slicer-reference-v1.py'
       - 'character/skeleton-v16-mechanics-preview.*'
       - 'character/skeleton-mechanics-v16.js'
       - 'character/skeleton-mechanics-v19.js'
       - 'character/skeleton-mechanics-v20.js'
       - 'character/anatomy-regression-test.*'
       - 'tests/anatomy-screenshots.mjs'
-      - '.github/workflows/anatomy-regression.yml'
 permissions:
   contents: write
 concurrency:
