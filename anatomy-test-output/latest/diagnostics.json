@@ -89,17 +89,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -193,17 +228,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -297,17 +367,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -334,12 +439,12 @@
       "elbow_L": [
         -0.5370196548091252,
         1.4720044924213829,
-        0.004948727315011357
+        0.0049487273150113946
       ],
       "wrist_L": [
         -0.7663329990416922,
         1.4966774431727596,
-        0.005473758834419393
+        0.005473758834419457
       ],
       "hip_L": [
         -0.092,
@@ -401,17 +506,52 @@
       "clavicle_L": 0.14799999999999996,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575427,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.14571547618561329,
+      "scapula_width_L": 0.10000000000000005,
       "hand_L": 0.18917440095989835,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -431,19 +571,19 @@
         -0.019605535544384226
       ],
       "shoulder_L": [
-        -0.227,
-        1.5023666666666664,
-        0.012000000000000005
+        -0.22700000000000004,
+        1.5023666666666666,
+        0.011999999999999999
       ],
       "elbow_L": [
-        -0.22377787353142914,
-        1.817038958983266,
-        -0.027691010937452416
+        -0.2192750061134275,
+        1.81855399459072,
+        -0.011881124967209814
       ],
       "wrist_L": [
-        -0.20065521700465747,
-        2.044444686808126,
-        -0.05844190860875231
+        -0.19299094518223625,
+        2.046805826920946,
+        -0.03197811924147497
       ],
       "hip_L": [
         -0.092,
@@ -491,8 +631,8 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.31718198246432594,
-      "forearm_L": 0.23063746443281938,
+      "upperarm_L": 0.317181982464326,
+      "forearm_L": 0.2306374644328192,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.148,
@@ -505,17 +645,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.1891744009598981,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.0999999999999999,
+      "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -535,18 +710,18 @@
         -0.015227464116674354
       ],
       "shoulder_L": [
-        -0.21988085937500002,
+        -0.219880859375,
         1.4667709635416666,
         0.009761718750000002
       ],
       "elbow_L": [
-        -0.2735962318430894,
+        -0.27359623184308934,
         1.419337871215255,
         0.31874257659230787
       ],
       "wrist_L": [
-        -0.33078228147046496,
-        1.3949531017026287,
+        -0.3307822814704649,
+        1.3949531017026284,
         0.5408434067209488
       ],
       "hip_L": [
@@ -596,7 +771,7 @@
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
       "upperarm_L": 0.3171819824643259,
-      "forearm_L": 0.23063746443281927,
+      "forearm_L": 0.2306374644328193,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.14799999999999996,
@@ -609,17 +784,52 @@
       "clavicle_L": 0.14799999999999996,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575432,
-      "scapula_width_L": 0.1393161871427725,
+      "scapula_height_L": 0.14571547618561315,
+      "scapula_width_L": 0.10000000000000005,
       "hand_L": 0.18917440095989832,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -641,17 +851,17 @@
       "shoulder_L": [
         -0.22699999999999998,
         1.5023666666666666,
-        0.023999999999999997
+        0.024000000000000004
       ],
       "elbow_L": [
-        -0.02356299156140032,
-        1.6903517708362117,
-        0.17852959007231703
+        -0.013370514888375318,
+        1.6781410071082972,
+        0.17914584858529678
       ],
       "wrist_L": [
-        0.11147829732288819,
-        1.842938975928354,
-        0.2865788156069712
+        0.12931804301605473,
+        1.8223226281676832,
+        0.28889681938666
       ],
       "hip_L": [
         -0.092,
@@ -713,17 +923,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.13931618714277252,
-      "hand_L": 0.18917440095989824,
+      "scapula_height_L": 0.14571547618561315,
+      "scapula_width_L": 0.10000000000000007,
+      "hand_L": 0.1891744009598983,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -745,17 +990,17 @@
       "shoulder_L": [
         -0.215787353515625,
         1.4463034342447916,
-        0.0015747070312500016
+        0.0015747070312499964
       ],
       "elbow_L": [
-        -0.25514130073060143,
-        1.2191136832514993,
-        0.21938309502906483
+        -0.26226123195368634,
+        1.219505979179324,
+        0.21838684460373792
       ],
       "wrist_L": [
-        -0.3042197894192076,
-        1.0581854074304224,
-        0.3771393373439025
+        -0.316487798228529,
+        1.058844494856827,
+        0.3747230431162133
       ],
       "hip_L": [
         -0.092,
@@ -803,8 +1048,8 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.3171819824643259,
-      "forearm_L": 0.23063746443281932,
+      "upperarm_L": 0.31718198246432594,
+      "forearm_L": 0.2306374644328192,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.148,
@@ -817,17 +1062,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575438,
-      "scapula_width_L": 0.13931618714277244,
+      "scapula_height_L": 0.1457154761856133,
+      "scapula_width_L": 0.09999999999999998,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -847,18 +1127,18 @@
         -0.015227464116674354
       ],
       "shoulder_L": [
-        -0.21988085937500002,
+        -0.219880859375,
         1.4667709635416666,
         0.009761718750000002
       ],
       "elbow_L": [
-        -0.2735962318430894,
+        -0.27359623184308934,
         1.419337871215255,
         0.31874257659230787
       ],
       "wrist_L": [
-        -0.33078228147046496,
-        1.3949531017026287,
+        -0.3307822814704649,
+        1.3949531017026284,
         0.5408434067209488
       ],
       "hip_L": [
@@ -908,7 +1188,7 @@
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
       "upperarm_L": 0.3171819824643259,
-      "forearm_L": 0.23063746443281927,
+      "forearm_L": 0.2306374644328193,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.14799999999999996,
@@ -921,17 +1201,52 @@
       "clavicle_L": 0.14799999999999996,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575432,
-      "scapula_width_L": 0.1393161871427725,
+      "scapula_height_L": 0.14571547618561315,
+      "scapula_width_L": 0.10000000000000005,
       "hand_L": 0.18917440095989832,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -953,17 +1268,17 @@
       "shoulder_L": [
         -0.22468627929687499,
         1.4907980631510416,
-        0.019372558593750006
+        0.019372558593750002
       ],
       "elbow_L": [
-        -0.1698420217763164,
-        1.5968066932584628,
-        0.3132410457776714
+        -0.148855963519974,
+        1.5789540478396886,
+        0.31447033149749537
       ],
       "wrist_L": [
-        -0.14407421952808208,
-        1.6888522893182132,
-        0.523139279722841
+        -0.1076248830495082,
+        1.6585357911540342,
+        0.5269800586496604
       ],
       "hip_L": [
         -0.092,
@@ -1011,8 +1326,8 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.317181982464326,
-      "forearm_L": 0.23063746443281932,
+      "upperarm_L": 0.31718198246432594,
+      "forearm_L": 0.23063746443281935,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.14800000000000002,
@@ -1025,17 +1340,52 @@
       "clavicle_L": 0.14800000000000002,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575438,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.18917440095989835,
+      "scapula_height_L": 0.14571547618561323,
+      "scapula_width_L": 0.1,
+      "hand_L": 0.18917440095989826,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1057,17 +1407,17 @@
       "shoulder_L": [
         -0.22699999999999998,
         1.5023666666666666,
-        0.023999999999999997
+        0.024000000000000004
       ],
       "elbow_L": [
-        -0.02356299156140032,
-        1.6903517708362117,
-        0.17852959007231703
+        -0.013370514888375318,
+        1.6781410071082972,
+        0.17914584858529678
       ],
       "wrist_L": [
-        0.11147829732288819,
-        1.842938975928354,
-        0.2865788156069712
+        0.12931804301605473,
+        1.8223226281676832,
+        0.28889681938666
       ],
       "hip_L": [
         -0.092,
@@ -1129,17 +1479,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.13931618714277252,
-      "hand_L": 0.18917440095989824,
+      "scapula_height_L": 0.14571547618561315,
+      "scapula_width_L": 0.10000000000000007,
+      "hand_L": 0.1891744009598983,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1161,17 +1546,17 @@
       "shoulder_L": [
         -0.215787353515625,
         1.4463034342447916,
-        0.0007873535156250003
+        0.0007873535156249977
       ],
       "elbow_L": [
-        -0.44378733464144526,
-        1.2260592475150565,
-        -0.009838879042678156
+        -0.4431733969243655,
+        1.2258891620156391,
+        -0.017032462998903597
       ],
       "wrist_L": [
-        -0.6234083591436848,
-        1.081520342818164,
-        -0.01603828109355549
+        -0.6224005896288538,
+        1.0812206897402596,
+        -0.028960854540764473
       ],
       "hip_L": [
         -0.092,
@@ -1219,8 +1604,8 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.31718198246432594,
-      "forearm_L": 0.23063746443281918,
+      "upperarm_L": 0.317181982464326,
+      "forearm_L": 0.23063746443281924,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.148,
@@ -1233,17 +1618,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575438,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.1891744009598983,
+      "scapula_height_L": 0.1457154761856133,
+      "scapula_width_L": 0.10000000000000003,
+      "hand_L": 0.18917440095989826,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1270,12 +1690,12 @@
       "elbow_L": [
         -0.5370196548091252,
         1.4720044924213829,
-        0.004948727315011357
+        0.0049487273150113946
       ],
       "wrist_L": [
         -0.7663329990416922,
         1.4966774431727596,
-        0.005473758834419393
+        0.005473758834419457
       ],
       "hip_L": [
         -0.092,
@@ -1337,17 +1757,52 @@
       "clavicle_L": 0.14799999999999996,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575427,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.14571547618561329,
+      "scapula_width_L": 0.10000000000000005,
       "hand_L": 0.18917440095989835,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1367,19 +1822,19 @@
         -0.01818434912624766
       ],
       "shoulder_L": [
-        -0.22468627929687499,
+        -0.224686279296875,
         1.4907980631510416,
         0.009686279296875
       ],
       "elbow_L": [
-        -0.4443341633961835,
-        1.7196187478235092,
-        0.010244201083401412
+        -0.4389720721849216,
+        1.7230308252321302,
+        0.03714448722327915
       ],
       "wrist_L": [
-        -0.5883676649414891,
-        1.8997481198379238,
-        0.009061082200493873
+        -0.5789436183191421,
+        1.9054319018990693,
+        0.055350351760213454
       ],
       "hip_L": [
         -0.092,
@@ -1428,7 +1883,7 @@
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
       "upperarm_L": 0.317181982464326,
-      "forearm_L": 0.23063746443281935,
+      "forearm_L": 0.2306374644328193,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.14800000000000002,
@@ -1441,17 +1896,52 @@
       "clavicle_L": 0.14800000000000002,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575435,
-      "scapula_width_L": 0.1393161871427724,
+      "scapula_height_L": 0.1457154761856131,
+      "scapula_width_L": 0.10000000000000013,
       "hand_L": 0.1891744009598982,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1471,19 +1961,19 @@
         -0.019605535544384226
       ],
       "shoulder_L": [
-        -0.227,
-        1.5023666666666664,
-        0.012000000000000005
+        -0.22700000000000004,
+        1.5023666666666666,
+        0.011999999999999999
       ],
       "elbow_L": [
-        -0.22377787353142914,
-        1.817038958983266,
-        -0.027691010937452416
+        -0.2192750061134275,
+        1.81855399459072,
+        -0.011881124967209814
       ],
       "wrist_L": [
-        -0.20065521700465747,
-        2.044444686808126,
-        -0.05844190860875231
+        -0.19299094518223625,
+        2.046805826920946,
+        -0.03197811924147497
       ],
       "hip_L": [
         -0.092,
@@ -1531,8 +2021,8 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.31718198246432594,
-      "forearm_L": 0.23063746443281938,
+      "upperarm_L": 0.317181982464326,
+      "forearm_L": 0.2306374644328192,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.148,
@@ -1545,17 +2035,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.1891744009598981,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.0999999999999999,
+      "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1575,19 +2100,19 @@
         -0.011999999999999997
       ],
       "shoulder_L": [
-        -0.215,
+        -0.21500000000000002,
         1.4423666666666666,
-        0
+        8.673617379884035e-19
       ],
       "elbow_L": [
-        -0.22134569695760778,
+        -0.22147271977842187,
         1.1252666666666666,
-        0.0034252197188220255
+        0.0031786630318463766
       ],
       "wrist_L": [
-        -0.2616900340795553,
+        -0.26806572002032986,
         0.9674404331058293,
-        0.16669448952239116
+        0.16477573085319502
       ],
       "hip_L": [
         -0.092,
@@ -1636,7 +2161,7 @@
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
       "upperarm_L": 0.31718198246432594,
-      "forearm_L": 0.2306374644328193,
+      "forearm_L": 0.23063746443281927,
       "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.2306374644328193,
       "clavicle_L": 0.148,
@@ -1649,17 +2174,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.18917440095989826,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
+      "hand_L": 0.1891744009598983,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1679,19 +2239,19 @@
         -0.011999999999999997
       ],
       "shoulder_L": [
-        -0.215,
+        -0.21500000000000002,
         1.4423666666666666,
-        0
+        8.673617379884035e-19
       ],
       "elbow_L": [
-        -0.22134569695760778,
+        -0.22147271977842187,
         1.1252666666666666,
-        0.0034252197188220255
+        0.0031786630318463766
       ],
       "wrist_L": [
-        -0.26753318405249515,
+        -0.2763124574978433,
         1.1312666666666666,
-        0.22931093426460644
+        0.22712116272063937
       ],
       "hip_L": [
         -0.092,
@@ -1753,17 +2313,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.13931618714277244,
-      "hand_L": 0.18917440095989826,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
+      "hand_L": 0.1891744009598982,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1783,19 +2378,19 @@
         -0.011999999999999997
       ],
       "shoulder_L": [
-        -0.215,
+        -0.21500000000000002,
         1.4423666666666666,
-        0
+        8.673617379884035e-19
       ],
       "elbow_L": [
-        -0.22134569695760778,
+        -0.22147271977842187,
         1.1252666666666666,
-        0.0034252197188220255
+        0.0031786630318463766
       ],
       "wrist_L": [
-        -0.2609016421890354,
+        -0.2669530220781877,
         1.2915781816017426,
-        0.1582459134159125
+        0.1563637213852051
       ],
       "hip_L": [
         -0.092,
@@ -1857,17 +2452,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.13931618714277244,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989835,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -1961,17 +2591,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2065,17 +2730,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2169,17 +2869,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2273,17 +3008,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2377,17 +3147,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2481,17 +3286,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2585,17 +3425,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2689,17 +3564,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2793,17 +3703,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683716,
       "c1_head_gap": 0.024331050121192868,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856133,
+      "scapula_width_L": 0.10000000000000003,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -2897,17 +3842,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683715,
       "c1_head_gap": 0.024331050121192885,
-      "scapula_height_L": 0.14607532303575452,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.14571547618561334,
+      "scapula_width_L": 0.10000000000000003,
       "hand_L": 0.18917440095989826,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3001,17 +3981,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683716,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575438,
-      "scapula_width_L": 0.1393161871427725,
+      "scapula_height_L": 0.14571547618561337,
+      "scapula_width_L": 0.10000000000000002,
       "hand_L": 0.18917440095989832,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3105,17 +4120,52 @@
       "clavicle_L": 0.14800000000000005,
       "cervical_T1_C1": 0.10621205204683692,
       "c1_head_gap": 0.024331050121192885,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.1393161871427725,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.10000000000000003,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3209,17 +4259,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10584950403671896,
       "c1_head_gap": 0.02433105012119286,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3313,17 +4398,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10618959577862978,
       "c1_head_gap": 0.024331050121192858,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.13931618714277247,
+      "scapula_height_L": 0.1457154761856132,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989824,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3417,17 +4537,52 @@
       "clavicle_L": 0.148,
       "cervical_T1_C1": 0.10621205204683695,
       "c1_head_gap": 0.024331050121192865,
-      "scapula_height_L": 0.1460753230357544,
-      "scapula_width_L": 0.1393161871427725,
+      "scapula_height_L": 0.1457154761856134,
+      "scapula_width_L": 0.1,
       "hand_L": 0.18917440095989835,
       "foot_L": 0.25515877409957893,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   },
@@ -3447,19 +4602,19 @@
         -0.00007016591131970423
       ],
       "shoulder_L": [
-        -0.225892578125,
-        1.4889251948879931,
-        0.04412386874285482
+        -0.22589257812500002,
+        1.4889251948879934,
+        0.04412386874285485
       ],
       "elbow_L": [
-        -0.11672672646341932,
-        1.593400758142147,
-        0.3230003351464025
+        -0.09622957749697228,
+        1.57246426156799,
+        0.32127570547927464
       ],
       "wrist_L": [
-        -0.007783055506204908,
-        1.7301189542005686,
-        0.4734431861726216
+        0.025679532361594815,
+        1.696646018127792,
+        0.47263851554573
       ],
       "hip_L": [
         -0.092,
@@ -3507,9 +4662,9 @@
       "shin_L": 0.35602184258834463,
       "thigh_R": 0.44569398694620055,
       "shin_R": 0.35602184258834463,
-      "upperarm_L": 0.31718198246432594,
-      "forearm_L": 0.23063746443281927,
-      "upperarm_R": 0.317181982464326,
+      "upperarm_L": 0.3171819824643259,
+      "forearm_L": 0.2306374644328192,
+      "upperarm_R": 0.31718198246432594,
       "forearm_R": 0.23063746443281935,
       "clavicle_L": 0.14800000000000002,
       "clavicle_R": 0.14800000000000002,
@@ -3521,17 +4676,52 @@
       "clavicle_L": 0.14800000000000002,
       "cervical_T1_C1": 0.10585199840049829,
       "c1_head_gap": 0.024331050121192882,
-      "scapula_height_L": 0.14607532303575443,
-      "scapula_width_L": 0.1393161871427725,
-      "hand_L": 0.18917440095989826,
+      "scapula_height_L": 0.14571547618561317,
+      "scapula_width_L": 0.10000000000000005,
+      "hand_L": 0.18917440095989832,
       "foot_L": 0.25515877409957904,
       "componentChecks": {
         "sacrum": true,
         "siPair": true,
-        "costalCartilage": false,
+        "costalCartilage": true,
         "forearmRotation": true,
         "threeCuneiforms": true,
         "mandible": true
+      }
+    },
+    "geometryValidation": {
+      "pass": true,
+      "checks": {
+        "clavicle": true,
+        "cervical": true,
+        "atlasSkull": true,
+        "scapulaHeight": true,
+        "scapulaWidth": true,
+        "hand": true,
+        "foot": true,
+        "sacrum": true,
+        "siPair": true,
+        "costalCartilage": true,
+        "forearmRotation": true,
+        "threeCuneiforms": true,
+        "mandible": true
+      },
+      "metrics": {
+        "clavicle_L": 0.148,
+        "cervical_T1_C1": 0.10621205204683692,
+        "c1_head_gap": 0.024331050121192882,
+        "scapula_height_L": 0.1457154761856132,
+        "scapula_width_L": 0.1,
+        "hand_L": 0.18917440095989824,
+        "foot_L": 0.25515877409957904,
+        "componentChecks": {
+          "sacrum": true,
+          "siPair": true,
+          "costalCartilage": true,
+          "forearmRotation": true,
+          "threeCuneiforms": true,
+          "mandible": true
+        }
       }
     }
   }
