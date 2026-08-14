@@ -21,13 +21,13 @@
 <body>
   <div id="stage"></div>
   <section class="panel">
-    <div class="row"><div class="title">goth girl · 8 ракурсов</div><button id="reset">Сбросить</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
+    <div class="row"><div class="title">goth girl · 8 ракурсов</div><button id="reset">Сбросить</button><button id="free">Свободно</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
     <div class="sub">Эксперимент: объём и цвет из восьми пиксельных ракурсов · высота ровно 200 px</div>
     <div class="views" id="views"><button class="active" data-view="0">Спереди</button><button data-view="1">П 3/4 →</button><button data-view="2">Справа</button><button data-view="3">З 3/4 →</button><button data-view="4">Сзади</button><button data-view="5">З 3/4 ←</button><button data-view="6">Слева</button><button data-view="7">П 3/4 ←</button></div>
     <div class="row"><label>Срез снизу <input id="slice" type="range" min="0" max="200" value="0" step="1"><output id="sliceValue">0</output> px</label></div>
   </section>
   <div class="status" id="status">Загрузка объёма…</div>
-  <div class="legend">ракурс: восемь кнопок<br>масштаб: щипок / колесо<br>вращение отключено</div>
+  <div class="legend">точные ракурсы: восемь кнопок<br>свободный обзор: «Свободно»<br>масштаб: щипок / колесо</div>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js";
@@ -49,7 +49,7 @@
     const origin=new THREE.AxesHelper(7); origin.position.y=-.45; origin.material.transparent=true; origin.material.opacity=.35; scene.add(origin);
     const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
     renderer.localClippingEnabled=true;
-    let mesh=null, material=null, painted=true, selectedView=0, atlasPixels=null, surfacePoints=[], clayColors=[];
+    let mesh=null, material=null, painted=true, freeMode=false, selectedView=0, atlasPixels=null, surfacePoints=[], clayColors=[];
 
     function isSet(bits,index){return ((bits[index>>3]>>(index&7))&1)!==0}
     function makeSurface(bits){
@@ -74,8 +74,11 @@
       if(sourceX<0||sourceX>=pixels.width||atlasY<0||atlasY>=pixels.height||data[offset+3]===0) return target.setHex(0x9b6349);
       return target.setRGB(data[offset]/255,data[offset+1]/255,data[offset+2]/255);
     }
-    function applyColors(){if(!mesh)return;const color=new THREE.Color();for(let i=0;i<surfacePoints.length;i++)mesh.setColorAt(i,painted?sampleColor(surfacePoints[i],atlasPixels,selectedView,color):clayColors[i]);mesh.instanceColor.needsUpdate=true;}
-    function setView(view){selectedView=view;modelGroup.rotation.y=view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
+    function sampleSurfaceColor(point,pixels,target){const view=(Math.round(Math.atan2(-point[0],point[2])/(Math.PI/4))%8+8)%8;return sampleColor(point,pixels,view,target)}
+    function applyColors(){if(!mesh)return;const color=new THREE.Color();for(let i=0;i<surfacePoints.length;i++)mesh.setColorAt(i,painted?(freeMode?sampleSurfaceColor(surfacePoints[i],atlasPixels,color):sampleColor(surfacePoints[i],atlasPixels,selectedView,color)):clayColors[i]);mesh.instanceColor.needsUpdate=true;}
+    function alignCamera(){const radius=camera.position.distanceTo(controls.target);camera.position.set(0,controls.target.y+radius*.05,radius*.99875);controls.update()}
+    function setView(view){selectedView=view;freeMode=false;controls.enableRotate=false;document.getElementById("free").classList.remove("active");alignCamera();modelGroup.rotation.y=view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
+    function setFreeMode(enabled){freeMode=enabled;controls.enableRotate=enabled;document.getElementById("free").classList.toggle("active",enabled);document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",!enabled&&Number(button.dataset.view)===selectedView));applyColors()}
     function build(points,pixels){
       material=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
       const geometry=new THREE.BoxGeometry(1,1,1), instanced=new THREE.InstancedMesh(geometry,material,points.length); const dummy=new THREE.Object3D();
@@ -86,6 +89,7 @@
     }
     async function load(){const [response,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);if(!response.ok)throw new Error("volume fetch "+response.status);const bits=new Uint8Array(await response.arrayBuffer());build(makeSurface(bits),pixels);}
     document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();setView(0)};
+    document.getElementById("free").onclick=()=>setFreeMode(!freeMode);
     document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(Number(button.dataset.view)));
     document.getElementById("paint").onclick=e=>{painted=!painted;e.currentTarget.classList.toggle("active",painted);e.currentTarget.textContent=painted?"Цвет":"Глина";applyColors()};
     document.getElementById("wire").onclick=e=>{if(material) material.wireframe=!material.wireframe;e.currentTarget.classList.toggle("active",!!material?.wireframe)};
