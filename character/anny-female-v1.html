@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090c12">
+<title>Anny female · mesh test</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090c12;color:#edf3ff}
+#stage{position:fixed;inset:0;touch-action:none}canvas{display:block;width:100%;height:100%}
+.panel{position:fixed;z-index:5;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(720px,calc(100vw - 16px));padding:10px;border:1px solid #344057;border-radius:14px;background:#111722e8;backdrop-filter:blur(12px);box-shadow:0 14px 40px #0008}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.title{font-weight:850;font-size:14px;flex:1}.sub{width:100%;font-size:10px;line-height:1.35;color:#9daac0}
+button{border:1px solid #3d4961;border-radius:9px;background:#222b3c;color:#edf3ff;padding:7px 9px;font-weight:750;font-size:11px;white-space:nowrap}button.active{background:#425778;border-color:#9dbbec}.views{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.views button{padding:7px 2px}
+.status{position:fixed;z-index:5;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:8px 11px;border:1px solid #344057;border-radius:10px;background:#111722e8;color:#b4c0d3;font-size:11px;max-width:calc(100vw - 16px);text-align:center}.status strong{color:#83d3ff}.credit{position:fixed;left:10px;bottom:max(50px,calc(env(safe-area-inset-bottom) + 48px));z-index:4;font-size:9px;color:#64718a}.credit a{color:#91a4c6}
+@media(max-width:560px){.panel{padding:8px}.title{font-size:12px}.sub{font-size:9px}.row button,.views button{font-size:10px;padding:6px 5px}.credit{display:none}}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<section class="panel">
+  <div class="row">
+    <div class="title">Anny · взрослая женская база</div>
+    <button id="free" class="active">Свободно</button>
+    <button id="wire">Сетка</button>
+    <button id="reset">Сброс</button>
+    <div class="sub">Официальная CC0 MakeHuman/MPFB2 topology из Anny. Женская форма получается усреднением 3 young-female macro-targets (African / Asian / Caucasian), без одежды и волос.</div>
+  </div>
+  <div class="views">
+    <button data-view="0">Спереди</button><button data-view="1">П 3/4 →</button><button data-view="2">Справа</button><button data-view="3">З 3/4 →</button>
+    <button data-view="4">Сзади</button><button data-view="5">З 3/4 ←</button><button data-view="6">Слева</button><button data-view="7">П 3/4 ←</button>
+  </div>
+</section>
+<div class="status" id="status">Загрузка Anny…</div>
+<div class="credit">Anny / NAVER LABS Europe · code Apache-2.0 · MPFB2 body data CC0</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const BASE='https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2/3dobjs/base.obj';
+const TARGETS=[
+ 'https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2/targets/macrodetails/african-female-young.target.gz',
+ 'https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2/targets/macrodetails/asian-female-young.target.gz',
+ 'https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2/targets/macrodetails/caucasian-female-young.target.gz'
+];
+const status=document.getElementById('status');
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.setClearColor(0x090c12,1);stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.fog=new THREE.Fog(0x090c12,7,15);
+const camera=new THREE.PerspectiveCamera(28,1,.01,100);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.09;controls.enablePan=false;controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI-.12;
+scene.add(new THREE.HemisphereLight(0xe7efff,0x16131d,2.25));
+const key=new THREE.DirectionalLight(0xffddc3,3.1);key.position.set(-4,7,5);scene.add(key);
+const fill=new THREE.DirectionalLight(0x8ab1ff,1.7);fill.position.set(5,3,-4);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xd0a4ff,1.2);rim.position.set(-4,4,-6);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(2,64),new THREE.MeshStandardMaterial({color:0x141b28,roughness:1}));floor.rotation.x=-Math.PI/2;scene.add(floor);
+const grid=new THREE.GridHelper(4,24,0x34425a,0x1c2432);grid.position.y=.003;grid.material.transparent=true;grid.material.opacity=.38;scene.add(grid);
+let mesh=null,wire=false,frontOffset=0,radius=5,centerY=1;
+
+function parseOBJ(text){
+ const verts=[], indices=[];
+ for(const raw of text.split(/\r?\n/)){
+  const line=raw.trim(); if(!line||line[0]==='#')continue;
+  if(line.startsWith('v ')){
+   const p=line.split(/\s+/);verts.push(+p[1],+p[2],+p[3]);
+  }else if(line.startsWith('f ')){
+   const p=line.slice(2).trim().split(/\s+/).map(x=>parseInt(x.split('/')[0],10)-1);
+   for(let i=1;i<p.length-1;i++)indices.push(p[0],p[i],p[i+1]);
+  }
+ }
+ return {verts:new Float32Array(verts),indices};
+}
+async function gunzipText(url){
+ const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('target '+r.status);
+ const ds=new DecompressionStream('gzip');
+ return await new Response(r.body.pipeThrough(ds)).text();
+}
+function applyTarget(verts,text,weight){
+ let count=0;
+ for(const raw of text.split(/\r?\n/)){
+  const line=raw.trim();if(!line||line[0]==='#')continue;
+  const p=line.split(/\s+/);if(p.length<4)continue;
+  const i=+p[0],o=i*3;if(o+2>=verts.length)continue;
+  verts[o]+=+p[1]*weight;verts[o+1]+=+p[2]*weight;verts[o+2]+=+p[3]*weight;count++;
+ }
+ return count;
+}
+async function load(){
+ const r=await fetch(BASE,{cache:'force-cache'});if(!r.ok)throw new Error('base '+r.status);
+ status.textContent='Разбираю базовую сетку…';
+ const parsed=parseOBJ(await r.text());
+ status.textContent='Применяю женскую форму…';
+ let applied=0;
+ try{
+  const texts=await Promise.all(TARGETS.map(gunzipText));
+  for(const t of texts)applied+=applyTarget(parsed.verts,t,1/3);
+ }catch(e){console.warn(e);status.textContent='Macro-target не загрузился — показываю базовую сетку';}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(parsed.verts,3));g.setIndex(parsed.indices);g.computeVertexNormals();
+ const m=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,metalness:0,side:THREE.DoubleSide});
+ mesh=new THREE.Mesh(g,m);scene.add(mesh);
+ const box=new THREE.Box3().setFromObject(mesh),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+ mesh.position.sub(center);mesh.position.y+=size.y/2;
+ const postBox=new THREE.Box3().setFromObject(mesh),postSize=postBox.getSize(new THREE.Vector3());
+ centerY=postSize.y*.52;radius=Math.max(postSize.y*1.65,postSize.x*3.1,postSize.z*3.1);
+ controls.target.set(0,centerY,0);controls.minDistance=postSize.y*.65;controls.maxDistance=postSize.y*6;
+ floor.scale.setScalar(Math.max(postSize.x,postSize.z)*.7);grid.scale.setScalar(Math.max(postSize.x,postSize.z)*.7);
+ scene.fog.near=radius*1.15;scene.fog.far=radius*3.2;
+ frontOffset=Math.PI;setView(0);setFree();
+ status.innerHTML=`<strong>Готово</strong> · ${Math.round(parsed.verts.length/3).toLocaleString('ru-RU')} вершин · ${Math.round(parsed.indices.length/3).toLocaleString('ru-RU')} треугольников`;
+}
+function setView(i){
+ controls.enableRotate=false;document.getElementById('free').classList.remove('active');
+ const a=frontOffset+i*Math.PI/4;camera.position.set(Math.sin(a)*radius,centerY+radius*.025,Math.cos(a)*radius);controls.target.set(0,centerY,0);controls.update();
+ document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',+b.dataset.view===i));
+}
+function setFree(){controls.enableRotate=true;document.getElementById('free').classList.add('active');document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'))}
+function reset(){setView(0);setFree()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(+b.dataset.view));
+document.getElementById('free').onclick=setFree;document.getElementById('reset').onclick=reset;
+document.getElementById('wire').onclick=()=>{wire=!wire;document.getElementById('wire').classList.toggle('active',wire);if(mesh)mesh.material.wireframe=wire};
+addEventListener('resize',resize);resize();
+function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)}loop();
+load().catch(e=>{console.error(e);status.textContent='Ошибка загрузки Anny: '+e.message});
+</script>
+</body>
+</html>
