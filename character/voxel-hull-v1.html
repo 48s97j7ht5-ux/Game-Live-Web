@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d12">
+  <title>8-dir voxel hull · body test</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0d12;color:#edf2fb}
+    #stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}
+    .panel{position:fixed;z-index:5;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 18px));padding:11px 12px;border:1px solid #30384a;border-radius:13px;background:#12161fe8;box-shadow:0 14px 40px #0008;backdrop-filter:blur(12px)}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.title{font-size:14px;font-weight:800;flex:1}.sub{font-size:11px;color:#9daac0;width:100%;margin-top:-4px}
+    button{border:1px solid #3c465a;border-radius:8px;background:#232a39;color:#edf2fb;padding:6px 9px;font-weight:700}button.active{background:#3c4b66;border-color:#8aa1ca}
+    label{display:flex;align-items:center;gap:6px;color:#b8c4d6;font-size:11px}input[type=range]{width:120px;accent-color:#7ca8d9}
+    .status{position:fixed;z-index:5;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border:1px solid #30384a;border-radius:9px;background:#12161fe8;color:#aebbd0;font-size:11px;white-space:nowrap}.status strong{color:#8fd6ff}
+    .legend{position:fixed;z-index:5;right:10px;bottom:max(10px,env(safe-area-inset-bottom));font-size:10px;color:#78869d;text-align:right;line-height:1.35}
+    @media(max-width:560px){.panel{padding:9px}.title{font-size:13px}.sub{font-size:10px}button{padding:5px 7px;font-size:11px}input[type=range]{width:94px}.legend{display:none}}
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <section class="panel">
+    <div class="row"><div class="title">8-dir voxel hull · body test</div><button id="reset">Сбросить</button><button id="autorotate" class="active">Автоповорот</button><button id="wire">Сетка</button></div>
+    <div class="sub">Объём из восьми силуэтов · исходная высота 168 px · голова отсутствует в источнике</div>
+    <div class="row"><label>Срез снизу <input id="slice" type="range" min="0" max="168" value="0" step="1"><output id="sliceValue">0</output> px</label></div>
+  </section>
+  <div class="status" id="status">Загрузка объёма…</div>
+  <div class="legend">вращение: палец / мышь<br>масштаб: щипок / колесо<br>цвет — технический предпросмотр</div>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js";
+    import {OrbitControls} from "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js";
+
+    const H=168, W=55, D=55, ORIGIN=-27, TOTAL=H*W*D;
+    const stage=document.getElementById("stage");
+    const renderer=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:false});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.setClearColor(0x0b0d12,1); stage.appendChild(renderer.domElement);
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,1000);
+    camera.position.set(235,130,235);
+    const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.target.set(0,83,0); controls.minDistance=115; controls.maxDistance=430;
+    scene.add(new THREE.HemisphereLight(0xdde8ff,0x241b18,2.1));
+    const key=new THREE.DirectionalLight(0xffe1c0,2.4); key.position.set(-120,260,150); scene.add(key);
+    const rim=new THREE.DirectionalLight(0x78b8ff,1.1); rim.position.set(160,130,-220); scene.add(rim);
+    const grid=new THREE.GridHelper(66,66,0x394050,0x1b202b); grid.position.y=-.55; scene.add(grid);
+    const origin=new THREE.AxesHelper(7); origin.position.y=-.45; origin.material.transparent=true; origin.material.opacity=.35; scene.add(origin);
+    const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+    renderer.localClippingEnabled=true;
+    let mesh=null, material=null, autorotate=true;
+
+    function isSet(bits,index){return ((bits[index>>3]>>(index&7))&1)!==0}
+    function makeSurface(bits){
+      const points=[];
+      const idx=(y,x,z)=>(y*W+x)*D+z;
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++) for(let z=0;z<D;z++){
+        const i=idx(y,x,z); if(!isSet(bits,i)) continue;
+        const exposed=y===0||y===H-1||x===0||x===W-1||z===0||z===D-1||!isSet(bits,idx(y-1,x,z))||!isSet(bits,idx(y+1,x,z))||!isSet(bits,idx(y,x-1,z))||!isSet(bits,idx(y,x+1,z))||!isSet(bits,idx(y,x,z-1))||!isSet(bits,idx(y,x,z+1));
+        if(exposed) points.push([x+ORIGIN,H-1-y,z+ORIGIN]);
+      }
+      return points;
+    }
+    function build(points){
+      material=new THREE.MeshStandardMaterial({color:0xd9a178,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
+      const geometry=new THREE.BoxGeometry(1,1,1), instanced=new THREE.InstancedMesh(geometry,material,points.length); const dummy=new THREE.Object3D();
+      for(let i=0;i<points.length;i++){dummy.position.set(...points[i]);dummy.updateMatrix();instanced.setMatrixAt(i,dummy.matrix); const t=points[i][1]/(H-1); instanced.setColorAt(i,new THREE.Color().setHSL(.07,.43,.43+.09*t))}
+      instanced.instanceMatrix.needsUpdate=true; if(instanced.instanceColor) instanced.instanceColor.needsUpdate=true; scene.add(instanced); mesh=instanced;
+      document.getElementById("status").innerHTML=`<strong>${points.length.toLocaleString("ru-RU")}</strong> surface voxels · 168 px · 8 views`;
+    }
+    async function load(){const response=await fetch("./voxel-hull-v1-volume.bin?v=20260814"); if(!response.ok) throw new Error("volume fetch "+response.status); const bits=new Uint8Array(await response.arrayBuffer()); build(makeSurface(bits));}
+    document.getElementById("reset").onclick=()=>{camera.position.set(235,130,235);controls.target.set(0,83,0);controls.update()};
+    document.getElementById("autorotate").onclick=e=>{autorotate=!autorotate;e.currentTarget.classList.toggle("active",autorotate)};
+    document.getElementById("wire").onclick=e=>{if(material) material.wireframe=!material.wireframe;e.currentTarget.classList.toggle("active",!!material?.wireframe)};
+    const slice=document.getElementById("slice"), sliceValue=document.getElementById("sliceValue"); slice.oninput=()=>{const v=Number(slice.value);plane.constant=-v;sliceValue.value=v};
+    addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+    let last=performance.now(); function animate(now){requestAnimationFrame(animate); const dt=(now-last)/1000; last=now; if(autorotate) scene.rotation.y+=dt*.38; controls.update(); renderer.render(scene,camera)}
+    load().catch(error=>{document.getElementById("status").textContent="Не удалось загрузить объём: "+error.message; console.error(error)}); requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
