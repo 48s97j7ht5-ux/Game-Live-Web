@@ -75,7 +75,7 @@
       return target.setRGB(data[offset]/255,data[offset+1]/255,data[offset+2]/255);
     }
     function applyColors(){if(!mesh)return;const color=new THREE.Color();for(let i=0;i<surfacePoints.length;i++)mesh.setColorAt(i,painted?sampleColor(surfacePoints[i],atlasPixels,selectedView,color):clayColors[i]);mesh.instanceColor.needsUpdate=true;}
-    function setView(view){selectedView=view;modelGroup.rotation.y=-view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
+    function setView(view){selectedView=view;modelGroup.rotation.y=view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
     function build(points,pixels){
       material=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
       const geometry=new THREE.BoxGeometry(1,1,1), instanced=new THREE.InstancedMesh(geometry,material,points.length); const dummy=new THREE.Object3D();
