@@ -10,7 +10,7 @@
     *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0d12;color:#edf2fb}
     #stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}
     .panel{position:fixed;z-index:5;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 18px));padding:11px 12px;border:1px solid #30384a;border-radius:13px;background:#12161fe8;box-shadow:0 14px 40px #0008;backdrop-filter:blur(12px)}
-    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.title{font-size:14px;font-weight:800;flex:1}.sub{font-size:11px;color:#9daac0;width:100%;margin-top:-4px}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.title{font-size:14px;font-weight:800;flex:1}.sub{font-size:11px;color:#9daac0;width:100%;margin-top:-4px}.views{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.views button{padding:6px 3px;font-size:10px;white-space:nowrap}
     button{border:1px solid #3c465a;border-radius:8px;background:#232a39;color:#edf2fb;padding:6px 9px;font-weight:700}button.active{background:#3c4b66;border-color:#8aa1ca}
     label{display:flex;align-items:center;gap:6px;color:#b8c4d6;font-size:11px}input[type=range]{width:120px;accent-color:#7ca8d9}
     .status{position:fixed;z-index:5;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border:1px solid #30384a;border-radius:9px;background:#12161fe8;color:#aebbd0;font-size:11px;white-space:nowrap}.status strong{color:#8fd6ff}
@@ -21,12 +21,13 @@
 <body>
   <div id="stage"></div>
   <section class="panel">
-    <div class="row"><div class="title">8-dir voxel hull · goth girl</div><button id="reset">Сбросить</button><button id="autorotate" class="active">Автоповорот</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
+    <div class="row"><div class="title">goth girl · 8 ракурсов</div><button id="reset">Сбросить</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
     <div class="sub">Эксперимент: объём и цвет из восьми пиксельных ракурсов · высота ровно 200 px</div>
+    <div class="views" id="views"><button class="active" data-view="0">Спереди</button><button data-view="1">П 3/4 →</button><button data-view="2">Справа</button><button data-view="3">З 3/4 →</button><button data-view="4">Сзади</button><button data-view="5">З 3/4 ←</button><button data-view="6">Слева</button><button data-view="7">П 3/4 ←</button></div>
     <div class="row"><label>Срез снизу <input id="slice" type="range" min="0" max="200" value="0" step="1"><output id="sliceValue">0</output> px</label></div>
   </section>
   <div class="status" id="status">Загрузка объёма…</div>
-  <div class="legend">вращение: палец / мышь<br>масштаб: щипок / колесо<br>«Цвет» — пиксели исходных ракурсов</div>
+  <div class="legend">ракурс: восемь кнопок<br>масштаб: щипок / колесо<br>вращение отключено</div>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js";
@@ -37,9 +38,10 @@
     const renderer=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:false});
     renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.setClearColor(0x0b0d12,1); stage.appendChild(renderer.domElement);
     const scene=new THREE.Scene();
+    const modelGroup=new THREE.Group(); scene.add(modelGroup);
     const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,5000);
-    camera.position.set(275,155,275);
-    const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.target.set(0,99,0); controls.minDistance=135; controls.maxDistance=2400;
+    camera.position.set(0,120,420);
+    const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.target.set(0,99,0); controls.minDistance=135; controls.maxDistance=2400; controls.enableRotate=false; controls.enablePan=false;
     scene.add(new THREE.HemisphereLight(0xdde8ff,0x241b18,2.1));
     const key=new THREE.DirectionalLight(0xffe1c0,2.4); key.position.set(-120,260,150); scene.add(key);
     const rim=new THREE.DirectionalLight(0x78b8ff,1.1); rim.position.set(160,130,-220); scene.add(rim);
@@ -47,7 +49,7 @@
     const origin=new THREE.AxesHelper(7); origin.position.y=-.45; origin.material.transparent=true; origin.material.opacity=.35; scene.add(origin);
     const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
     renderer.localClippingEnabled=true;
-    let mesh=null, material=null, autorotate=true, painted=true, sourceColors=[], clayColors=[];
+    let mesh=null, material=null, painted=true, selectedView=0, atlasPixels=null, surfacePoints=[], clayColors=[];
 
     function isSet(bits,index){return ((bits[index>>3]>>(index&7))&1)!==0}
     function makeSurface(bits){
@@ -63,33 +65,33 @@
     function loadPixels(url){
       return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{const canvas=document.createElement("canvas");canvas.width=image.width;canvas.height=image.height;const context=canvas.getContext("2d",{willReadFrequently:true});context.drawImage(image,0,0);resolve(context.getImageData(0,0,image.width,image.height))};image.onerror=reject;image.src=url});
     }
-    function sampleColor(point,pixels){
+    function sampleColor(point,pixels,view,target){
       const [x,y,z]=point;
-      const radial=Math.atan2(x,z); let view=Math.round(radial/(Math.PI/4)); view=(view%8+8)%8;
       const angle=view*Math.PI/4;
       const projected=Math.round(CENTER_X+x*Math.cos(angle)+z*Math.sin(angle));
       const sourceY=MODEL_TOP+(H-1-y), sourceX=(view%4)*CELL_W+projected, atlasY=Math.floor(view/4)*CELL_H+sourceY;
       const offset=(atlasY*pixels.width+sourceX)*4, data=pixels.data;
-      if(sourceX<0||sourceX>=pixels.width||atlasY<0||atlasY>=pixels.height||data[offset+3]===0) return new THREE.Color(0x9b6349);
-      return new THREE.Color(data[offset]/255,data[offset+1]/255,data[offset+2]/255);
+      if(sourceX<0||sourceX>=pixels.width||atlasY<0||atlasY>=pixels.height||data[offset+3]===0) return target.setHex(0x9b6349);
+      return target.setRGB(data[offset]/255,data[offset+1]/255,data[offset+2]/255);
     }
-    function applyColors(){if(!mesh)return;const colors=painted?sourceColors:clayColors;for(let i=0;i<colors.length;i++)mesh.setColorAt(i,colors[i]);mesh.instanceColor.needsUpdate=true;}
+    function applyColors(){if(!mesh)return;const color=new THREE.Color();for(let i=0;i<surfacePoints.length;i++)mesh.setColorAt(i,painted?sampleColor(surfacePoints[i],atlasPixels,selectedView,color):clayColors[i]);mesh.instanceColor.needsUpdate=true;}
+    function setView(view){selectedView=view;modelGroup.rotation.y=-view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
     function build(points,pixels){
       material=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
       const geometry=new THREE.BoxGeometry(1,1,1), instanced=new THREE.InstancedMesh(geometry,material,points.length); const dummy=new THREE.Object3D();
-      sourceColors=new Array(points.length);clayColors=new Array(points.length);
-      for(let i=0;i<points.length;i++){dummy.position.set(...points[i]);dummy.updateMatrix();instanced.setMatrixAt(i,dummy.matrix);const t=points[i][1]/(H-1);sourceColors[i]=sampleColor(points[i],pixels);clayColors[i]=new THREE.Color().setHSL(.07,.43,.43+.09*t);instanced.setColorAt(i,sourceColors[i])}
-      instanced.instanceMatrix.needsUpdate=true; if(instanced.instanceColor) instanced.instanceColor.needsUpdate=true; scene.add(instanced); mesh=instanced;
+      surfacePoints=points;atlasPixels=pixels;clayColors=new Array(points.length);const color=new THREE.Color();
+      for(let i=0;i<points.length;i++){dummy.position.set(...points[i]);dummy.updateMatrix();instanced.setMatrixAt(i,dummy.matrix);const t=points[i][1]/(H-1);clayColors[i]=new THREE.Color().setHSL(.07,.43,.43+.09*t);instanced.setColorAt(i,sampleColor(points[i],pixels,selectedView,color))}
+      instanced.instanceMatrix.needsUpdate=true; if(instanced.instanceColor) instanced.instanceColor.needsUpdate=true; modelGroup.add(instanced); mesh=instanced;
       document.getElementById("status").innerHTML=`<strong>${points.length.toLocaleString("ru-RU")}</strong> поверхностных вокселей · 200 px · 8 видов`;
     }
     async function load(){const [response,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);if(!response.ok)throw new Error("volume fetch "+response.status);const bits=new Uint8Array(await response.arrayBuffer());build(makeSurface(bits),pixels);}
-    document.getElementById("reset").onclick=()=>{camera.position.set(275,155,275);controls.target.set(0,99,0);controls.update()};
-    document.getElementById("autorotate").onclick=e=>{autorotate=!autorotate;e.currentTarget.classList.toggle("active",autorotate)};
+    document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();setView(0)};
+    document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(Number(button.dataset.view)));
     document.getElementById("paint").onclick=e=>{painted=!painted;e.currentTarget.classList.toggle("active",painted);e.currentTarget.textContent=painted?"Цвет":"Глина";applyColors()};
     document.getElementById("wire").onclick=e=>{if(material) material.wireframe=!material.wireframe;e.currentTarget.classList.toggle("active",!!material?.wireframe)};
     const slice=document.getElementById("slice"), sliceValue=document.getElementById("sliceValue"); slice.oninput=()=>{const v=Number(slice.value);plane.constant=-v;sliceValue.value=v};
     addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-    let last=performance.now(); function animate(now){requestAnimationFrame(animate); const dt=(now-last)/1000; last=now; if(autorotate) scene.rotation.y+=dt*.38; controls.update(); renderer.render(scene,camera)}
+    function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
     load().catch(error=>{document.getElementById("status").textContent="Не удалось загрузить объём: "+error.message; console.error(error)}); requestAnimationFrame(animate);
   </script>
 </body>
