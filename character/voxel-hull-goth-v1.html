@@ -72,7 +72,7 @@
           const base=positions.length/3;
           for(const corner of face.c){positions.push(center[0]+corner[0],center[1]+corner[1],center[2]+corner[2]);normals.push(nx,ny,nz)}
           indices.push(base,base+1,base+2,base,base+2,base+3);
-          const angle=ny===0?Math.atan2(-nx,nz):Math.atan2(-center[0],center[2]);
+          const angle=ny===0?Math.atan2(-nx,-nz):Math.atan2(-center[0],-center[2]);
           const view=(Math.round(angle/(Math.PI/4))%8+8)%8;
           faceSamples.push({point:center,view});
         }
