@@ -113,23 +113,23 @@
       atlasPixels=pixels;const geometry=makeFaceGeometry(bits);
       material=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
       mesh=new THREE.Mesh(geometry,material);modelGroup.add(mesh);applyColors();
-      const label=volumeMode===8?"8 видов":volumeMode===4?"4 видов":"двух depth-карт";
+      const label=volumeMode===8?"8 видов":volumeMode===4?"4 видов":volumeMode==="depth"?"двух depth-карт":"двух силуэтов";
       document.getElementById("status").innerHTML=`<strong>${faceSamples.length.toLocaleString("ru-RU")}</strong> граней · ${label}`;
     }
     function setVolumeMode(mode){
-      volumeMode=mode;const four=mode===4,depth=mode==="depth",button=document.getElementById("volumeMode");
-      button.textContent=depth?"Объём: depth":`Объём: ${mode}`;button.classList.toggle("active",!four&&!depth);
-      document.getElementById("modeHint").textContent=depth?"Эксперимент: форма восстановлена двумя попиксельными depth-картами, без 3/4-рендеров":four?"Объём вырезан только спереди, справа, сзади и слева · 3/4 не использованы":"Эталонный объём, вырезанный всеми восемью проекциями · высота ровно 200 px";
+      volumeMode=mode;const four=mode===4,depth=mode==="depth",two=mode==="two",button=document.getElementById("volumeMode");
+      button.textContent=depth?"Объём: depth":two?"Объём: 2D":`Объём: ${mode}`;button.classList.toggle("active",!four&&!depth&&!two);
+      document.getElementById("modeHint").textContent=depth?"Контроль: две depth-карты, извлечённые из эталонного объёма":two?"Контроль: только фронтальный и боковой силуэты, без глубинной информации":four?"Объём вырезан только спереди, справа, сзади и слева · 3/4 не использованы":"Эталонный объём, вырезанный всеми восемью проекциями · высота ровно 200 px";
       document.querySelectorAll("[data-view]").forEach(item=>item.disabled=four&&Number(item.dataset.view)%2===1);
       build(volumeBits[mode],atlasPixels);
       if(four)setFreeMode(true);else if(freeMode)setFreeMode(true);else setView(selectedView);
     }
     async function load(){
-      const [response8,response4,responseDepth,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814-depth"),fetch("./voxel-hull-goth-v1-volume-4.bin?v=20260814-depth"),fetch("./voxel-hull-goth-v1-depth.bin?v=20260814-depth"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);
-      if(!response8.ok||!response4.ok||!responseDepth.ok)throw new Error(`volume fetch ${response8.status}/${response4.status}/${responseDepth.status}`);
-      volumeBits[8]=new Uint8Array(await response8.arrayBuffer());volumeBits[4]=new Uint8Array(await response4.arrayBuffer());volumeBits.depth=new Uint8Array(await responseDepth.arrayBuffer());atlasPixels=pixels;setVolumeMode(8);
+      const [response8,response4,responseDepth,responseTwo,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814-depth"),fetch("./voxel-hull-goth-v1-volume-4.bin?v=20260814-depth"),fetch("./voxel-hull-goth-v1-depth.bin?v=20260814-depth"),fetch("./voxel-hull-goth-v1-two-silhouette.bin?v=20260814-depth"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);
+      if(!response8.ok||!response4.ok||!responseDepth.ok||!responseTwo.ok)throw new Error(`volume fetch ${response8.status}/${response4.status}/${responseDepth.status}/${responseTwo.status}`);
+      volumeBits[8]=new Uint8Array(await response8.arrayBuffer());volumeBits[4]=new Uint8Array(await response4.arrayBuffer());volumeBits.depth=new Uint8Array(await responseDepth.arrayBuffer());volumeBits.two=new Uint8Array(await responseTwo.arrayBuffer());atlasPixels=pixels;setVolumeMode(8);
     }
-    document.getElementById("volumeMode").onclick=()=>setVolumeMode(volumeMode===8?4:volumeMode===4?"depth":8);
+    document.getElementById("volumeMode").onclick=()=>setVolumeMode(volumeMode===8?4:volumeMode===4?"depth":volumeMode==="depth"?"two":8);
     document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();volumeMode===4?setFreeMode(true):setView(0)};
     document.getElementById("free").onclick=()=>setFreeMode(!freeMode);
     document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(Number(button.dataset.view)));
