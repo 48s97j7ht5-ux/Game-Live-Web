@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090c12">
+<title>Anny body v7 · adult male debug</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#090c12;color:#edf3ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.boot{position:fixed;inset:0;display:grid;place-items:center;font-size:14px;color:#aebbd0}</style>
+</head>
+<body>
+<div class="boot" id="boot">Загрузка Anny v7…</div>
+<script>
+(async()=>{
+try{
+  const r=await fetch('./anny-body-v4.html?v=20260814-v7base',{cache:'no-store'});
+  if(!r.ok)throw new Error('v4 '+r.status);
+  let s=await r.text();
+
+  s=s.replace('<title>Anny body v4 · gender + age</title>','<title>Anny body v7 · adult male debug</title>');
+  s=s.replace('Anny · тело v4','Anny · тело v7');
+  s=s.replace('<button id="wire">Сетка</button><button id="reset">Сброс</button>',
+    '<button id="wire">Сетка</button><button id="technical" class="active">Тех. силуэт</button><button id="reset">Сброс</button>');
+  s=s.replace('Пол и возраст теперь тоже меняют настоящую геометрию Anny/MakeHuman. Детский диапазон показывается как технический силуэт: пропорции и объём видны, анатомические детали скрыты.',
+    'v7: расширенные morph-targets + adult male debug. Генитальные морфы работают только для взрослого мужского диапазона.');
+
+  const extraControls='\n<div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>необыч.</span><span>идеал.</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n'+
+  '<div class="ctrl adultDebug"><div class="h"><span>Длина ♂</span><output id="penisLengthVal">50</output></div><input id="penisLength" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\n'+
+  '<div class="ctrl adultDebug"><div class="h"><span>Обхват ♂</span><output id="penisCircVal">50</output></div><input id="penisCirc" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\n'+
+  '<div class="ctrl adultDebug"><div class="h"><span>Яички ♂</span><output id="testiclesVal">50</output></div><input id="testicles" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\n';
+  s=s.replace('</div>\n<div class="views"><button data-view="0">',extraControls+'</div>\n<div class="views"><button data-view="0">');
+  s=s.replace('</style>',' .adultDebug{outline:1px solid #5b3f64}.adultDebug.disabled{opacity:.35} .adultDebug.disabled input{pointer-events:none}</style>');
+
+  s=s.replace("const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,metalness:0,side:THREE.DoubleSide});const silhouetteMat=new THREE.MeshBasicMaterial({color:0x69778d,side:THREE.DoubleSide});",
+    "const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,metalness:0,side:THREE.DoubleSide});const neutralMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.9,metalness:0,side:THREE.DoubleSide});const silhouetteMat=new THREE.MeshBasicMaterial({color:0x69778d,side:THREE.DoubleSide});");
+  s=s.replace("let mesh=null,baseVerts=null,wire=false,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();",
+    "let mesh=null,baseVerts=null,wire=false,technicalOn=true,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();");
+
+  s=s.replace("for(const k of['height','weight','muscle','cup'])$(k+'Val').value=Math.round(+$(k).value*100)",
+    "for(const k of['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness','penisLength','penisCirc','testicles'])$(k+'Val').value=Math.round(+$(k).value*100);const adultMale=+$('age').value>=.66&&+$('gender').value>.5;document.querySelectorAll('.adultDebug').forEach(x=>x.classList.toggle('disabled',!adultMale));for(const k of['penisLength','penisCirc','testicles'])$(k).disabled=!adultMale");
+
+  s=s.replace("cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);",
+    "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']),pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']),ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);");
+
+  s=s.replace("await target(`${M}/proportions/${g}-${a}-${m}-${w}-idealproportions.target.gz`,v,q*.5,true);await target(`${M}/proportions/${g}-${a}-${m}-${w}-uncommonproportions.target.gz`,v,q*.5,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)await target(`${B}/female-${a}-${m}-${w}-${c}-averagefirmness.target.gz`,v,q*wc,true)",
+    "for(const[p,wp]of pp)await target(M+'/proportions/'+g+'-'+a+'-'+m+'-'+w+'-'+p+'.target.gz',v,q*wp,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)for(const[f,wf]of ff)await target(B+'/female-'+a+'-'+m+'-'+w+'-'+c+'-'+f+'.target.gz',v,q*wc*wf,true)");
+
+  s=s.replace("if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);",
+    "const localPair=async(cid,folder,stems,scale=1)=>{const x=+$(cid).value,amp=Math.abs(x-.5)*2*scale;if(amp<=1e-6)return;const d=x<.5?'decr':'incr';for(const stem of stems)await target(ROOT+'/targets/'+folder+'/'+stem+'-'+d+'.target.gz',v,amp,true)};await localPair('buttocks','buttocks',['buttocks-volume']);await localPair('hands','hands',['l-hand-scale','r-hand-scale']);await localPair('feet','feet',['l-foot-scale','r-foot-scale']);const adult=+$('age').value>=.66,maleScale=adult?Math.max(0,(+$('gender').value-.5)*2):0;if(maleScale>0){await localPair('penisLength','genitals',['penis-length'],maleScale);await localPair('penisCirc','genitals',['penis-circ'],maleScale);await localPair('testicles','genitals',['penis-testicles'],maleScale)}if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);");
+
+  s=s.replace("const technical=+$('age').value<.66;mesh.material=technical?silhouetteMat:skinMat;mesh.material.wireframe=wire;fit(false);",
+    "const minor=+$('age').value<.66,technical=technicalOn;mesh.material=technical?silhouetteMat:(minor?neutralMat:skinMat);mesh.material.wireframe=wire;fit(false);");
+
+  s=s.replace(" · грудь ${pct('cup')}${technical?' · тех. силуэт':''}`;",
+    " · грудь ${pct('cup')} · пропорции ${pct('proportions')} · ягодицы ${pct('buttocks')} · кисти ${pct('hands')} · стопы ${pct('feet')}${+$('age').value>=.66&&+$('gender').value>.5?' · ♂ debug '+pct('penisLength')+'/'+pct('penisCirc')+'/'+pct('testicles'):''}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;");
+
+  s=s.replace("for(const k of['gender','age','height','weight','muscle','cup'])",
+    "for(const k of['gender','age','height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness','penisLength','penisCirc','testicles'])");
+
+  s=s.replace("$('free').onclick=setFree;$('wire').onclick=()=>{wire=!wire;$('wire').classList.toggle('active',wire);if(mesh)mesh.material.wireframe=wire};$('reset').onclick=()=>{",
+    "$('free').onclick=setFree;$('wire').onclick=()=>{wire=!wire;$('wire').classList.toggle('active',wire);if(mesh)mesh.material.wireframe=wire};$('technical').onclick=()=>{technicalOn=!technicalOn;$('technical').classList.toggle('active',technicalOn);if(mesh){const minor=+$('age').value<.66;mesh.material=technicalOn?silhouetteMat:(minor?neutralMat:skinMat);mesh.material.wireframe=wire}};$('reset').onclick=()=>{");
+
+  s=s.replace("for(const k of['height','weight','muscle','cup'])$(k).value=.5;",
+    "for(const k of['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness','penisLength','penisCirc','testicles'])$(k).value=.5;");
+
+  document.open();document.write(s);document.close();
+}catch(e){
+  document.getElementById('boot').textContent='Ошибка загрузки v7: '+e.message;
+  console.error(e);
+}
+})();
+</script>
+</body>
+</html>
