@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#090c12">
+  <title>Free female 3D · 200 px test</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090c12;color:#edf3ff}
+    #stage{position:fixed;inset:0;overflow:hidden;touch-action:none}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+    #pixels{display:none;image-rendering:pixelated;image-rendering:crisp-edges}
+    .panel{position:fixed;z-index:5;top:max(9px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(690px,calc(100vw - 16px));padding:11px 12px;border:1px solid #344057;border-radius:14px;background:#111722eb;box-shadow:0 16px 45px #0009;backdrop-filter:blur(12px)}
+    .top,.modes{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.title{font-size:15px;font-weight:850;line-height:1.1;flex:1}.sub{width:100%;font-size:11px;color:#9daac0;line-height:1.35}
+    button{border:1px solid #3d4961;border-radius:9px;background:#222b3c;color:#edf3ff;padding:7px 10px;font-weight:750;white-space:nowrap}button.active{background:#425778;border-color:#9dbbec}button:active{transform:translateY(1px)}
+    .modes{margin:8px 0 7px}.modes button{flex:1}.views{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.views button{padding:7px 3px;font-size:11px}
+    .status{position:fixed;z-index:5;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:calc(100vw - 18px);padding:8px 11px;border:1px solid #344057;border-radius:10px;background:#111722eb;color:#b4c0d3;font-size:11px;text-align:center;white-space:nowrap}.status strong{color:#83d3ff}
+    .hint{position:fixed;z-index:4;right:10px;bottom:max(48px,calc(env(safe-area-inset-bottom) + 45px));font-size:10px;color:#718099;text-align:right;line-height:1.4;pointer-events:none}
+    .credit{position:fixed;z-index:4;left:10px;bottom:max(48px,calc(env(safe-area-inset-bottom) + 45px));font-size:9px;color:#56647b}.credit a{color:#7f91ae}
+    @media(max-width:560px){.panel{padding:9px}.title{font-size:13px}.sub{font-size:10px}.top button{font-size:11px;padding:6px 8px}.modes button{font-size:11px;padding:7px 4px}.views button{font-size:10px}.hint,.credit{display:none}}
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="pixels"></canvas></div>
+  <section class="panel">
+    <div class="top">
+      <div class="title">готовая 3D-девушка · тест</div>
+      <button id="reset">Сбросить</button>
+      <button id="free" class="active">Свободно</button>
+      <button id="flip">Перед ↔ зад</button>
+      <div class="sub">Настоящая полигональная модель вместо объёма, вырезанного из картинок</div>
+    </div>
+    <div class="modes">
+      <button data-mode="full" class="active">Обычный 3D</button>
+      <button data-mode="pixel">200 px</button>
+      <button data-mode="palette">200 px · 48 цветов</button>
+    </div>
+    <div class="views">
+      <button data-view="0">Спереди</button><button data-view="1">П 3/4 →</button><button data-view="2">Справа</button><button data-view="3">З 3/4 →</button>
+      <button data-view="4">Сзади</button><button data-view="5">З 3/4 ←</button><button data-view="6">Слева</button><button data-view="7">П 3/4 ←</button>
+    </div>
+  </section>
+  <div class="status" id="status">Загрузка модели…</div>
+  <div class="hint">вращение: одним пальцем<br>масштаб: щипком</div>
+  <div class="credit">model: <a href="https://quaternius.com/" target="_blank" rel="noreferrer">Quaternius</a> · CC BY</div>
+
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
+  <script type="module">
+    import * as THREE from "three";
+    import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+    import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+
+    const MODEL_URL="https://raw.githubusercontent.com/hukasu/bevy-modular-characters/b84c33822779c827fec2074edbfe98c4ddafb0e5/assets/Adventurer.gltf";
+    const stage=document.getElementById("stage"), pixelCanvas=document.getElementById("pixels"), status=document.getElementById("status");
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true});
+    renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.setClearColor(0x090c12,1);stage.prepend(renderer.domElement);
+    const pixelContext=pixelCanvas.getContext("2d",{alpha:false,willReadFrequently:true});pixelContext.imageSmoothingEnabled=false;
+    const scene=new THREE.Scene();scene.fog=new THREE.Fog(0x090c12,7,15);
+    const camera=new THREE.PerspectiveCamera(28,innerWidth/innerHeight,.01,100);
+    const controls=new OrbitControls(camera,stage);controls.enableDamping=true;controls.dampingFactor=.09;controls.enablePan=false;controls.minPolarAngle=.18;controls.maxPolarAngle=Math.PI-.18;
+    scene.add(new THREE.HemisphereLight(0xdbe8ff,0x17131c,2.2));
+    const key=new THREE.DirectionalLight(0xffe0c2,3.1);key.position.set(-4,7,5);scene.add(key);
+    const fill=new THREE.DirectionalLight(0x87aaff,1.8);fill.position.set(5,3,-4);scene.add(fill);
+    const rim=new THREE.DirectionalLight(0xb98cff,1.25);rim.position.set(-4,5,-6);scene.add(rim);
+    const floor=new THREE.Mesh(new THREE.CircleGeometry(2.1,64),new THREE.MeshStandardMaterial({color:0x151c29,roughness:1,metalness:0}));floor.rotation.x=-Math.PI/2;scene.add(floor);
+    const grid=new THREE.GridHelper(4.2,28,0x334057,0x1b2331);grid.position.y=.006;grid.material.transparent=true;grid.material.opacity=.43;scene.add(grid);
+
+    let model=null, mode="full", currentView=0, frontOffset=Math.PI, radius=5, centerY=1, modelHeight=2;
+    function setRendererSize(){
+      const aspect=Math.max(.35,innerWidth/innerHeight);camera.aspect=aspect;camera.updateProjectionMatrix();
+      if(mode==="full"){
+        renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight,false);renderer.domElement.style.display="block";pixelCanvas.style.display="none";
+      }else{
+        const h=200,w=Math.max(1,Math.round(h*aspect));renderer.setPixelRatio(1);renderer.setSize(w,h,false);pixelCanvas.width=w;pixelCanvas.height=h;renderer.domElement.style.display="none";pixelCanvas.style.display="block";pixelContext.imageSmoothingEnabled=false;
+      }
+    }
+    function quantize48(image){
+      const d=image.data;
+      for(let i=0;i<d.length;i+=4){
+        d[i]=Math.round(d[i]/85)*85;d[i+1]=Math.round(d[i+1]/85)*85;d[i+2]=Math.round(d[i+2]/127.5)*127.5;
+      }
+      return image;
+    }
+    function drawPixelFrame(){
+      pixelContext.drawImage(renderer.domElement,0,0,pixelCanvas.width,pixelCanvas.height);
+      if(mode==="palette")pixelContext.putImageData(quantize48(pixelContext.getImageData(0,0,pixelCanvas.width,pixelCanvas.height)),0,0);
+    }
+    function cameraAt(angle,elevation=.08){
+      currentView=((Math.round((angle-frontOffset)/(Math.PI/4))%8)+8)%8;
+      controls.enableRotate=false;document.getElementById("free").classList.remove("active");
+      const y=centerY+radius*elevation;camera.position.set(Math.sin(angle)*radius,y,Math.cos(angle)*radius);controls.target.set(0,centerY,0);controls.update();
+      document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",Number(b.dataset.view)===currentView));
+    }
+    function setView(index){cameraAt(frontOffset+index*Math.PI/4)}
+    function setFree(){controls.enableRotate=true;document.getElementById("free").classList.add("active");document.querySelectorAll("[data-view]").forEach(b=>b.classList.remove("active"))}
+    function reset(){setView(0);setFree()}
+    function setMode(next){mode=next;document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));setRendererSize();status.innerHTML=mode==="full"?`<strong>полный 3D</strong> · исходное разрешение`:mode==="pixel"?`<strong>200 px</strong> · без ограничения палитры`:`<strong>200 px</strong> · ровно 48 возможных RGB-цветов`}
+
+    new GLTFLoader().load(MODEL_URL,gltf=>{
+      model=gltf.scene;scene.add(model);
+      model.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m){m.side=THREE.FrontSide;m.roughness=Math.max(.65,m.roughness??.8)}})}});
+      const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+      model.position.sub(center);model.position.y+=size.y/2;modelHeight=size.y;centerY=size.y*.52;radius=Math.max(size.y*1.85,size.x*3.2,size.z*3.2);
+      floor.scale.setScalar(Math.max(size.x,size.z)*.7);grid.scale.setScalar(Math.max(size.x,size.z)*.7);controls.minDistance=size.y*.72;controls.maxDistance=size.y*7;controls.target.set(0,centerY,0);scene.fog.near=radius*1.15;scene.fog.far=radius*3.1;
+      reset();setMode("full");status.innerHTML=`<strong>готово</strong> · женская модель Quaternius · вращай пальцем`;
+    },progress=>{if(progress.total)status.textContent=`Загрузка ${Math.round(progress.loaded/progress.total*100)}%…`},error=>{status.textContent="Не удалось загрузить модель";console.error(error)});
+
+    document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+    document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>setView(Number(b.dataset.view)));
+    document.getElementById("free").onclick=setFree;
+    document.getElementById("reset").onclick=reset;
+    document.getElementById("flip").onclick=()=>{frontOffset+=Math.PI;setView(0)};
+    addEventListener("resize",setRendererSize);
+    setRendererSize();
+    function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);if(mode!=="full")drawPixelFrame()}
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
