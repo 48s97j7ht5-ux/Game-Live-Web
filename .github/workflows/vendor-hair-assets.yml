@@ -38,7 +38,6 @@ jobs:
               [ -f "$SRC/$id/$file" ] && cp "$SRC/$id/$file" "$dst/$file" || true
             done
 
-            # Fail loudly if an OBJ is still merely a Git LFS pointer.
             if head -n 1 "$dst/$id.obj" | grep -q 'git-lfs.github.com/spec'; then
               echo "ERROR: $id.obj is still an LFS pointer" >&2
               exit 1
@@ -60,7 +59,7 @@ jobs:
           - braid01
           EOF
 
-      - name: Ensure experiment uses local assets
+      - name: Ensure experiment uses local assets and global hair offset
         shell: bash
         run: |
           python - <<'PY'
@@ -73,6 +72,8 @@ jobs:
               "const ASSET_ROOT='https://raw.githubusercontent.com/makehumancommunity/makehuman-assets/master/base/hair';",
           ]:
               s = s.replace(old, "const ROOT='./hair';")
+          s = s.replace("const HAIR_Y_OFFSET=0.035;", "const HAIR_Y_OFFSET=0.070;")
+          s = s.replace("hair Y +0.035", "hair Y +0.070")
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -85,6 +86,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Resolve MakeHuman hair OBJ files from Git LFS'
+            git commit -m 'Raise global hair Y offset to 0.070'
             git push
           fi
