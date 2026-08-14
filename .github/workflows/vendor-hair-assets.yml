@@ -25,10 +25,8 @@ jobs:
           for id in bob01 long01 ponytail01 short02 braid01; do
             dst="engine/hair/$id"
             mkdir -p "$dst"
-
             curl -fL --retry 3 "$SRC/$id/$id.mhclo" -o "$dst/$id.mhclo"
             curl -fL --retry 3 "$SRC/$id/$id.obj"   -o "$dst/$id.obj"
-
             for file in "$id.mhmat" "${id}_diffuse.png" "$id.thumb"; do
               curl -fL --retry 2 "$SRC/$id/$file" -o "$dst/$file" || rm -f "$dst/$file"
             done
@@ -37,39 +35,37 @@ jobs:
           cat > engine/hair/README.md <<'EOF'
           # MakeHuman hair assets
 
-          Vendored from `emberlightstudios/Humentity`, which contains MakeHuman system assets released as CC0.
+          Vendored from `emberlightstudios/Humentity`, which contains the MakeHuman system assets released as CC0.
 
-          Included:
+          Included for the browser hair experiment:
           - bob01
           - long01
           - ponytail01
           - short02
           - braid01
 
-          Runtime loads these assets locally from `engine/hair/`; there is no TuxFamily/CORS dependency.
+          Runtime code loads these files locally from `engine/hair/`.
           EOF
 
-      - name: Point hair experiment at local assets
+      - name: Point hair experiment at local assets and fix MHCLO state parser
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('engine/hair-mesh-experiment.html')
           s = p.read_text(encoding='utf-8')
-          replacements = [
+          for old in [
               "const ROOT='https://free.downloads.tuxfamily.net/makehuman/assets/1.1/base/hair';",
-              "const ROOT='https://raw.githubusercontent.com/makehumancommunity/makehuman-assets/master/base/hair';",
               "const ASSET_ROOT='https://free.downloads.tuxfamily.net/makehuman/assets/1.1/base/hair';",
               "const ASSET_ROOT='https://raw.githubusercontent.com/makehumancommunity/makehuman-assets/master/base/hair';",
-          ]
-          done = False
-          for old in replacements:
-              if old in s:
-                  key = 'ASSET_ROOT' if 'ASSET_ROOT' in old else 'ROOT'
-                  s = s.replace(old, f"const {key}='./hair';")
-                  done = True
-          if not done and "='./hair';" not in s:
-              raise SystemExit('hair root pattern not found')
+          ]:
+              s = s.replace(old, "const ROOT='./hair';")
+
+          # Official MakeHuman proxy.py keeps status=doRefVerts after the `verts`
+          # keyword even when recognized metadata (such as `material`) occurs.
+          # Our first JS parser incorrectly cleared the mode at `material`, so every
+          # subsequent numeric mapping line was skipped and MHCLO reported 0 mappings.
+          s = s.replace("if(mode)mode=false;", "")
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -82,6 +78,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Vendor MakeHuman hair assets locally'
+            git commit -m 'Fix MakeHuman MHCLO mapping parser'
             git push
           fi
