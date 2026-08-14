@@ -7,7 +7,7 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script><script type="module">
 import * as THREE from 'three';import{OrbitControls}from'three/addons/controls/OrbitControls.js';
 const BASE='./anny/mpfb2/3dobjs/base.obj';
-const ROOT='https://free.downloads.tuxfamily.net/makehuman/assets/1.1/base/hair';
+const ROOT='./hair';
 const H=[{name:'Без волос'},{name:'Bob 01',id:'bob01'},{name:'Long 01',id:'long01'},{name:'Ponytail 01',id:'ponytail01'},{name:'Short 02',id:'short02'},{name:'Braid 01',id:'braid01'}];
 const $=x=>document.getElementById(x),stage=$('stage'),diag=$('diag');let hi=1,body=null,bv=null,hair=null,hwire=false,radius=5,cy=1;const cache=new Map();
 function msg(s,type=''){diag.className='diag '+type;diag.textContent=s}
