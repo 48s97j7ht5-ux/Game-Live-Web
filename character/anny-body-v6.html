@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090c12">
+<title>Anny body v6 · advanced morphs</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#090c12;color:#edf3ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.boot{position:fixed;inset:0;display:grid;place-items:center;font-size:14px;color:#aebbd0}</style>
+</head>
+<body>
+<div class="boot" id="boot">Загрузка Anny v6…</div>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('./anny-body-v5.html?v=20260814-v6base',{cache:'no-store'});
+    if(!r.ok)throw new Error('v5 '+r.status);
+    let page=await r.text();
+
+    const hook='document.open();document.write(s);document.close();';
+    const patch=String.raw`
+    s=s.replace('<title>Anny body v5 · silhouette toggle</title>','<title>Anny body v6 · advanced morphs</title>');
+    s=s.replace('Anny · тело v5','Anny · тело v6');
+    s=s.replace('Пол и возраст меняют настоящую геометрию Anny/MakeHuman. Переключатель «Тех. силуэт» позволяет вручную включать плоский технический материал; при выключении младшие возрастные формы остаются в нейтральном 3D-материале для проверки геометрии.',
+      'v6: добавлены реальные MakeHuman/Anny morph-targets — пропорции, ягодицы, размер кистей, размер стоп и упругость груди. «Тех. силуэт» остаётся ручным переключателем.');
+
+    s=s.replace('</div>\\n<div class="views">',
+      '<div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>необыч.</span><span>идеал.</span></div></div>\\n'+
+      '<div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\\n'+
+      '<div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
+      '<div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
+      '<div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
+      '</div>\\n<div class="views">');
+
+    s=s.replaceAll("['height','weight','muscle','cup']","['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness']");
+
+    s=s.replace(
+      "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);",
+      "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']),pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']),ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);"
+    );
+
+    s=s.replace(
+      "await target(`${M}/proportions/${g}-${a}-${m}-${w}-idealproportions.target.gz`,v,q*.5,true);await target(`${M}/proportions/${g}-${a}-${m}-${w}-uncommonproportions.target.gz`,v,q*.5,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)await target(`${B}/female-${a}-${m}-${w}-${c}-averagefirmness.target.gz`,v,q*wc,true)",
+      "for(const[p,wp]of pp)await target(`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`,v,q*wp,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)for(const[f,wf]of ff)await target(`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`,v,q*wc*wf,true)"
+    );
+
+    s=s.replace(
+      "if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);",
+      "const localPair=async(id,folder,stems)=>{const x=+$(id).value,amp=Math.abs(x-.5)*2;if(amp<=1e-6)return;const d=x<.5?'decr':'incr';for(const stem of stems)await target(`${ROOT}/targets/${folder}/${stem}-${d}.target.gz`,v,amp,true)};await localPair('buttocks','buttocks',['buttocks-volume']);await localPair('hands','hands',['l-hand-scale','r-hand-scale']);await localPair('feet','feet',['l-foot-scale','r-foot-scale']);if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);"
+    );
+
+    s=s.replace(
+      " · грудь ${pct('cup')}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;",
+      " · грудь ${pct('cup')} · пропорции ${pct('proportions')} · ягодицы ${pct('buttocks')} · кисти ${pct('hands')} · стопы ${pct('feet')} · упругость ${pct('firmness')}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;"
+    );
+    `;
+
+    if(!page.includes(hook))throw new Error('v5 hook not found');
+    page=page.replace(hook,patch+'\n    '+hook);
+    document.open();document.write(page);document.close();
+  }catch(e){
+    document.getElementById('boot').textContent='Ошибка загрузки v6: '+e.message;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
