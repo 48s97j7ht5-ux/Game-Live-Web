@@ -49,18 +49,39 @@
     const origin=new THREE.AxesHelper(7); origin.position.y=-.45; origin.material.transparent=true; origin.material.opacity=.35; scene.add(origin);
     const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
     renderer.localClippingEnabled=true;
-    let mesh=null, material=null, painted=true, freeMode=false, selectedView=0, atlasPixels=null, surfacePoints=[], clayColors=[];
+    let mesh=null, material=null, painted=true, freeMode=false, selectedView=0, atlasPixels=null, faceSamples=[];
+
+    const FACE_DEFS=[
+      {n:[1,0,0],c:[[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5],[.5,-.5,.5]]},
+      {n:[-1,0,0],c:[[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5],[-.5,-.5,-.5]]},
+      {n:[0,1,0],c:[[-.5,.5,-.5],[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5]]},
+      {n:[0,-1,0],c:[[-.5,-.5,.5],[-.5,-.5,-.5],[.5,-.5,-.5],[.5,-.5,.5]]},
+      {n:[0,0,1],c:[[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5],[-.5,-.5,.5]]},
+      {n:[0,0,-1],c:[[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5],[.5,-.5,-.5]]}
+    ];
 
     function isSet(bits,index){return ((bits[index>>3]>>(index&7))&1)!==0}
-    function makeSurface(bits){
-      const points=[];
-      const idx=(y,x,z)=>(y*W+x)*D+z;
+    function occupied(bits,y,x,z){return y>=0&&y<H&&x>=0&&x<W&&z>=0&&z<D&&isSet(bits,(y*W+x)*D+z)}
+    function makeFaceGeometry(bits){
+      const positions=[],normals=[],indices=[];faceSamples=[];
       for(let y=0;y<H;y++) for(let x=0;x<W;x++) for(let z=0;z<D;z++){
-        const i=idx(y,x,z); if(!isSet(bits,i)) continue;
-        const exposed=y===0||y===H-1||x===0||x===W-1||z===0||z===D-1||!isSet(bits,idx(y-1,x,z))||!isSet(bits,idx(y+1,x,z))||!isSet(bits,idx(y,x-1,z))||!isSet(bits,idx(y,x+1,z))||!isSet(bits,idx(y,x,z-1))||!isSet(bits,idx(y,x,z+1));
-        if(exposed) points.push([x+ORIGIN,H-1-y,z+ORIGIN]);
+        if(!occupied(bits,y,x,z))continue;
+        const center=[x+ORIGIN,H-1-y,z+ORIGIN];
+        for(const face of FACE_DEFS){
+          const [nx,ny,nz]=face.n;if(occupied(bits,y-ny,x+nx,z+nz))continue;
+          const base=positions.length/3;
+          for(const corner of face.c){positions.push(center[0]+corner[0],center[1]+corner[1],center[2]+corner[2]);normals.push(nx,ny,nz)}
+          indices.push(base,base+1,base+2,base,base+2,base+3);
+          const angle=ny===0?Math.atan2(-nx,nz):Math.atan2(-center[0],center[2]);
+          const view=(Math.round(angle/(Math.PI/4))%8+8)%8;
+          faceSamples.push({point:center,view});
+        }
       }
-      return points;
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+      geometry.setAttribute("normal",new THREE.Float32BufferAttribute(normals,3));
+      geometry.setAttribute("color",new THREE.Float32BufferAttribute(new Float32Array(faceSamples.length*12),3));
+      geometry.setIndex(indices);geometry.computeBoundingSphere();return geometry;
     }
     function loadPixels(url){
       return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{const canvas=document.createElement("canvas");canvas.width=image.width;canvas.height=image.height;const context=canvas.getContext("2d",{willReadFrequently:true});context.drawImage(image,0,0);resolve(context.getImageData(0,0,image.width,image.height))};image.onerror=reject;image.src=url});
@@ -74,20 +95,25 @@
       if(sourceX<0||sourceX>=pixels.width||atlasY<0||atlasY>=pixels.height||data[offset+3]===0) return target.setHex(0x9b6349);
       return target.setRGB(data[offset]/255,data[offset+1]/255,data[offset+2]/255);
     }
-    function sampleSurfaceColor(point,pixels,target){const view=(Math.round(Math.atan2(-point[0],point[2])/(Math.PI/4))%8+8)%8;return sampleColor(point,pixels,view,target)}
-    function applyColors(){if(!mesh)return;const color=new THREE.Color();for(let i=0;i<surfacePoints.length;i++)mesh.setColorAt(i,painted?(freeMode?sampleSurfaceColor(surfacePoints[i],atlasPixels,color):sampleColor(surfacePoints[i],atlasPixels,selectedView,color)):clayColors[i]);mesh.instanceColor.needsUpdate=true;}
+    function applyColors(){
+      if(!mesh)return;const color=new THREE.Color(),attribute=mesh.geometry.getAttribute("color");
+      for(let i=0;i<faceSamples.length;i++){
+        const face=faceSamples[i];
+        if(painted)sampleColor(face.point,atlasPixels,freeMode?face.view:selectedView,color);else color.setHSL(.07,.43,.43+.09*face.point[1]/(H-1));
+        for(let vertex=0;vertex<4;vertex++)attribute.setXYZ(i*4+vertex,color.r,color.g,color.b);
+      }
+      attribute.needsUpdate=true;
+    }
     function alignCamera(){const radius=camera.position.distanceTo(controls.target);camera.position.set(0,controls.target.y+radius*.05,radius*.99875);controls.update()}
     function setView(view){selectedView=view;freeMode=false;controls.enableRotate=false;document.getElementById("free").classList.remove("active");alignCamera();modelGroup.rotation.y=view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
     function setFreeMode(enabled){freeMode=enabled;controls.enableRotate=enabled;document.getElementById("free").classList.toggle("active",enabled);document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",!enabled&&Number(button.dataset.view)===selectedView));applyColors()}
-    function build(points,pixels){
-      material=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
-      const geometry=new THREE.BoxGeometry(1,1,1), instanced=new THREE.InstancedMesh(geometry,material,points.length); const dummy=new THREE.Object3D();
-      surfacePoints=points;atlasPixels=pixels;clayColors=new Array(points.length);const color=new THREE.Color();
-      for(let i=0;i<points.length;i++){dummy.position.set(...points[i]);dummy.updateMatrix();instanced.setMatrixAt(i,dummy.matrix);const t=points[i][1]/(H-1);clayColors[i]=new THREE.Color().setHSL(.07,.43,.43+.09*t);instanced.setColorAt(i,sampleColor(points[i],pixels,selectedView,color))}
-      instanced.instanceMatrix.needsUpdate=true; if(instanced.instanceColor) instanced.instanceColor.needsUpdate=true; modelGroup.add(instanced); mesh=instanced;
-      document.getElementById("status").innerHTML=`<strong>${points.length.toLocaleString("ru-RU")}</strong> поверхностных вокселей · 200 px · 8 видов`;
+    function build(bits,pixels){
+      atlasPixels=pixels;const geometry=makeFaceGeometry(bits);
+      material=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
+      mesh=new THREE.Mesh(geometry,material);modelGroup.add(mesh);applyColors();
+      document.getElementById("status").innerHTML=`<strong>${faceSamples.length.toLocaleString("ru-RU")}</strong> окрашенных граней · 200 px · 8 видов`;
     }
-    async function load(){const [response,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);if(!response.ok)throw new Error("volume fetch "+response.status);const bits=new Uint8Array(await response.arrayBuffer());build(makeSurface(bits),pixels);}
+    async function load(){const [response,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);if(!response.ok)throw new Error("volume fetch "+response.status);const bits=new Uint8Array(await response.arrayBuffer());build(bits,pixels);}
     document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();setView(0)};
     document.getElementById("free").onclick=()=>setFreeMode(!freeMode);
     document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(Number(button.dataset.view)));
