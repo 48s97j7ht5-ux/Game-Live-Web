@@ -1,0 +1,84 @@
+name: Vendor MakeHuman hair assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/vendor-hair-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-hair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download CC0 MakeHuman hair assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='https://raw.githubusercontent.com/emberlightstudios/Humentity/252b501ffb819e8a4f6bc97b9269c59479e8be55/assets/body_parts/Hair'
+          mkdir -p engine/hair
+
+          for id in bob01 long01 ponytail01 short02 braid01; do
+            dst="engine/hair/$id"
+            mkdir -p "$dst"
+
+            # Core files required by the browser fitter.
+            curl -fL --retry 3 "$SRC/$id/$id.mhclo" -o "$dst/$id.mhclo"
+            curl -fL --retry 3 "$SRC/$id/$id.obj"   -o "$dst/$id.obj"
+
+            # Keep material/texture/thumbnail locally too when the asset has them.
+            for file in "$id.mhmat" "${id}_diffuse.png" "$id.thumb"; do
+              curl -fL --retry 2 "$SRC/$id/$file" -o "$dst/$file" || rm -f "$dst/$file"
+            done
+          done
+
+          cat > engine/hair/README.md <<'EOF'
+          # MakeHuman hair assets
+
+          Vendored from `emberlightstudios/Humentity`, which contains the MakeHuman system assets released as CC0.
+
+          Included for the browser hair experiment:
+          - bob01
+          - long01
+          - ponytail01
+          - short02
+          - braid01
+
+          Runtime code must load these files locally from `engine/hair/`; no TuxFamily/CORS dependency is required.
+          EOF
+
+      - name: Point hair experiment at local assets
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('engine/hair-mesh-experiment.html')
+          s = p.read_text(encoding='utf-8')
+          old = "const ASSET_ROOT='https://free.downloads.tuxfamily.net/makehuman/assets/1.1/base/hair';"
+          old2 = "const ASSET_ROOT='https://raw.githubusercontent.com/makehumancommunity/makehuman-assets/master/base/hair';"
+          new = "const ASSET_ROOT='./hair';"
+          if old in s:
+              s = s.replace(old, new)
+          elif old2 in s:
+              s = s.replace(old2, new)
+          elif new not in s:
+              raise SystemExit('ASSET_ROOT pattern not found')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit vendored assets
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/hair engine/hair-mesh-experiment.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Vendor MakeHuman hair assets locally'
+            git push
+          fi
