@@ -11,7 +11,7 @@
     #stage{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}
     .panel{position:fixed;z-index:5;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 18px));padding:11px 12px;border:1px solid #30384a;border-radius:13px;background:#12161fe8;box-shadow:0 14px 40px #0008;backdrop-filter:blur(12px)}
     .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.title{font-size:14px;font-weight:800;flex:1}.sub{font-size:11px;color:#9daac0;width:100%;margin-top:-4px}.views{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.views button{padding:6px 3px;font-size:10px;white-space:nowrap}
-    button{border:1px solid #3c465a;border-radius:8px;background:#232a39;color:#edf2fb;padding:6px 9px;font-weight:700}button.active{background:#3c4b66;border-color:#8aa1ca}
+    button{border:1px solid #3c465a;border-radius:8px;background:#232a39;color:#edf2fb;padding:6px 9px;font-weight:700}button.active{background:#3c4b66;border-color:#8aa1ca}button:disabled{opacity:.32}
     label{display:flex;align-items:center;gap:6px;color:#b8c4d6;font-size:11px}input[type=range]{width:120px;accent-color:#7ca8d9}
     .status{position:fixed;z-index:5;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border:1px solid #30384a;border-radius:9px;background:#12161fe8;color:#aebbd0;font-size:11px;white-space:nowrap}.status strong{color:#8fd6ff}
     .legend{position:fixed;z-index:5;right:10px;bottom:max(10px,env(safe-area-inset-bottom));font-size:10px;color:#78869d;text-align:right;line-height:1.35}
@@ -21,8 +21,8 @@
 <body>
   <div id="stage"></div>
   <section class="panel">
-    <div class="row"><div class="title">goth girl · 8 ракурсов</div><button id="reset">Сбросить</button><button id="free">Свободно</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
-    <div class="sub">Эксперимент: объём и цвет из восьми пиксельных ракурсов · высота ровно 200 px</div>
+    <div class="row"><div class="title">goth girl · тест 4 / 8 видов</div><button id="volumeMode" class="active">Объём: 8</button><button id="reset">Сбросить</button><button id="free">Свободно</button><button id="paint" class="active">Цвет</button><button id="wire">Сетка</button></div>
+    <div class="sub" id="modeHint">Объём вырезан восемью проекциями · высота ровно 200 px</div>
     <div class="views" id="views"><button class="active" data-view="0">Спереди</button><button data-view="1">П 3/4 →</button><button data-view="2">Справа</button><button data-view="3">З 3/4 →</button><button data-view="4">Сзади</button><button data-view="5">З 3/4 ←</button><button data-view="6">Слева</button><button data-view="7">П 3/4 ←</button></div>
     <div class="row"><label>Срез снизу <input id="slice" type="range" min="0" max="200" value="0" step="1"><output id="sliceValue">0</output> px</label></div>
   </section>
@@ -49,7 +49,8 @@
     const origin=new THREE.AxesHelper(7); origin.position.y=-.45; origin.material.transparent=true; origin.material.opacity=.35; scene.add(origin);
     const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
     renderer.localClippingEnabled=true;
-    let mesh=null, material=null, painted=true, freeMode=false, selectedView=0, atlasPixels=null, faceSamples=[];
+    let mesh=null, material=null, painted=true, freeMode=false, selectedView=0, volumeMode=8, atlasPixels=null, faceSamples=[];
+    const volumeBits={};
 
     const FACE_DEFS=[
       {n:[1,0,0],c:[[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5],[.5,-.5,.5]]},
@@ -108,13 +109,27 @@
     function setView(view){selectedView=view;freeMode=false;controls.enableRotate=false;document.getElementById("free").classList.remove("active");alignCamera();modelGroup.rotation.y=view*Math.PI/4;document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",Number(button.dataset.view)===view));applyColors();}
     function setFreeMode(enabled){freeMode=enabled;controls.enableRotate=enabled;document.getElementById("free").classList.toggle("active",enabled);document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",!enabled&&Number(button.dataset.view)===selectedView));applyColors()}
     function build(bits,pixels){
+      if(mesh){modelGroup.remove(mesh);mesh.geometry.dispose();material.dispose();mesh=null;material=null}
       atlasPixels=pixels;const geometry=makeFaceGeometry(bits);
       material=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.86,metalness:0,flatShading:true,clippingPlanes:[plane],clipShadows:true});
       mesh=new THREE.Mesh(geometry,material);modelGroup.add(mesh);applyColors();
-      document.getElementById("status").innerHTML=`<strong>${faceSamples.length.toLocaleString("ru-RU")}</strong> окрашенных граней · 200 px · 8 видов`;
+      document.getElementById("status").innerHTML=`<strong>${faceSamples.length.toLocaleString("ru-RU")}</strong> граней · объём из ${volumeMode} видов`;
     }
-    async function load(){const [response,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);if(!response.ok)throw new Error("volume fetch "+response.status);const bits=new Uint8Array(await response.arrayBuffer());build(bits,pixels);}
-    document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();setView(0)};
+    function setVolumeMode(mode){
+      volumeMode=mode;const four=mode===4,button=document.getElementById("volumeMode");
+      button.textContent=`Объём: ${mode}`;button.classList.toggle("active",!four);
+      document.getElementById("modeHint").textContent=four?"Объём вырезан только спереди, справа, сзади и слева · 3/4 не использованы":"Объём вырезан всеми восемью проекциями · высота ровно 200 px";
+      document.querySelectorAll("[data-view]").forEach(item=>item.disabled=four&&Number(item.dataset.view)%2===1);
+      build(volumeBits[mode],atlasPixels);
+      if(four)setFreeMode(true);else if(freeMode)setFreeMode(true);else setView(selectedView);
+    }
+    async function load(){
+      const [response8,response4,pixels]=await Promise.all([fetch("./voxel-hull-goth-v1-volume.bin?v=20260814-4v8"),fetch("./voxel-hull-goth-v1-volume-4.bin?v=20260814-4v8"),loadPixels("./voxel-hull-goth-v1-source.png?v=20260814")]);
+      if(!response8.ok||!response4.ok)throw new Error(`volume fetch ${response8.status}/${response4.status}`);
+      volumeBits[8]=new Uint8Array(await response8.arrayBuffer());volumeBits[4]=new Uint8Array(await response4.arrayBuffer());atlasPixels=pixels;setVolumeMode(8);
+    }
+    document.getElementById("volumeMode").onclick=()=>setVolumeMode(volumeMode===8?4:8);
+    document.getElementById("reset").onclick=()=>{camera.position.set(0,120,420);controls.target.set(0,99,0);controls.update();volumeMode===4?setFreeMode(true):setView(0)};
     document.getElementById("free").onclick=()=>setFreeMode(!freeMode);
     document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(Number(button.dataset.view)));
     document.getElementById("paint").onclick=e=>{painted=!painted;e.currentTarget.classList.toggle("active",painted);e.currentTarget.textContent=painted?"Цвет":"Глина";applyColors()};
