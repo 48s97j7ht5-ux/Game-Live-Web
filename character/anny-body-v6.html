@@ -11,56 +11,62 @@
 <div class="boot" id="boot">Загрузка Anny v6…</div>
 <script>
 (async()=>{
-  try{
-    const r=await fetch('./anny-body-v5.html?v=20260814-v6base',{cache:'no-store'});
-    if(!r.ok)throw new Error('v5 '+r.status);
-    let page=await r.text();
+try{
+  const r=await fetch('./anny-body-v4.html?v=20260814-v6fixed',{cache:'no-store'});
+  if(!r.ok)throw new Error('v4 '+r.status);
+  let s=await r.text();
 
-    const hook='document.open();document.write(s);document.close();';
-    const patch=String.raw`
-    s=s.replace('<title>Anny body v5 · silhouette toggle</title>','<title>Anny body v6 · advanced morphs</title>');
-    s=s.replace('Anny · тело v5','Anny · тело v6');
-    s=s.replace('Пол и возраст меняют настоящую геометрию Anny/MakeHuman. Переключатель «Тех. силуэт» позволяет вручную включать плоский технический материал; при выключении младшие возрастные формы остаются в нейтральном 3D-материале для проверки геометрии.',
-      'v6: добавлены реальные MakeHuman/Anny morph-targets — пропорции, ягодицы, размер кистей, размер стоп и упругость груди. «Тех. силуэт» остаётся ручным переключателем.');
+  s=s.replace('<title>Anny body v4 · gender + age</title>','<title>Anny body v6 · advanced morphs</title>');
+  s=s.replace('Anny · тело v4','Anny · тело v6');
+  s=s.replace('<button id="wire">Сетка</button><button id="reset">Сброс</button>',
+    '<button id="wire">Сетка</button><button id="technical" class="active">Тех. силуэт</button><button id="reset">Сброс</button>');
+  s=s.replace('Пол и возраст теперь тоже меняют настоящую геометрию Anny/MakeHuman. Детский диапазон показывается как технический силуэт: пропорции и объём видны, анатомические детали скрыты.',
+    'v6: реальные Anny/MakeHuman morph-targets — пропорции, ягодицы, кисти, стопы и упругость груди. Тех. силуэт включается вручную.');
 
-    s=s.replace('</div>\\n<div class="views">',
-      '<div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>необыч.</span><span>идеал.</span></div></div>\\n'+
-      '<div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\\n'+
-      '<div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
-      '<div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
-      '<div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\\n'+
-      '</div>\\n<div class="views">');
+  const extraControls='\n<div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>необыч.</span><span>идеал.</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n'+
+  '<div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>меньше</span><span>больше</span></div></div>\n';
+  s=s.replace('</div>\n<div class="views"><button data-view="0">',extraControls+'</div>\n<div class="views"><button data-view="0">');
 
-    s=s.replaceAll("['height','weight','muscle','cup']","['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness']");
+  s=s.replace("const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,metalness:0,side:THREE.DoubleSide});const silhouetteMat=new THREE.MeshBasicMaterial({color:0x69778d,side:THREE.DoubleSide});",
+    "const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,metalness:0,side:THREE.DoubleSide});const neutralMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.9,metalness:0,side:THREE.DoubleSide});const silhouetteMat=new THREE.MeshBasicMaterial({color:0x69778d,side:THREE.DoubleSide});");
+  s=s.replace("let mesh=null,baseVerts=null,wire=false,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();",
+    "let mesh=null,baseVerts=null,wire=false,technicalOn=true,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();");
 
-    s=s.replace(
-      "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);",
-      "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']),pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']),ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);"
-    );
+  s=s.replace("for(const k of['height','weight','muscle','cup'])$(k+'Val').value=Math.round(+$(k).value*100)",
+    "for(const k of['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness'])$(k+'Val').value=Math.round(+$(k).value*100)");
 
-    s=s.replace(
-      "await target(`${M}/proportions/${g}-${a}-${m}-${w}-idealproportions.target.gz`,v,q*.5,true);await target(`${M}/proportions/${g}-${a}-${m}-${w}-uncommonproportions.target.gz`,v,q*.5,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)await target(`${B}/female-${a}-${m}-${w}-${c}-averagefirmness.target.gz`,v,q*wc,true)",
-      "for(const[p,wp]of pp)await target(`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`,v,q*wp,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)for(const[f,wf]of ff)await target(`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`,v,q*wc*wf,true)"
-    );
+  s=s.replace("cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);",
+    "cc=tri(+$('cup').value,['mincup','averagecup','maxcup']),pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']),ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);");
 
-    s=s.replace(
-      "if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);",
-      "const localPair=async(id,folder,stems)=>{const x=+$(id).value,amp=Math.abs(x-.5)*2;if(amp<=1e-6)return;const d=x<.5?'decr':'incr';for(const stem of stems)await target(`${ROOT}/targets/${folder}/${stem}-${d}.target.gz`,v,amp,true)};await localPair('buttocks','buttocks',['buttocks-volume']);await localPair('hands','hands',['l-hand-scale','r-hand-scale']);await localPair('feet','feet',['l-foot-scale','r-foot-scale']);if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);"
-    );
+  s=s.replace("await target(`${M}/proportions/${g}-${a}-${m}-${w}-idealproportions.target.gz`,v,q*.5,true);await target(`${M}/proportions/${g}-${a}-${m}-${w}-uncommonproportions.target.gz`,v,q*.5,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)await target(`${B}/female-${a}-${m}-${w}-${c}-averagefirmness.target.gz`,v,q*wc,true)",
+    "for(const[p,wp]of pp)await target(M+'/proportions/'+g+'-'+a+'-'+m+'-'+w+'-'+p+'.target.gz',v,q*wp,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)for(const[f,wf]of ff)await target(B+'/female-'+a+'-'+m+'-'+w+'-'+c+'-'+f+'.target.gz',v,q*wc*wf,true)");
 
-    s=s.replace(
-      " · грудь ${pct('cup')}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;",
-      " · грудь ${pct('cup')} · пропорции ${pct('proportions')} · ягодицы ${pct('buttocks')} · кисти ${pct('hands')} · стопы ${pct('feet')} · упругость ${pct('firmness')}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;"
-    );
-    `;
+  s=s.replace("if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);",
+    "const localPair=async(id,folder,stems)=>{const x=+$(id).value,amp=Math.abs(x-.5)*2;if(amp<=1e-6)return;const d=x<.5?'decr':'incr';for(const stem of stems)await target(ROOT+'/targets/'+folder+'/'+stem+'-'+d+'.target.gz',v,amp,true)};await localPair('buttocks','buttocks',['buttocks-volume']);await localPair('hands','hands',['l-hand-scale','r-hand-scale']);await localPair('feet','feet',['l-foot-scale','r-foot-scale']);if(id!==buildId)return;mesh.geometry.attributes.position.array.set(v);");
 
-    if(!page.includes(hook))throw new Error('v5 hook not found');
-    page=page.replace(hook,patch+'\n    '+hook);
-    document.open();document.write(page);document.close();
-  }catch(e){
-    document.getElementById('boot').textContent='Ошибка загрузки v6: '+e.message;
-    console.error(e);
-  }
+  s=s.replace("const technical=+$('age').value<.66;mesh.material=technical?silhouetteMat:skinMat;mesh.material.wireframe=wire;fit(false);",
+    "const minor=+$('age').value<.66,technical=technicalOn;mesh.material=technical?silhouetteMat:(minor?neutralMat:skinMat);mesh.material.wireframe=wire;fit(false);");
+
+  s=s.replace(" · грудь ${pct('cup')}${technical?' · тех. силуэт':''}`;",
+    " · грудь ${pct('cup')} · пропорции ${pct('proportions')} · ягодицы ${pct('buttocks')} · кисти ${pct('hands')} · стопы ${pct('feet')} · упругость ${pct('firmness')}${technical?' · тех. силуэт':(minor?' · нейтр. 3D':'')}`;");
+
+  s=s.replace("for(const k of['gender','age','height','weight','muscle','cup'])",
+    "for(const k of['gender','age','height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness'])");
+
+  s=s.replace("$('free').onclick=setFree;$('wire').onclick=()=>{wire=!wire;$('wire').classList.toggle('active',wire);if(mesh)mesh.material.wireframe=wire};$('reset').onclick=()=>{",
+    "$('free').onclick=setFree;$('wire').onclick=()=>{wire=!wire;$('wire').classList.toggle('active',wire);if(mesh)mesh.material.wireframe=wire};$('technical').onclick=()=>{technicalOn=!technicalOn;$('technical').classList.toggle('active',technicalOn);if(mesh){const minor=+$('age').value<.66;mesh.material=technicalOn?silhouetteMat:(minor?neutralMat:skinMat);mesh.material.wireframe=wire}};$('reset').onclick=()=>{");
+
+  s=s.replace("for(const k of['height','weight','muscle','cup'])$(k).value=.5;",
+    "for(const k of['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness'])$(k).value=.5;");
+
+  document.open();document.write(s);document.close();
+}catch(e){
+  document.getElementById('boot').textContent='Ошибка загрузки v6: '+e.message;
+  console.error(e);
+}
 })();
 </script>
 </body>
