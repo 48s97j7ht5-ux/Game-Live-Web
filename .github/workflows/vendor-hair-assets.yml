@@ -72,8 +72,10 @@ jobs:
               "const ASSET_ROOT='https://raw.githubusercontent.com/makehumancommunity/makehuman-assets/master/base/hair';",
           ]:
               s = s.replace(old, "const ROOT='./hair';")
-          s = s.replace("const HAIR_Y_OFFSET=0.035;", "const HAIR_Y_OFFSET=0.070;")
-          s = s.replace("hair Y +0.035", "hair Y +0.070")
+          for old in ["const HAIR_Y_OFFSET=0.035;", "const HAIR_Y_OFFSET=0.070;"]:
+              s = s.replace(old, "const HAIR_Y_OFFSET=0.050;")
+          s = s.replace("hair Y +0.035", "hair Y +0.050")
+          s = s.replace("hair Y +0.070", "hair Y +0.050")
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -86,6 +88,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
           else
-            git commit -m 'Raise global hair Y offset to 0.070'
+            git commit -m 'Set global hair Y offset to 0.050'
             git push
           fi
