@@ -37,9 +37,9 @@
     const renderer=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:false});
     renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.setClearColor(0x0b0d12,1); stage.appendChild(renderer.domElement);
     const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,1000);
+    const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,5000);
     camera.position.set(275,155,275);
-    const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.target.set(0,99,0); controls.minDistance=135; controls.maxDistance=520;
+    const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=.08; controls.target.set(0,99,0); controls.minDistance=135; controls.maxDistance=2400;
     scene.add(new THREE.HemisphereLight(0xdde8ff,0x241b18,2.1));
     const key=new THREE.DirectionalLight(0xffe1c0,2.4); key.position.set(-120,260,150); scene.add(key);
     const rim=new THREE.DirectionalLight(0x78b8ff,1.1); rim.position.set(160,130,-220); scene.add(rim);
