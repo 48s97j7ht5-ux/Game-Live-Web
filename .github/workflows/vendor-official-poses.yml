@@ -25,9 +25,13 @@ jobs:
           RAW='https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2'
           curl -fL "$RAW/rigs/standard/rig.game_engine.json" -o "$RIG/rig.game_engine.json"
           curl -fL "$RAW/rigs/standard/weights.game_engine.json" -o "$RIG/weights.game_engine.json"
+          curl -fL "$RAW/rigs/standard/rig.game_engine_with_breast.json" -o "$RIG/rig.game_engine_with_breast.json"
+          curl -fL "$RAW/rigs/standard/weights.game_engine_with_breast.json" -o "$RIG/weights.game_engine_with_breast.json"
           curl -fL "$RAW/poses/game_engine_with_breast_fk/t-pose.json" -o "$POSES/anny-t-pose.json"
           test -s "$RIG/rig.game_engine.json"
           test -s "$RIG/weights.game_engine.json"
+          test -s "$RIG/rig.game_engine_with_breast.json"
+          test -s "$RIG/weights.game_engine_with_breast.json"
           test -s "$POSES/anny-t-pose.json"
 
       - name: Vendor selected MakeHuman CC0 poses
@@ -58,7 +62,9 @@ jobs:
 
           Browser pose experiment uses original assets rather than hand-authored vertex deformations.
 
-          - `anny-t-pose.json`: NAVER Anny, Apache-2.0 project data / bundled MPFB2-derived data.
+          - `anny-t-pose.json`: NAVER Anny `game_engine_with_breast_fk` pose.
+          - matching rig: `rig.game_engine_with_breast.json`.
+          - matching weights: `weights.game_engine_with_breast.json`.
           - `callharvey3d_sittingdefault.bvh`: callharvey3d, MakeHuman Community poses01, CC0.
           - `callharvey3d_sittingnatural.bvh`: callharvey3d, MakeHuman Community poses01, CC0.
           - `anrico_sitting03.bvh`: Anrico, MakeHuman Community poses01, CC0.
