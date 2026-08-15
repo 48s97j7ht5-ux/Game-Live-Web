@@ -1,0 +1,32 @@
+name: Bust MPFB runtime cache
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bust-mpfb-runtime-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bust runtime module cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('engine/pose-experiment.html')
+          s=p.read_text()
+          s=s.replace("RT=await import('./mpfb-runtime.js?v=20260815-2');", "RT=await import('./mpfb-runtime.js?v=20260815-3');")
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/pose-experiment.html
+          git commit -m 'Bust MPFB runtime module cache' || exit 0
+          git push
