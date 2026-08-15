@@ -10,13 +10,12 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
 button,input{font:inherit;touch-action:manipulation}
-.app{height:100dvh}
-.stage{position:relative;min-width:0;min-height:0;background:var(--bg)}
+.app{height:100%;height:100dvh;position:relative}
+.stage{position:relative;min-width:0;min-height:0;width:100%;height:100%;height:100dvh;background:var(--bg)}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none}
-.badge,.status{position:absolute;z-index:4;padding:7px 10px;border:1px solid #303c51;border-radius:11px;background:#111722d9;backdrop-filter:blur(9px);font-size:11px;color:#aebbd0;max-width:min(520px,calc(100% - 24px))}
-.badge{left:12px;top:calc(12px + env(safe-area-inset-top))}
-.status{left:12px;bottom:calc(70px + env(safe-area-inset-bottom))}
+.status{position:fixed;z-index:12;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));padding:8px 11px;border:1px solid #303c51;border-radius:11px;background:#111722f2;backdrop-filter:blur(9px);font-size:12px;color:#aebbd0;max-width:min(560px,calc(100% - 24px));pointer-events:none}
 .status strong{color:#84ceff}
+.badge{display:none}
 .sheet{background:linear-gradient(180deg,#121a26,#0d121b);border-right:1px solid var(--line);overflow:auto;-webkit-overflow-scrolling:touch}
 .grab{display:none;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-bottom:1px solid var(--line);background:#121a26;position:sticky;top:0;z-index:3}
 .grabHandle{width:36px;height:4px;border-radius:99px;background:#3a465b;margin:0 auto 6px}
@@ -44,14 +43,13 @@ button{border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf
 button.active{background:#355276;border-color:#79b8ff}
 @media(min-width:860px){
   .app{display:grid;grid-template-columns:340px 1fr}
-  .sheet{height:100dvh}
-  .status{bottom:16px}
+  .sheet{height:100%;height:100dvh}
+  .stage{height:100%;height:100dvh}
+  .status{left:360px}
 }
 @media(max-width:859px){
   .app{display:block}
-  .stage{height:100dvh}
-  .badge{display:none}
-  .status{left:10px;right:10px;max-width:none}
+  .stage{position:fixed;inset:0;height:100%;height:100dvh}
   .sheet{
     position:fixed;left:0;right:0;bottom:0;z-index:8;height:min(62dvh,560px);
     border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;
@@ -61,8 +59,6 @@ button.active{background:#355276;border-color:#79b8ff}
   .sheet.open{transform:translateY(0)}
   .grab{display:flex;flex-wrap:wrap}
   .brand{padding-top:8px}
-  .status{bottom:calc(72px + env(safe-area-inset-bottom))}
-  .sheet.open ~ .stage .status,.sheet.open + .stage .status{bottom:calc(62dvh + 8px)}
 }
 </style>
 </head>
@@ -123,16 +119,18 @@ button.active{background:#355276;border-color:#79b8ff}
     </div>
   </div>
 </aside>
-<main class="stage" id="stage">
-  <div class="badge">локальные MPFB morphs · hm08 · 400 px</div>
-  <div class="status" id="status">Загрузка…</div>
-</main>
+<main class="stage" id="stage"></main>
+<div class="status" id="status">Загрузка…</div>
 </div>
+<script>
+window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка: '+(e.message||e.filename||'script')});
+window.addEventListener('unhandledrejection',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка: '+(e.reason&&e.reason.message||e.reason||'promise')});
+</script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import * as RT from './mpfb-runtime.js?v=20260815-6';
+import * as RT from './mpfb-runtime.js?v=20260815-7';
 
 const T='./anny/mpfb2/targets', BASE='./anny/mpfb2/3dobjs/base.obj';
 const M=T+'/macrodetails', B=T+'/breast';
@@ -171,9 +169,23 @@ async function json(url){const r=await fetch(url,{cache:'force-cache'}); if(!r.o
 async function gz(url,opt=false){
   if(cache.has(url)) return cache.get(url);
   const p=(async()=>{
-    const r=await fetch(url,{cache:'force-cache'});
-    if(!r.ok){ if(opt&&(r.status===404||r.status===0)) return null; throw Error(r.status+' '+url.split('/').pop()) }
-    return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+    try{
+      const r=await fetch(url,{cache:'force-cache'});
+      if(!r.ok){ if(opt) return null; throw Error(r.status+' '+url.split('/').pop()) }
+      const buf=new Uint8Array(await r.arrayBuffer());
+      if(!buf.length) return null;
+      if(buf[0]===0x1f&&buf[1]===0x8b){
+        if(typeof DecompressionStream==='function'){
+          return await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+        }
+        const {gunzipSync}=await import('https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.mjs');
+        return new TextDecoder().decode(gunzipSync(buf));
+      }
+      return new TextDecoder().decode(buf);
+    }catch(e){
+      if(opt) return null;
+      throw e;
+    }
   })();
   cache.set(url,p); return p;
 }
@@ -183,7 +195,13 @@ function bi(x,n){ return [[n[0],1-x],[n[1],x]].filter(a=>a[1]>1e-6) }
 function ageBlend(years){ const pts=[[1,'baby'],[10,'child'],[25,'young'],[70,'old']]; if(years<=pts[0][0]) return [[pts[0][1],1]]; for(let i=0;i<pts.length-1;i++){ const[a,an]=pts[i],[b,bn]=pts[i+1]; if(years<=b){ const t=(years-a)/(b-a); return [[an,1-t],[bn,t]].filter(q=>q[1]>1e-6)} } return [['old',1]] }
 function ageName(years){ if(years<=2) return 'младенец'; if(years<=12) return 'ребёнок'; if(years<=17) return 'подросток'; if(years<=49) return 'молодой'; if(years<=69) return 'зрелый'; return 'пожилой' }
 function yearsText(n){ const d=n%10,d2=n%100; const word=d===1&&d2!==11?'год':d>=2&&d<=4&&(d2<12||d2>14)?'года':'лет'; return `${n} ${word}` }
-async function target(url,v,w,opt=false){ if(w>1e-6) add(v, await gz(url,opt), w) }
+async function applyTargets(v, jobs){
+  const parts=await Promise.all(jobs.map(async job=>{
+    if(!job.w||job.w<=1e-6) return null;
+    return {t:await gz(job.url,true), w:job.w};
+  }));
+  for(const p of parts) if(p?.t) add(v,p.t,p.w);
+}
 function genitalEligible(){ return +$('age').value>=18 }
 function genitalAllowed(){ return genitalEligible() && $('genitalEnabled').checked }
 function labels(){
@@ -194,7 +212,7 @@ function labels(){
   const eligible=genitalEligible(); $('genitalEnabled').disabled=!eligible; if(!eligible) $('genitalEnabled').checked=false;
   document.querySelectorAll('.genital').forEach(el=>el.classList.toggle('disabled', !genitalAllowed()));
 }
-async function pair(v,id,folder,stem){ const x=+$(id).value, amp=Math.abs(x-.5)*2; if(amp<1e-6) return; await target(`${T}/${folder}/${stem}-${x<.5?'decr':'incr'}.target.gz`, v, amp, true) }
+async function pair(v,id,folder,stem){ const x=+$(id).value, amp=Math.abs(x-.5)*2; if(amp<1e-6) return; await applyTargets(v, [{url:`${T}/${folder}/${stem}-${x<.5?'decr':'incr'}.target.gz`, w:amp}]) }
 
 function parseClothOBJ(t){
   const v=[],uv=[],f=[];
@@ -341,17 +359,19 @@ async function rebuild(){
   const pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']);
   const ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);
   try{
+    const jobs=[];
     for(const[g,wg] of gg) for(const[a,wa] of aa){
       const ga=wg*wa;
-      for(const r of ['african','asian','caucasian']) await target(`${M}/${r}-${g}-${a}.target.gz`, v, ga/3, true);
+      for(const r of ['african','asian','caucasian']) jobs.push({url:`${M}/${r}-${g}-${a}.target.gz`, w:ga/3});
       for(const[m,wm] of mw) for(const[w,wwt] of ww){
         const q=ga*wm*wwt;
-        await target(`${M}/universal-${g}-${a}-${m}-${w}.target.gz`, v, q, true);
-        for(const[h,wh] of hh) await target(`${M}/height/${g}-${a}-${m}-${w}-${h}.target.gz`, v, q*wh, true);
-        for(const[p,wp] of pp) await target(`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`, v, q*wp, true);
-        if(g==='female'&&(a==='young'||a==='old')) for(const[c,wc] of cc) for(const[f,wf] of ff) await target(`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`, v, q*wc*wf, true);
+        jobs.push({url:`${M}/universal-${g}-${a}-${m}-${w}.target.gz`, w:q});
+        for(const[h,wh] of hh) jobs.push({url:`${M}/height/${g}-${a}-${m}-${w}-${h}.target.gz`, w:q*wh});
+        for(const[p,wp] of pp) jobs.push({url:`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`, w:q*wp});
+        if(g==='female'&&(a==='young'||a==='old')) for(const[c,wc] of cc) for(const[f,wf] of ff) jobs.push({url:`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`, w:q*wc*wf});
       }
     }
+    await applyTargets(v, jobs);
     await pair(v,'buttocks','buttocks','buttocks-volume');
     await pair(v,'hands','hands','l-hand-scale'); await pair(v,'hands','hands','r-hand-scale');
     await pair(v,'feet','feet','l-foot-scale'); await pair(v,'feet','feet','r-foot-scale');
@@ -411,8 +431,16 @@ $('reset').onclick=()=>{
   rebuild();
 };
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(+b.dataset.view));
-function resize(){ const w=stage.clientWidth, h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/Math.max(h,1); camera.updateProjectionMatrix(); if(bodyMesh) ground(false) }
-addEventListener('resize', resize); resize();
+function resize(){
+  const w=Math.max(stage.clientWidth||0, 1);
+  const h=Math.max(stage.clientHeight||0, window.innerHeight||1, 1);
+  renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+  if(bodyMesh) ground(false);
+}
+addEventListener('resize', resize);
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+requestAnimationFrame(()=>{ resize(); if(bodyMesh) ground(false) });
+resize();
 renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene, camera) });
 load().catch(e=>{ console.error(e); status.textContent='Ошибка загрузки: '+e.message });
 </script>
