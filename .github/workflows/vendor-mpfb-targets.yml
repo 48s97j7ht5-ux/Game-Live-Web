@@ -1,0 +1,43 @@
+name: Vendor MPFB morph targets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sparse-clone Anny target folders
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/anny-targets
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/naver/anny.git /tmp/anny-targets
+          git -C /tmp/anny-targets sparse-checkout set \
+            src/anny/data/mpfb2/targets/macrodetails \
+            src/anny/data/mpfb2/targets/breast \
+            src/anny/data/mpfb2/targets/genitals \
+            src/anny/data/mpfb2/targets/buttocks \
+            src/anny/data/mpfb2/targets/hands \
+            src/anny/data/mpfb2/targets/feet
+          mkdir -p engine/anny/mpfb2/targets
+          rm -rf engine/anny/mpfb2/targets
+          cp -a /tmp/anny-targets/src/anny/data/mpfb2/targets engine/anny/mpfb2/targets
+          test -f engine/anny/mpfb2/targets/macrodetails/caucasian-female-young.target.gz
+          find engine/anny/mpfb2/targets -type f | wc -l
+
+      - name: Commit assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add engine/anny/mpfb2/targets
+          git diff --cached --quiet && echo 'No target changes' && exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Vendor Anny/MPFB morph targets"
+          git push
