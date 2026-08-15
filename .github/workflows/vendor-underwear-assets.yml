@@ -1,0 +1,108 @@
+name: Vendor MakeHuman underwear assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/vendor-underwear-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-underwear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download MakeHuman underwear packs
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/mh-underwear && mkdir -p /tmp/mh-underwear
+          cd /tmp/mh-underwear
+
+          fetch_zip() {
+            local pack="$1" file="$2"
+            local p="https://files2.makehumancommunity.org/asset_packs/$pack/$file"
+            local s="https://files.makehumancommunity.org/asset_packs/$pack/$file"
+            curl -fL --retry 3 "$p" -o "$file" || curl -fL --retry 3 "$s" -o "$file"
+            unzip -q "$file" -d "$pack"
+          }
+
+          fetch_zip underwear02 underwear02_cc0.zip
+          fetch_zip underwear03 underwear03_cc-by.zip
+
+      - name: Copy selected tops and bottoms
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$GITHUB_WORKSPACE/engine/clothes/underwear"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT/top" "$ROOT/bottom"
+
+          copy_asset() {
+            local pack="$1" kind="$2" id="$3"
+            local srcroot="/tmp/mh-underwear/$pack"
+            local dst="$ROOT/$kind/$id"
+            mkdir -p "$dst"
+
+            local mhclo obj mhmat
+            mhclo=$(find "$srcroot" -type f -iname "$id.mhclo" | head -n1 || true)
+            obj=$(find "$srcroot" -type f -iname "$id.obj" | head -n1 || true)
+            mhmat=$(find "$srcroot" -type f -iname "$id.mhmat" | head -n1 || true)
+            [ -n "$mhclo" ] || { echo "missing $id.mhclo" >&2; exit 1; }
+            [ -n "$obj" ] || { echo "missing $id.obj" >&2; exit 1; }
+
+            cp "$mhclo" "$dst/$id.mhclo"
+            cp "$obj" "$dst/$id.obj"
+            [ -n "$mhmat" ] && cp "$mhmat" "$dst/$id.mhmat" || true
+
+            local srcdir
+            srcdir=$(dirname "$mhclo")
+            find "$srcdir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.thumb' \) -exec cp {} "$dst/" \;
+
+            grep -q '^f ' "$dst/$id.obj" || { echo "$id.obj has no faces" >&2; exit 1; }
+          }
+
+          copy_asset underwear03 top joepal_plain_bra
+          copy_asset underwear02 top punkduck_bandeau_bra
+          copy_asset underwear02 top punkduck_bikini02_bra
+
+          copy_asset underwear02 bottom elvs_bow_bottom_panty
+          copy_asset underwear02 bottom elvs_lace_panty
+          copy_asset underwear02 bottom punkduck_bandeau_bikini_slip
+          copy_asset underwear02 bottom punkduck_bikini02_slip
+
+          cat > "$ROOT/README.md" <<'EOF'
+          # Underwear experiment assets
+
+          MakeHuman Community MHCLO clothes used for browser fitting experiments.
+
+          Tops:
+          - joepal_plain_bra — Joel Palmius — CC-BY
+          - punkduck_bandeau_bra — punkduck — CC-BY
+          - punkduck_bikini02_bra — punkduck — CC-BY
+
+          Bottoms:
+          - elvs_bow_bottom_panty — Elvaerwyn — CC-BY
+          - elvs_lace_panty — Elvaerwyn — CC-BY
+          - punkduck_bandeau_bikini_slip — punkduck — CC-BY
+          - punkduck_bikini02_slip — punkduck — CC-BY
+
+          Sources: MakeHuman Community underwear02 / underwear03 asset packs.
+          EOF
+
+      - name: Commit vendored assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/clothes/underwear
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Vendor MakeHuman underwear assets'
+            git push
+          fi
