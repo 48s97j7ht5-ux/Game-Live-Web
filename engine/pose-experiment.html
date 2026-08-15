@@ -36,7 +36,7 @@ function ground(){for(const m of [body,top,bottom])if(m)m.position.set(0,0,0);co
 function view(i){ctl.enableRotate=false;$('free').classList.remove('active');const a=Math.PI+i*Math.PI/4;cam.position.set(Math.sin(a)*radius,bodyCenterY,Math.cos(a)*radius);ctl.target.set(0,bodyCenterY,0);ctl.update()}function free(){ctl.enableRotate=true;$('free').classList.add('active')}
 async function load(){
   msg('1/7 · загрузка runtime…');
-  RT=await import('./mpfb-runtime.js?v=20260815-2');
+  RT=await import('./mpfb-runtime.js?v=20260815-3');
   msg('2/7 · загрузка hm08…'); const bt=await txt(BASE);
   msg('3/7 · загрузка rig…'); const r=await json(RIG);
   msg('4/7 · загрузка weights (~3 MB)…'); const w=await json(WEIGHTS);
