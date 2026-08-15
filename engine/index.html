@@ -181,7 +181,7 @@ const techMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.92,side:
 let baseMesh=null, bodyMesh=null, genitalMesh=null, currentVerts=null;
 let topMesh=null, bottomMesh=null, hairMesh=null, topMeta=null, bottomMeta=null, hairMeta=null;
 let ti=0, bi=0, hi=0, pose='rest', wire=false, technical=false;
-let radius=5, centerY=1, buildId=0, timer=0, rigPack=null;
+let radius=5, centerY=1, buildId=0, timer=0, rigPack=null, rigPackPromise=null;
 const cache=new Map(), assetCache=new Map();
 
 function msg(html){status.innerHTML=html}
@@ -305,15 +305,24 @@ async function rebuildSlot(kind){
 
 async function ensureRig(){
   if(rigPack) return rigPack;
-  msg('Гружу риг…');
-  const poseFiles=POSES.filter(p=>p.file);
-  const [rig, weights, ...posePairs]=await Promise.all([
-    json('./anny/mpfb2/rigs/standard/rig.game_engine_with_breast.json'),
-    json('./anny/mpfb2/rigs/standard/weights.game_engine_with_breast.json'),
-    ...poseFiles.map(p=>json('./poses/official/'+p.file).then(j=>[p.id,j]))
-  ]);
-  rigPack={rig, weights, poses:Object.fromEntries(posePairs), influences: RT.buildVertexInfluences(weights, baseMesh.vertices.length/3)};
-  return rigPack;
+  if(!rigPackPromise){
+    rigPackPromise=(async()=>{
+      const poseFiles=POSES.filter(p=>p.file);
+      const [rig, weights, ...posePairs]=await Promise.all([
+        json('./anny/mpfb2/rigs/standard/rig.game_engine_with_breast.json'),
+        json('./anny/mpfb2/rigs/standard/weights.game_engine_with_breast.json'),
+        ...poseFiles.map(p=>json('./poses/official/'+p.file).then(j=>[p.id,j]))
+      ]);
+      rigPack={rig, weights, poses:Object.fromEntries(posePairs), influences: RT.buildVertexInfluences(weights, baseMesh.vertices.length/3)};
+      return rigPack;
+    })().catch(e=>{ rigPackPromise=null; throw e; });
+  }
+  return rigPackPromise;
+}
+function poseLabel(){ return POSES.find(p=>p.id===pose)?.name||pose }
+function readyMsg(){
+  const years=+$('age').value;
+  return `<strong>Готово</strong> · ${poseLabel()} · ${yearsText(years)} · ${ageName(years)}`;
 }
 
 function applyMaterials(){
@@ -369,10 +378,12 @@ async function applyPose(){
   if(pose==='rest'){
     for(const m of [bodyMesh, genitalMesh]){ m.geometry.attributes.position.array.set(currentVerts); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals() }
     await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
-    ground(false); return;
+    ground(false); msg(readyMsg()); return;
   }
+  if(!rigPack) msg('Гружу риг…');
   await skinCurrent();
   ground(false);
+  msg(readyMsg());
 }
 
 async function rebuild(){
@@ -413,8 +424,7 @@ async function rebuild(){
     await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
     if(pose==='rest'){ bodyMesh.geometry.computeVertexNormals(); genitalMesh.geometry.computeVertexNormals(); ground(false) }
     else await applyPose();
-    const years=+$('age').value;
-    msg(`<strong>Готово</strong> · локальные morphs · ${yearsText(years)} · ${ageName(years)}`);
+    msg(readyMsg());
   }catch(e){ console.error(e); status.textContent='Ошибка: '+e.message }
 }
 
@@ -429,7 +439,11 @@ async function load(){
     const m=new THREE.Mesh(g, skinMat); scene.add(m);
     if(name==='body') bodyMesh=m; else genitalMesh=m;
   }
-  genitalMesh.visible=false; ground(true); setFree(); await rebuild();
+  genitalMesh.visible=false; ground(true); setFree();
+  const rigWarm=ensureRig().catch(e=>console.error(e));
+  await rebuild();
+  await rigWarm;
+  msg(readyMsg());
 }
 
 $('sheetToggle').onclick=()=>{
