@@ -90,7 +90,6 @@ function strategyPosition(info,mesh,relativeScale=1){
 function boneBasisFromVectorRoll(vec,roll){
   const n=vec.clone().normalize(),x=n.x,y=n.y,z=n.z;
   const SAFE=6.1e-3,CRIT=2.5e-4,TH2=CRIT*CRIT; let theta=1+y,alt=x*x+z*z;
-  // Blender's 3x3 is column-major semantically; create explicit basis matrix here.
   let b00,b01,b02,b10,b11,b12,b20,b21,b22;
   if(theta>SAFE||alt>TH2){
     if(theta<=SAFE)theta=alt*.5+alt*alt*.125;
@@ -148,20 +147,18 @@ export function buildVertexInfluences(weightsJson,vertexCount){
 }
 
 export function skinVertices(restObjVertices,influences,skinMatrices){
-  const out=new Float32Array(restObjVertices.length),v=new THREE.Vector3(),sum;
+  const out=new Float32Array(restObjVertices.length),v=new THREE.Vector3();
   for(let i=0;i<restObjVertices.length/3;i++){
     const k=i*3,inf=influences[i];if(!inf||!inf.length){out[k]=restObjVertices[k];out[k+1]=restObjVertices[k+1];out[k+2]=restObjVertices[k+2];continue}
-    const src=objToRigXYZ(restObjVertices[k],restObjVertices[k+1],restObjVertices[k+2]),acc=new THREE.Vector3();sum={v:0};
-    for(const [bone,w] of inf){const m=skinMatrices[bone];if(!m)continue;v.copy(src).applyMatrix4(m);acc.addScaledVector(v,w);sum.v+=w}
-    if(sum.v>1e-8)acc.multiplyScalar(1/sum.v);else acc.copy(src);const o=rigToObjXYZ(acc);out[k]=o.x;out[k+1]=o.y;out[k+2]=o.z;
+    const src=objToRigXYZ(restObjVertices[k],restObjVertices[k+1],restObjVertices[k+2]),acc=new THREE.Vector3();let sum=0;
+    for(const [bone,w] of inf){const m=skinMatrices[bone];if(!m)continue;v.copy(src).applyMatrix4(m);acc.addScaledVector(v,w);sum+=w}
+    if(sum>1e-8)acc.multiplyScalar(1/sum);else acc.copy(src);const o=rigToObjXYZ(acc);out[k]=o.x;out[k+1]=o.y;out[k+2]=o.z;
   }
   return out;
 }
 
 function scaleFromMhclo(r,axis,base){if(!r)return 1;const a=vAtObj(base,r[0]),b=vAtObj(base,r[1]);return Math.abs((b.getComponent(axis)-a.getComponent(axis))/r[2])}
 export function fitMHCLO(meta,baseObjVertices){
-  // MHCLO offsets are MakeHuman coordinates. MPFB swaps Y/Z only after Blender import;
-  // in browser we remain in the original OBJ coordinate system, so no swap is needed here.
   const S=[scaleFromMhclo(meta.x,0,baseObjVertices),scaleFromMhclo(meta.y,1,baseObjVertices),scaleFromMhclo(meta.z,2,baseObjVertices)],out=new Float32Array(meta.verts.length*3);
   for(let n=0;n<meta.verts.length;n++){
     const q=meta.verts[n],p=new THREE.Vector3();for(let j=0;j<3;j++){const i=q.i[j],w=q.w[j],k=i*3;if(k+2<baseObjVertices.length)p.addScaledVector(new THREE.Vector3(baseObjVertices[k],baseObjVertices[k+1],baseObjVertices[k+2]),w)}
