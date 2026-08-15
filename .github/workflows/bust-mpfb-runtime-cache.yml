@@ -1,4 +1,4 @@
-name: Bust MPFB runtime cache
+name: Fix vendored underwear OBJ resolution
 
 on:
   push:
@@ -14,13 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bust runtime module cache
+      - name: Patch clothing loader
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('engine/pose-experiment.html')
           s=p.read_text()
-          s=s.replace("RT=await import('./mpfb-runtime.js?v=20260815-2');", "RT=await import('./mpfb-runtime.js?v=20260815-3');")
+          old="async function readCloth(kind,id){const root=`${CLOTH}/${kind}/${id}`,mh=await txt(`${root}/${id}.mhclo`),meta=RT.parseMHCLO(mh),objName=(meta.objFile||`${id}.obj`).split(/[\\\\/]/).pop(),mesh=RT.parseOBJ(await txt(`${root}/${objName}`));return{id,meta,mesh}}"
+          new="async function readCloth(kind,id){const root=`${CLOTH}/${kind}/${id}`,mh=await txt(`${root}/${id}.mhclo`),meta=RT.parseMHCLO(mh);let objName=(meta.objFile||`${id}.obj`).split(/[\\\\/]/).pop(),objText;try{objText=await txt(`${root}/${objName}`)}catch(e){if(objName===`${id}.obj`)throw e;objName=`${id}.obj`;objText=await txt(`${root}/${objName}`)}const mesh=RT.parseOBJ(objText);return{id,meta,mesh,objName}}"
+          if old not in s:
+              raise SystemExit('readCloth pattern not found')
+          s=s.replace(old,new)
+          s=s.replace("RT=await import('./mpfb-runtime.js?v=20260815-3');", "RT=await import('./mpfb-runtime.js?v=20260815-4');")
+          s=s.replace('MPFB port v3.1 · diagnostic loader · 400 px','MPFB port v3.2 · asset fallback · 400 px')
           p.write_text(s)
           PY
       - name: Commit
@@ -28,5 +34,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add engine/pose-experiment.html
-          git commit -m 'Bust MPFB runtime module cache' || exit 0
+          git commit -m 'Fix vendored underwear OBJ filename fallback' || exit 0
           git push
