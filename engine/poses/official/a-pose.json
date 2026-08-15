@@ -1,0 +1,59 @@
+{
+    "bone_rotations": {
+        "clavicle_l": [
+            0.0,
+            0.0,
+            0.1396263402
+        ],
+        "clavicle_r": [
+            0.0,
+            0.0,
+            -0.1396263402
+        ],
+        "upperarm_l": [
+            0.0,
+            0.0,
+            0.3141592654
+        ],
+        "upperarm_r": [
+            0.0,
+            0.0,
+            -0.3141592654
+        ],
+        "lowerarm_l": [
+            -0.2094395102,
+            0.0,
+            0.0
+        ],
+        "lowerarm_r": [
+            -0.2094395102,
+            0.0,
+            0.0
+        ],
+        "thigh_l": [
+            0.0523598776,
+            0.0,
+            0.0959931089
+        ],
+        "thigh_r": [
+            0.0523598776,
+            0.0,
+            -0.0959931089
+        ],
+        "foot_l": [
+            0.0,
+            0.0959931089,
+            -0.0523598776
+        ],
+        "foot_r": [
+            0.0,
+            -0.0959931089,
+            0.0523598776
+        ]
+    },
+    "bone_translations": {},
+    "has_ik_bones": false,
+    "original_shoulder_width": 0,
+    "original_spine_length": 0,
+    "skeleton_type": "game_engine_with_breast"
+}

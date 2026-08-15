@@ -13,8 +13,8 @@
 import * as THREE from 'three';import{OrbitControls}from'three/addons/controls/OrbitControls.js';
 import * as RT from './mpfb-runtime.js?v=20260815-5';
 const BASE='./anny/mpfb2/3dobjs/base.obj',ROOT='./clothes/underwear',TARGET_PX=400;
-const TOPS=[{name:'Без лифчика'},{name:'Plain Bra',id:'joepal_plain_bra'},{name:'Bandeau Bra',id:'punkduck_bandeau_bra'},{name:'Bikini 02 Bra',id:'punkduck_bikini02_bra'}];
-const BOTTOMS=[{name:'Без трусов'},{name:'Bow Panty',id:'elvs_bow_bottom_panty'},{name:'Lace Panty',id:'elvs_lace_panty'},{name:'Bandeau Bikini Slip',id:'punkduck_bandeau_bikini_slip'},{name:'Bikini 02 Slip',id:'punkduck_bikini02_slip'}];
+const TOPS=[{name:'Без лифчика'},{name:'Plain Bra',id:'joepal_plain_bra'},{name:'Bandeau Bra',id:'punkduck_bandeau_bra'},{name:'Bikini 02 Bra',id:'punkduck_bikini02_bra'},{name:'Купальник FS',id:'leotard_fs'},{name:'Купальник LB',id:'leotard_lb'},{name:'Комбинезон',id:'catsuit'}];
+const BOTTOMS=[{name:'Без трусов'},{name:'Bow Panty',id:'elvs_bow_bottom_panty'},{name:'Lace Panty',id:'elvs_lace_panty'},{name:'Bandeau Bikini Slip',id:'punkduck_bandeau_bikini_slip'},{name:'Bikini 02 Slip',id:'punkduck_bikini02_slip'},{name:'Колготки',id:'tightsv2'}];
 const $=x=>document.getElementById(x),stage=$('stage'),diag=$('diag');let ti=0,bi=0,body=null,baseMesh=null,topMesh=null,bottomMesh=null,topMeta=null,bottomMeta=null,wire=false,bodyHeight=1,bodyCenterY=.5,radius=5;const cache=new Map();
 function msg(s,type=''){diag.className='diag '+type;diag.textContent=s}
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);const scene=new THREE.Scene();scene.background=new THREE.Color(0x090c12);const cam=new THREE.PerspectiveCamera(30,1,.01,100),ctl=new OrbitControls(cam,renderer.domElement);ctl.enableDamping=true;scene.add(new THREE.HemisphereLight(0xffffff,0x222233,2.2));const dl=new THREE.DirectionalLight(0xffddcc,2.5);dl.position.set(-4,7,5);scene.add(dl);const skin=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,side:THREE.DoubleSide});

@@ -37,10 +37,12 @@ input[type=range]{width:100%;height:28px;margin:4px 0 0;accent-color:#79b8ff}
 .pick button{min-height:44px;font-size:18px}
 .pickName{text-align:center;font-size:12px;font-weight:800;color:var(--text)}
 .toolbar,.views,.poses{display:grid;gap:7px}
-.toolbar,.poses{grid-template-columns:1fr 1fr}
+.toolbar{grid-template-columns:1fr 1fr}
+.poses{grid-template-columns:repeat(4,1fr)}
 .views{grid-template-columns:repeat(4,1fr)}
 button{border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;padding:11px 8px;font-size:12px;font-weight:800}
 button.active{background:#355276;border-color:#79b8ff}
+.poses button{padding:9px 4px;font-size:11px}
 @media(min-width:860px){
   .app{display:grid;grid-template-columns:340px 1fr}
   .sheet{height:100%;height:100dvh}
@@ -82,7 +84,16 @@ button.active{background:#355276;border-color:#79b8ff}
   </div>
 
   <div class="section"><div class="sectionTitle">Поза</div>
-    <div class="poses"><button data-pose="rest" class="active" type="button">Rest</button><button data-pose="tpose" type="button">T-pose</button></div>
+    <div class="poses" id="poseGrid">
+      <button data-pose="rest" class="active" type="button">Rest</button>
+      <button data-pose="tpose" type="button">T-pose</button>
+      <button data-pose="apose" type="button">A-pose</button>
+      <button data-pose="step" type="button">Шаг</button>
+      <button data-pose="hips" type="button">В боки</button>
+      <button data-pose="sit" type="button">Сидя</button>
+      <button data-pose="sitnat" type="button">Сидя 2</button>
+      <button data-pose="sit3" type="button">Сидя 3</button>
+    </div>
   </div>
 
   <div class="section"><div class="sectionTitle">Основное тело</div>
@@ -135,9 +146,19 @@ import * as RT from './mpfb-runtime.js?v=20260815-9';
 const T='./anny/mpfb2/targets', BASE='./anny/mpfb2/3dobjs/base.obj';
 const M=T+'/macrodetails', B=T+'/breast';
 const CLOTH='./clothes/underwear', HAIR='./hair';
-const TOPS=[{name:'Без лифчика'},{name:'Plain Bra',id:'joepal_plain_bra'},{name:'Bandeau Bra',id:'punkduck_bandeau_bra'},{name:'Bikini 02 Bra',id:'punkduck_bikini02_bra'}];
-const BOTTOMS=[{name:'Без трусов'},{name:'Bow Panty',id:'elvs_bow_bottom_panty'},{name:'Lace Panty',id:'elvs_lace_panty'},{name:'Bandeau Slip',id:'punkduck_bandeau_bikini_slip'},{name:'Bikini 02 Slip',id:'punkduck_bikini02_slip'}];
+const TOPS=[{name:'Без лифчика'},{name:'Plain Bra',id:'joepal_plain_bra'},{name:'Bandeau Bra',id:'punkduck_bandeau_bra'},{name:'Bikini 02 Bra',id:'punkduck_bikini02_bra'},{name:'Купальник FS',id:'leotard_fs'},{name:'Купальник LB',id:'leotard_lb'},{name:'Комбинезон',id:'catsuit'}];
+const BOTTOMS=[{name:'Без трусов'},{name:'Bow Panty',id:'elvs_bow_bottom_panty'},{name:'Lace Panty',id:'elvs_lace_panty'},{name:'Bandeau Slip',id:'punkduck_bandeau_bikini_slip'},{name:'Bikini 02 Slip',id:'punkduck_bikini02_slip'},{name:'Колготки',id:'tightsv2'}];
 const HAIRS=[{name:'Без волос'},{name:'Bob 01',id:'bob01'},{name:'Long 01',id:'long01'},{name:'Ponytail 01',id:'ponytail01'},{name:'Short 02',id:'short02'},{name:'Braid 01',id:'braid01'}];
+const POSES=[
+  {id:'rest', name:'Rest'},
+  {id:'tpose', name:'T-pose', file:'anny-t-pose.json'},
+  {id:'apose', name:'A-pose', file:'a-pose.json'},
+  {id:'step', name:'Шаг', file:'step.json'},
+  {id:'hips', name:'В боки', file:'hands-hips.json'},
+  {id:'sit', name:'Сидя', file:'sit-default.json'},
+  {id:'sitnat', name:'Сидя 2', file:'sit-natural.json'},
+  {id:'sit3', name:'Сидя 3', file:'sit-anrico.json'}
+];
 const $=id=>document.getElementById(id), stage=$('stage'), status=$('status'), sheet=$('sheet');
 const CHARACTER_SCREEN_HEIGHT=400;
 
@@ -285,12 +306,13 @@ async function rebuildSlot(kind){
 async function ensureRig(){
   if(rigPack) return rigPack;
   msg('Гружу риг…');
-  const [rig, weights, tpose]=await Promise.all([
+  const poseFiles=POSES.filter(p=>p.file);
+  const [rig, weights, ...posePairs]=await Promise.all([
     json('./anny/mpfb2/rigs/standard/rig.game_engine_with_breast.json'),
     json('./anny/mpfb2/rigs/standard/weights.game_engine_with_breast.json'),
-    json('./poses/official/anny-t-pose.json')
+    ...poseFiles.map(p=>json('./poses/official/'+p.file).then(j=>[p.id,j]))
   ]);
-  rigPack={rig, weights, tpose, influences: RT.buildVertexInfluences(weights, baseMesh.vertices.length/3)};
+  rigPack={rig, weights, poses:Object.fromEntries(posePairs), influences: RT.buildVertexInfluences(weights, baseMesh.vertices.length/3)};
   return rigPack;
 }
 
@@ -324,8 +346,10 @@ function setFree(){ controls.enableRotate=true; $('free').classList.add('active'
 
 async function skinCurrent(){
   const pack=await ensureRig();
+  const poseJson=pose==='rest'?null:pack.poses[pose];
+  if(pose!=='rest' && !poseJson) throw Error('Нет файла позы: '+pose);
   const bones=RT.buildRig(pack.rig, {vertices: currentVerts, groups: baseMesh.groups});
-  const skin=RT.buildSkinMatrices(bones, pack.tpose);
+  const skin=RT.buildSkinMatrices(bones, poseJson);
   const bodyPos=RT.skinVertices(currentVerts, pack.influences, skin);
   for(const m of [bodyMesh, genitalMesh]){
     m.geometry.attributes.position.array.set(bodyPos); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals();
@@ -342,7 +366,7 @@ async function skinCurrent(){
 }
 
 async function applyPose(){
-  if(pose!=='tpose'){
+  if(pose==='rest'){
     for(const m of [bodyMesh, genitalMesh]){ m.geometry.attributes.position.array.set(currentVerts); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals() }
     await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
     ground(false); return;
@@ -387,7 +411,8 @@ async function rebuild(){
     genitalMesh.geometry.attributes.position.array.set(v); genitalMesh.geometry.attributes.position.needsUpdate=true;
     genitalMesh.visible=genitalAllowed(); applyMaterials();
     await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
-    if(pose==='tpose') await applyPose(); else { bodyMesh.geometry.computeVertexNormals(); genitalMesh.geometry.computeVertexNormals(); ground(false) }
+    if(pose==='rest'){ bodyMesh.geometry.computeVertexNormals(); genitalMesh.geometry.computeVertexNormals(); ground(false) }
+    else await applyPose();
     const years=+$('age').value;
     msg(`<strong>Готово</strong> · локальные morphs · ${yearsText(years)} · ${ageName(years)}`);
   }catch(e){ console.error(e); status.textContent='Ошибка: '+e.message }
@@ -418,7 +443,7 @@ $('genitalEnabled').onchange=()=>rebuild();
 async function cycleSlot(kind, dir, list, get, set){
   set((get()+dir+list.length)%list.length);
   await rebuildSlot(kind);
-  if(pose==='tpose') await skinCurrent();
+  if(pose!=='rest') await skinCurrent();
   ground(false);
 }
 $('topPrev').onclick=()=>cycleSlot('top',-1,TOPS,()=>ti,v=>ti=v);
