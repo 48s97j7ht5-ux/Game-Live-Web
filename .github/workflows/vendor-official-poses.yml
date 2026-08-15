@@ -1,0 +1,83 @@
+name: Vendor official Anny and MakeHuman pose assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/vendor-official-poses.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vendor official Anny rig
+        shell: bash
+        run: |
+          set -euo pipefail
+          RIG='engine/anny/mpfb2/rigs/standard'
+          POSES='engine/poses/official'
+          mkdir -p "$RIG" "$POSES"
+          RAW='https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2'
+          curl -fL "$RAW/rigs/standard/rig.game_engine.json" -o "$RIG/rig.game_engine.json"
+          curl -fL "$RAW/rigs/standard/weights.game_engine.json" -o "$RIG/weights.game_engine.json"
+          curl -fL "$RAW/poses/game_engine_with_breast_fk/t-pose.json" -o "$POSES/anny-t-pose.json"
+          test -s "$RIG/rig.game_engine.json"
+          test -s "$RIG/weights.game_engine.json"
+          test -s "$POSES/anny-t-pose.json"
+
+      - name: Vendor selected MakeHuman CC0 poses
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP='/tmp/mhposes'
+          OUT='engine/poses/official'
+          rm -rf "$TMP" && mkdir -p "$TMP" "$OUT"
+          cd "$TMP"
+          curl -fL --retry 3 'https://files2.makehumancommunity.org/asset_packs/poses01/poses01_cc0.zip' -o poses01.zip || curl -fL --retry 3 'https://files.makehumancommunity.org/asset_packs/poses01/poses01_cc0.zip' -o poses01.zip
+          unzip -q poses01.zip -d poses01
+
+          copy_pose() {
+            local id="$1"
+            local bvh
+            bvh=$(find poses01 -type f -iname "$id.bvh" | head -n1 || true)
+            [ -n "$bvh" ] || { echo "Missing $id.bvh" >&2; find poses01 -type f | sed -n '1,120p'; exit 1; }
+            cp "$bvh" "$GITHUB_WORKSPACE/$OUT/$id.bvh"
+          }
+
+          copy_pose callharvey3d_sittingdefault
+          copy_pose callharvey3d_sittingnatural
+          copy_pose anrico_sitting03
+
+          cat > "$GITHUB_WORKSPACE/$OUT/README.md" <<'EOF'
+          # Official pose experiment assets
+
+          Browser pose experiment uses original assets rather than hand-authored vertex deformations.
+
+          - `anny-t-pose.json`: NAVER Anny, Apache-2.0 project data / bundled MPFB2-derived data.
+          - `callharvey3d_sittingdefault.bvh`: callharvey3d, MakeHuman Community poses01, CC0.
+          - `callharvey3d_sittingnatural.bvh`: callharvey3d, MakeHuman Community poses01, CC0.
+          - `anrico_sitting03.bvh`: Anrico, MakeHuman Community poses01, CC0.
+
+          Sources:
+          - https://github.com/naver/anny
+          - https://static.makehumancommunity.org/assets/assetpacks/poses01.html
+          EOF
+
+      - name: Commit assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/anny/mpfb2/rigs/standard engine/poses/official
+          if git diff --cached --quiet; then
+            echo 'No changes.'
+          else
+            git commit -m 'Vendor official Anny rig and MakeHuman poses'
+            git push
+          fi
