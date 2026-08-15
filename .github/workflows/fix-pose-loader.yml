@@ -1,0 +1,56 @@
+name: Fix pose loader diagnostics
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-pose-loader.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch pose page
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('engine/pose-experiment.html')
+          s = p.read_text()
+          old = "import {parseBaseOBJ,parseOBJ,parseMHCLO,buildRig,buildSkinMatrices,buildVertexInfluences,skinVertices,fitMHCLO,transferInfluencesToMHCLO,expandIndexedCloth,expandIndexedInfluences} from './mpfb-runtime.js?v=20260815-1';"
+          s = s.replace(old, "let RT=null;")
+          replacements = {
+            'parseMHCLO(mh)': 'RT.parseMHCLO(mh)',
+            'parseOBJ(await txt(`${root}/${objName}`))': 'RT.parseOBJ(await txt(`${root}/${objName}`))',
+            'fitMHCLO(data.meta,baseMesh.vertices)': 'RT.fitMHCLO(data.meta,baseMesh.vertices)',
+            'transferInfluencesToMHCLO(data.meta,baseInfluences)': 'RT.transferInfluencesToMHCLO(data.meta,baseInfluences)',
+            'expandIndexedCloth(data.mesh,fitted)': 'RT.expandIndexedCloth(data.mesh,fitted)',
+            'expandIndexedInfluences(data.mesh,vinf)': 'RT.expandIndexedInfluences(data.mesh,vinf)',
+            'buildSkinMatrices(bones,p)': 'RT.buildSkinMatrices(bones,p)',
+            'skinVertices(baseMesh.vertices,baseInfluences,skin)': 'RT.skinVertices(baseMesh.vertices,baseInfluences,skin)',
+            'skinVertices(m.userData.rest,m.userData.inf,skin)': 'RT.skinVertices(m.userData.rest,m.userData.inf,skin)',
+            'baseMesh=parseBaseOBJ(bt)': 'baseMesh=RT.parseBaseOBJ(bt)',
+            'bones=buildRig(rig,baseMesh)': 'bones=RT.buildRig(rig,baseMesh)',
+            'baseInfluences=buildVertexInfluences(weights,baseMesh.vertices.length/3)': 'baseInfluences=RT.buildVertexInfluences(weights,baseMesh.vertices.length/3)'
+          }
+          for a,b in replacements.items(): s=s.replace(a,b)
+          oldload = "async function load(){\n  msg('Загрузка hm08 + matching Anny rig/weights…');\n  const [bt,r,w,p,ct,cb]=await Promise.all([txt(BASE),json(RIG),json(WEIGHTS),json(TPOSE),readCloth('top','joepal_plain_bra'),readCloth('bottom','elvs_bow_bottom_panty')]);"
+          newload = "async function load(){\n  msg('1/7 · загрузка runtime…');\n  RT=await import('./mpfb-runtime.js?v=20260815-2');\n  msg('2/7 · загрузка hm08…'); const bt=await txt(BASE);\n  msg('3/7 · загрузка rig…'); const r=await json(RIG);\n  msg('4/7 · загрузка weights (~3 MB)…'); const w=await json(WEIGHTS);\n  msg('5/7 · загрузка pose…'); const p=await json(TPOSE);\n  msg('6/7 · загрузка белья…'); const [ct,cb]=await Promise.all([readCloth('top','joepal_plain_bra'),readCloth('bottom','elvs_bow_bottom_panty')]);\n  msg('7/7 · сборка скелета и skinning…');"
+          if oldload not in s:
+              raise SystemExit('load block not found')
+          s=s.replace(oldload,newload)
+          s=s.replace("<div class=\"badge\">MPFB port v3 · matched rig/weights · 400 px</div>","<div class=\"badge\">MPFB port v3.1 · diagnostic loader · 400 px</div>")
+          # Catch errors that happen before load() can render its own diagnostic.
+          s=s.replace('<script type="module">','<script>window.addEventListener(\'error\',e=>{const d=document.getElementById(\'diag\');if(d){d.className=\'diag err\';d.textContent=\'JS ERROR · \'+(e.message||\'unknown\')}});window.addEventListener(\'unhandledrejection\',e=>{const d=document.getElementById(\'diag\');if(d){d.className=\'diag err\';d.textContent=\'PROMISE ERROR · \'+(e.reason?.message||e.reason||\'unknown\')}});</script>\n<script type="module">',1)
+          p.write_text(s)
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/pose-experiment.html
+          git commit -m 'Make pose loader observable and catch runtime failures'
+          git push
