@@ -38,7 +38,8 @@ input[type=range]{width:100%;height:28px;margin:4px 0 0;accent-color:#79b8ff}
 .pickName{text-align:center;font-size:12px;font-weight:800;color:var(--text)}
 .toolbar,.views,.poses{display:grid;gap:7px}
 .toolbar{grid-template-columns:1fr 1fr}
-.poses{grid-template-columns:repeat(3,1fr)}
+.poses{grid-template-columns:repeat(4,1fr)}
+select{width:100%;min-height:44px;border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;padding:8px}
 .views{grid-template-columns:repeat(4,1fr)}
 button{border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;padding:11px 8px;font-size:12px;font-weight:800}
 button.active{background:#355276;border-color:#79b8ff}
@@ -75,7 +76,7 @@ button.active{background:#355276;border-color:#79b8ff}
     <button class="miniView" data-view="4" type="button">Зад</button>
   </div>
   <div class="brand">Character Engine</div>
-  <div class="sub">Морфы, одежда и волосы из этого репозитория. На телефоне открой «Параметры», персонажа крути пальцем.</div>
+  <div class="sub">Морфы и одежда из репозитория. Позы Rest/T/A — официальные. Сидячие снимай кнопкой «Кости» (без Blender), JSON можно скачать.</div>
 
   <div class="section"><div class="sectionTitle">Одежда и волосы</div>
     <div class="pick"><button id="topPrev" type="button">◀</button><div class="pickName" id="topName">Без лифчика</div><button id="topNext" type="button">▶</button></div>
@@ -88,6 +89,24 @@ button.active{background:#355276;border-color:#79b8ff}
       <button data-pose="rest" class="active" type="button">Rest</button>
       <button data-pose="tpose" type="button">T-pose</button>
       <button data-pose="apose" type="button">A-pose</button>
+      <button data-pose="edit" type="button">Кости</button>
+    </div>
+    <div class="ctrl" id="boneEditor">
+      <div class="h"><span>Кость</span></div>
+      <select id="boneName"></select>
+      <div class="h" style="margin-top:8px"><span>X</span><output id="boneXVal">0°</output></div>
+      <input id="boneX" type="range" min="-120" max="120" step="1" value="0">
+      <div class="h"><span>Y</span><output id="boneYVal">0°</output></div>
+      <input id="boneY" type="range" min="-120" max="120" step="1" value="0">
+      <div class="h"><span>Z</span><output id="boneZVal">0°</output></div>
+      <input id="boneZ" type="range" min="-120" max="120" step="1" value="0">
+      <div class="ends"><span>одна ось за раз</span><span>без Blender</span></div>
+      <div class="toolbar" style="margin-top:8px">
+        <button id="boneZero" type="button">Сброс кости</button>
+        <button id="boneClear" type="button">Все 0</button>
+        <button id="boneMirror" type="button">Зеркало L↔R</button>
+        <button id="boneSave" type="button">Скачать JSON</button>
+      </div>
     </div>
   </div>
 
@@ -147,8 +166,22 @@ const HAIRS=[{name:'Без волос'},{name:'Bob 01',id:'bob01'},{name:'Long 0
 const POSES=[
   {id:'rest', name:'Rest'},
   {id:'tpose', name:'T-pose', file:'anny-t-pose.json'},
-  {id:'apose', name:'A-pose', file:'a-pose.json'}
+  {id:'apose', name:'A-pose', file:'a-pose.json'},
+  {id:'edit', name:'Кости'}
 ];
+const BONES=[
+  ['pelvis','Таз'],['spine_01','Поясница'],['spine_02','Грудь'],['spine_03','Верх спины'],
+  ['neck_01','Шея'],['head','Голова'],
+  ['clavicle_l','Ключица L'],['clavicle_r','Ключица R'],
+  ['upperarm_l','Плечо L'],['upperarm_r','Плечо R'],
+  ['lowerarm_l','Локоть L'],['lowerarm_r','Локоть R'],
+  ['hand_l','Кисть L'],['hand_r','Кисть R'],
+  ['thigh_l','Бедро L'],['thigh_r','Бедро R'],
+  ['calf_l','Голень L'],['calf_r','Голень R'],
+  ['foot_l','Стопа L'],['foot_r','Стопа R']
+];
+const boneDeg=Object.fromEntries(BONES.map(([id])=>[id,[0,0,0]]));
+let boneTimer=0;
 const $=id=>document.getElementById(id), stage=$('stage'), status=$('status'), sheet=$('sheet');
 const CHARACTER_SCREEN_HEIGHT=400;
 
@@ -314,6 +347,43 @@ function readyMsg(){
   const years=+$('age').value;
   return `<strong>Готово</strong> · ${poseLabel()} · ${yearsText(years)} · ${ageName(years)}`;
 }
+function deg(rad){ return Math.round((rad||0)*180/Math.PI) }
+function customPoseDict(){
+  const bone_rotations={};
+  for(const [name, d] of Object.entries(boneDeg)){
+    if(d.some(v=>Math.abs(v)>0.05)) bone_rotations[name]=d.map(v=>v*Math.PI/180);
+  }
+  return {
+    bone_rotations, bone_translations:{}, has_ik_bones:false,
+    original_shoulder_width:0, original_spine_length:0,
+    skeleton_type:'game_engine_with_breast'
+  };
+}
+function loadBoneDegFromPose(poseJson){
+  for(const [id] of BONES) boneDeg[id]=[0,0,0];
+  if(poseJson?.bone_rotations){
+    for(const [name, arr] of Object.entries(poseJson.bone_rotations)){
+      if(boneDeg[name]) boneDeg[name]=[deg(arr[0]), deg(arr[1]), deg(arr[2])];
+    }
+  }
+  showBoneSliders();
+}
+function showBoneSliders(){
+  const name=$('boneName').value;
+  const d=boneDeg[name]||[0,0,0];
+  $('boneX').value=d[0]; $('boneY').value=d[1]; $('boneZ').value=d[2];
+  $('boneXVal').value=d[0]+'°'; $('boneYVal').value=d[1]+'°'; $('boneZVal').value=d[2]+'°';
+}
+function storeBoneSliders(){
+  const name=$('boneName').value;
+  boneDeg[name]=[+$('boneX').value, +$('boneY').value, +$('boneZ').value];
+  showBoneSliders();
+}
+function mirrorName(name){
+  if(name.endsWith('_l')) return name.slice(0,-2)+'_r';
+  if(name.endsWith('_r')) return name.slice(0,-2)+'_l';
+  return null;
+}
 
 function applyMaterials(){
   const mat=technical?techMat:skinMat;
@@ -345,8 +415,10 @@ function setFree(){ controls.enableRotate=true; $('free').classList.add('active'
 
 async function skinCurrent(){
   const pack=await ensureRig();
-  const poseJson=pose==='rest'?null:pack.poses[pose];
-  if(pose!=='rest' && !poseJson) throw Error('Нет файла позы: '+pose);
+  let poseJson=null;
+  if(pose==='edit') poseJson=customPoseDict();
+  else if(pose!=='rest') poseJson=pack.poses[pose];
+  if(pose!=='rest' && pose!=='edit' && !poseJson) throw Error('Нет файла позы: '+pose);
   const bones=RT.buildRig(pack.rig, {vertices: currentVerts, groups: baseMesh.groups});
   const skin=RT.buildSkinMatrices(bones, poseJson);
   const bodyPos=RT.skinVertices(currentVerts, pack.influences, skin);
@@ -366,11 +438,14 @@ async function skinCurrent(){
 
 async function applyPose(){
   if(pose==='rest'){
+    loadBoneDegFromPose(null);
     for(const m of [bodyMesh, genitalMesh]){ m.geometry.attributes.position.array.set(currentVerts); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals() }
     await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
     ground(false); msg(readyMsg()); return;
   }
   if(!rigPack) msg('Гружу риг…');
+  const pack=await ensureRig();
+  if(pose!=='edit') loadBoneDegFromPose(pack.poses[pose]);
   await skinCurrent();
   ground(false);
   msg(readyMsg());
@@ -460,6 +535,30 @@ document.querySelectorAll('[data-pose]').forEach(b=>b.onclick=async()=>{
   pose=b.dataset.pose; document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose===pose));
   try{ await applyPose() }catch(e){ status.textContent='Ошибка позы: '+e.message }
 });
+$('boneName').innerHTML=BONES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
+showBoneSliders();
+function scheduleEdit(){
+  storeBoneSliders();
+  pose='edit';
+  document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose==='edit'));
+  clearTimeout(boneTimer);
+  boneTimer=setTimeout(async()=>{ try{ await applyPose() }catch(e){ status.textContent='Ошибка позы: '+e.message } }, 40);
+}
+for(const id of ['boneX','boneY','boneZ']) $(id).oninput=scheduleEdit;
+$('boneName').onchange=showBoneSliders;
+$('boneZero').onclick=()=>{ const n=$('boneName').value; boneDeg[n]=[0,0,0]; showBoneSliders(); scheduleEdit() };
+$('boneClear').onclick=()=>{ for(const [id] of BONES) boneDeg[id]=[0,0,0]; showBoneSliders(); scheduleEdit() };
+$('boneMirror').onclick=()=>{
+  const n=$('boneName').value, m=mirrorName(n);
+  if(!m) return;
+  const d=boneDeg[n];
+  boneDeg[m]=[d[0], -d[1], -d[2]];
+  scheduleEdit();
+};
+$('boneSave').onclick=()=>{
+  const blob=new Blob([JSON.stringify(customPoseDict(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pose-game-engine.json'; a.click();
+};
 $('free').onclick=setFree;
 $('wire').onclick=()=>{ wire=!wire; $('wire').classList.toggle('active', wire); applyMaterials() };
 $('technical').onclick=()=>{ technical=!technical; $('technical').classList.toggle('active', technical); applyMaterials() };
@@ -467,6 +566,7 @@ $('reset').onclick=()=>{
   const d={gender:0,age:24,height:.5,weight:.5,muscle:.5,proportions:.5,cup:.5,firmness:.5,buttocks:.5,hands:.5,feet:.5,penisLength:.5,penisCirc:.5,testicles:.5};
   for(const[k,v] of Object.entries(d)) $(k).value=v;
   $('genitalEnabled').checked=false; ti=0; bi=0; hi=0; pose='rest';
+  for(const [id] of BONES) boneDeg[id]=[0,0,0]; showBoneSliders();
   document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose==='rest'));
   rebuild();
 };
