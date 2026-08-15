@@ -47,19 +47,28 @@ jobs:
             local dst="$ROOT/$kind/$id"
             mkdir -p "$dst"
 
-            local mhclo obj mhmat
+            local mhclo srcdir obj_name obj mhmat_name mhmat
             mhclo=$(find "$srcroot" -type f -iname "$id.mhclo" | head -n1 || true)
-            obj=$(find "$srcroot" -type f -iname "$id.obj" | head -n1 || true)
-            mhmat=$(find "$srcroot" -type f -iname "$id.mhmat" | head -n1 || true)
-            [ -n "$mhclo" ] || { echo "missing $id.mhclo" >&2; exit 1; }
-            [ -n "$obj" ] || { echo "missing $id.obj" >&2; exit 1; }
+            [ -n "$mhclo" ] || { echo "missing $id.mhclo" >&2; find "$srcroot" -type f | grep -i "$id" | head -30 || true; exit 1; }
+            srcdir=$(dirname "$mhclo")
+
+            obj_name=$(awk '$1=="obj_file"{print $2; exit}' "$mhclo")
+            [ -n "$obj_name" ] || obj_name="$id.obj"
+            obj=$(find "$srcdir" -maxdepth 1 -type f -iname "$obj_name" | head -n1 || true)
+            if [ -z "$obj" ]; then
+              obj=$(find "$srcroot" -type f -iname "$obj_name" | head -n1 || true)
+            fi
+            [ -n "$obj" ] || { echo "missing OBJ for $id (mhclo says $obj_name)" >&2; find "$srcdir" -maxdepth 1 -type f -printf '%f\n'; exit 1; }
+
+            mhmat_name=$(awk '$1=="material"{print $2; exit}' "$mhclo")
+            mhmat=""
+            if [ -n "$mhmat_name" ]; then
+              mhmat=$(find "$srcdir" -maxdepth 1 -type f -iname "$mhmat_name" | head -n1 || true)
+            fi
 
             cp "$mhclo" "$dst/$id.mhclo"
             cp "$obj" "$dst/$id.obj"
             [ -n "$mhmat" ] && cp "$mhmat" "$dst/$id.mhmat" || true
-
-            local srcdir
-            srcdir=$(dirname "$mhclo")
             find "$srcdir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.thumb' \) -exec cp {} "$dst/" \;
 
             grep -q '^f ' "$dst/$id.obj" || { echo "$id.obj has no faces" >&2; exit 1; }
