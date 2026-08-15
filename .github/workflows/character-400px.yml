@@ -1,0 +1,59 @@
+name: Fit character to 400px
+
+on:
+  push:
+    paths:
+      - '.github/workflows/character-400px.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Keep character exactly 400 CSS pixels tall
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('engine/index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old="const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,side:THREE.DoubleSide}),techMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.92,side:THREE.DoubleSide});let bodyMesh=null,genitalMesh=null,baseVerts=null,wire=false,technical=false,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();"
+          new="const CHARACTER_SCREEN_HEIGHT=400;const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,side:THREE.DoubleSide}),techMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.92,side:THREE.DoubleSide});let bodyMesh=null,genitalMesh=null,baseVerts=null,wire=false,technical=false,radius=5,centerY=1,frontOffset=Math.PI,buildId=0,timer=0;const cache=new Map();"
+          if old not in s:
+              raise SystemExit('engine constants anchor not found')
+          s=s.replace(old,new,1)
+
+          old_fit="function fit(first=false){bodyMesh.position.set(0,0,0);genitalMesh.position.set(0,0,0);const b=new THREE.Box3().setFromObject(bodyMesh),size=b.getSize(new THREE.Vector3()),center=b.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-b.min.y,-center.z);bodyMesh.position.copy(offset);genitalMesh.position.copy(offset);centerY=size.y*.52;controls.target.set(0,centerY,0);const footprint=Math.max(size.x,size.z);floor.scale.setScalar(footprint*.75);grid.scale.setScalar(footprint*.75);if(first){radius=Math.max(size.y*1.65,size.x*3.1,size.z*3.1);controls.minDistance=size.y*.55;controls.maxDistance=size.y*7;setView(0);setFree()}controls.update()}"
+          new_fit="function screenRadius(worldHeight){const h=Math.max(stage.clientHeight,1),fov=THREE.MathUtils.degToRad(camera.fov);return worldHeight*h/(2*CHARACTER_SCREEN_HEIGHT*Math.tan(fov/2))}function fit(first=false){const oldTarget=controls.target.clone(),oldDir=camera.position.clone().sub(oldTarget);bodyMesh.position.set(0,0,0);genitalMesh.position.set(0,0,0);const b=new THREE.Box3().setFromObject(bodyMesh),size=b.getSize(new THREE.Vector3()),center=b.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-b.min.y,-center.z);bodyMesh.position.copy(offset);genitalMesh.position.copy(offset);centerY=size.y*.5;controls.target.set(0,centerY,0);const footprint=Math.max(size.x,size.z);floor.scale.setScalar(footprint*.75);grid.scale.setScalar(footprint*.75);radius=screenRadius(size.y);controls.minDistance=radius*.35;controls.maxDistance=radius*8;if(first){setView(0);setFree()}else{if(oldDir.lengthSq()<1e-8)oldDir.set(0,0,1);camera.position.copy(controls.target).add(oldDir.normalize().multiplyScalar(radius));controls.update()}}"
+          if old_fit not in s:
+              raise SystemExit('fit() anchor not found')
+          s=s.replace(old_fit,new_fit,1)
+
+          old_resize="function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}"
+          new_resize="function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(bodyMesh)fit(false)}"
+          if old_resize not in s:
+              raise SystemExit('resize() anchor not found')
+          s=s.replace(old_resize,new_resize,1)
+
+          s=s.replace('Anny base · engine/anny/mpfb2</div>','Anny base · 400 px character · engine/anny/mpfb2</div>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit engine change
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Fit character to 400px screen height'
+            git push
+          fi
