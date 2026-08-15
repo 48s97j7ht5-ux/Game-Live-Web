@@ -130,7 +130,7 @@ window.addEventListener('unhandledrejection',e=>{const s=document.getElementById
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import * as RT from './mpfb-runtime.js?v=20260815-8';
+import * as RT from './mpfb-runtime.js?v=20260815-9';
 
 const T='./anny/mpfb2/targets', BASE='./anny/mpfb2/3dobjs/base.obj';
 const M=T+'/macrodetails', B=T+'/breast';
@@ -257,6 +257,7 @@ function makeFittedMesh(asset, color){
   const mat=new THREE.MeshStandardMaterial({color, roughness:.72, side:THREE.DoubleSide, wireframe:wire});
   const mesh=new THREE.Mesh(g, mat);
   mesh.userData.meta=asset.meta; mesh.userData.rtObj=rtObj; mesh.userData.rest=new Float32Array(pos);
+  if(bodyMesh) mesh.position.copy(bodyMesh.position);
   scene.add(mesh); return mesh;
 }
 function refreshBodyFaces(){
@@ -278,6 +279,7 @@ async function rebuildSlot(kind){
   else if(kind==='bottom'){ bottomMesh=mesh; bottomMeta=asset.meta }
   else { hairMesh=mesh; hairMeta=asset.meta }
   refreshBodyFaces();
+  ground(false);
 }
 
 async function ensureRig(){
@@ -299,6 +301,9 @@ function applyMaterials(){
 }
 function screenRadius(worldHeight){ const h=Math.max(stage.clientHeight,1), fov=THREE.MathUtils.degToRad(camera.fov); return worldHeight*h/(2*CHARACTER_SCREEN_HEIGHT*Math.tan(fov/2)) }
 function ground(first=false){
+  /* hm08 rests with the pelvis at y=0 (feet ≈ −8.5). We lift every mesh by
+     the same offset so feet sit on the floor. New clothes/hair must get that
+     offset too — otherwise they stay at the origin (hair in the pelvis). */
   const meshes=[bodyMesh, genitalMesh, topMesh, bottomMesh, hairMesh].filter(Boolean);
   for(const m of meshes) m.position.set(0,0,0);
   const b=new THREE.Box3().setFromObject(bodyMesh), size=b.getSize(new THREE.Vector3()), center=b.getCenter(new THREE.Vector3());
@@ -410,12 +415,18 @@ for(const k of ['gender','age','height','weight','muscle','proportions','cup','f
   $(k).oninput=()=>{ clearTimeout(timer); labels(); timer=setTimeout(rebuild, 80) };
 }
 $('genitalEnabled').onchange=()=>rebuild();
-$('topPrev').onclick=async()=>{ ti=(ti-1+TOPS.length)%TOPS.length; await rebuildSlot('top'); if(pose==='tpose') await skinCurrent() };
-$('topNext').onclick=async()=>{ ti=(ti+1)%TOPS.length; await rebuildSlot('top'); if(pose==='tpose') await skinCurrent() };
-$('bottomPrev').onclick=async()=>{ bi=(bi-1+BOTTOMS.length)%BOTTOMS.length; await rebuildSlot('bottom'); if(pose==='tpose') await skinCurrent() };
-$('bottomNext').onclick=async()=>{ bi=(bi+1)%BOTTOMS.length; await rebuildSlot('bottom'); if(pose==='tpose') await skinCurrent() };
-$('hairPrev').onclick=async()=>{ hi=(hi-1+HAIRS.length)%HAIRS.length; await rebuildSlot('hair'); if(pose==='tpose') await skinCurrent() };
-$('hairNext').onclick=async()=>{ hi=(hi+1)%HAIRS.length; await rebuildSlot('hair'); if(pose==='tpose') await skinCurrent() };
+async function cycleSlot(kind, dir, list, get, set){
+  set((get()+dir+list.length)%list.length);
+  await rebuildSlot(kind);
+  if(pose==='tpose') await skinCurrent();
+  ground(false);
+}
+$('topPrev').onclick=()=>cycleSlot('top',-1,TOPS,()=>ti,v=>ti=v);
+$('topNext').onclick=()=>cycleSlot('top',1,TOPS,()=>ti,v=>ti=v);
+$('bottomPrev').onclick=()=>cycleSlot('bottom',-1,BOTTOMS,()=>bi,v=>bi=v);
+$('bottomNext').onclick=()=>cycleSlot('bottom',1,BOTTOMS,()=>bi,v=>bi=v);
+$('hairPrev').onclick=()=>cycleSlot('hair',-1,HAIRS,()=>hi,v=>hi=v);
+$('hairNext').onclick=()=>cycleSlot('hair',1,HAIRS,()=>hi,v=>hi=v);
 document.querySelectorAll('[data-pose]').forEach(b=>b.onclick=async()=>{
   pose=b.dataset.pose; document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose===pose));
   try{ await applyPose() }catch(e){ status.textContent='Ошибка позы: '+e.message }
