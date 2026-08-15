@@ -38,7 +38,7 @@ input[type=range]{width:100%;height:28px;margin:4px 0 0;accent-color:#79b8ff}
 .pickName{text-align:center;font-size:12px;font-weight:800;color:var(--text)}
 .toolbar,.views,.poses{display:grid;gap:7px}
 .toolbar{grid-template-columns:1fr 1fr}
-.poses{grid-template-columns:repeat(4,1fr)}
+.poses{grid-template-columns:repeat(3,1fr)}
 .views{grid-template-columns:repeat(4,1fr)}
 button{border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;padding:11px 8px;font-size:12px;font-weight:800}
 button.active{background:#355276;border-color:#79b8ff}
@@ -88,11 +88,6 @@ button.active{background:#355276;border-color:#79b8ff}
       <button data-pose="rest" class="active" type="button">Rest</button>
       <button data-pose="tpose" type="button">T-pose</button>
       <button data-pose="apose" type="button">A-pose</button>
-      <button data-pose="step" type="button">Шаг</button>
-      <button data-pose="hips" type="button">В боки</button>
-      <button data-pose="sit" type="button">Сидя</button>
-      <button data-pose="sitnat" type="button">Сидя 2</button>
-      <button data-pose="sit3" type="button">Сидя 3</button>
     </div>
   </div>
 
@@ -152,12 +147,7 @@ const HAIRS=[{name:'Без волос'},{name:'Bob 01',id:'bob01'},{name:'Long 0
 const POSES=[
   {id:'rest', name:'Rest'},
   {id:'tpose', name:'T-pose', file:'anny-t-pose.json'},
-  {id:'apose', name:'A-pose', file:'a-pose.json'},
-  {id:'step', name:'Шаг', file:'step.json'},
-  {id:'hips', name:'В боки', file:'hands-hips.json'},
-  {id:'sit', name:'Сидя', file:'sit-default.json'},
-  {id:'sitnat', name:'Сидя 2', file:'sit-natural.json'},
-  {id:'sit3', name:'Сидя 3', file:'sit-anrico.json'}
+  {id:'apose', name:'A-pose', file:'a-pose.json'}
 ];
 const $=id=>document.getElementById(id), stage=$('stage'), status=$('status'), sheet=$('sheet');
 const CHARACTER_SCREEN_HEIGHT=400;

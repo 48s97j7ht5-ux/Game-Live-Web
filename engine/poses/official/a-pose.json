@@ -2,53 +2,53 @@
     "bone_rotations": {
         "clavicle_l": [
             0.0,
-            0.0,
-            0.1745329252
+            -0.0,
+            0.1099557459
         ],
         "clavicle_r": [
             0.0,
-            0.0,
-            -0.1745329252
-        ],
-        "upperarm_l": [
-            0.0,
-            0.0,
-            0.3490658504
-        ],
-        "upperarm_r": [
-            0.0,
-            0.0,
-            -0.3490658504
-        ],
-        "lowerarm_l": [
-            -0.3141592654,
-            0.0,
-            0.0
-        ],
-        "lowerarm_r": [
-            -0.3141592654,
-            0.0,
-            0.0
-        ],
-        "thigh_l": [
-            0.0523598776,
-            0.0,
-            0.0959931089
-        ],
-        "thigh_r": [
-            0.0523598776,
-            0.0,
-            -0.0959931089
+            -0.0,
+            -0.1099557459
         ],
         "foot_l": [
             0.0,
-            0.0959931089,
-            -0.0523598776
+            0.0403171058,
+            -0.0219911492
         ],
         "foot_r": [
             0.0,
-            -0.0959931089,
-            0.0523598776
+            -0.0403171058,
+            0.0219911492
+        ],
+        "lowerarm_l": [
+            -0.2565633988,
+            -0.0,
+            0.0
+        ],
+        "lowerarm_r": [
+            -0.2565633988,
+            -0.0,
+            0.0
+        ],
+        "thigh_l": [
+            0.0219911492,
+            0.0,
+            0.0403171058
+        ],
+        "thigh_r": [
+            0.0219911492,
+            -0.0,
+            -0.0403171058
+        ],
+        "upperarm_l": [
+            0.0,
+            -0.0,
+            0.2345722497
+        ],
+        "upperarm_r": [
+            0.0,
+            -0.0,
+            -0.2345722497
         ]
     },
     "bone_translations": {},
@@ -56,5 +56,5 @@
     "original_shoulder_width": 0,
     "original_spine_length": 0,
     "skeleton_type": "game_engine_with_breast",
-    "note": "Euler XYZ on game_engine_with_breast, same convention as Anny t-pose.json"
+    "note": "0.42 scale of official Anny game_engine_with_breast_fk/t-pose.json (same bones/axes)"
 }
