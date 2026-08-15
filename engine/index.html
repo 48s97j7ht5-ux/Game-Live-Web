@@ -1,60 +1,420 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090c12">
 <title>Game Live · Character Engine</title>
 <style>
-:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--bg:#090c12;--panel:#111722;--line:#2c374b;--text:#edf3ff;--muted:#8997ad;--accent:#75baff}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text)}.app{display:grid;grid-template-columns:370px 1fr;height:100vh}.sidebar{background:linear-gradient(180deg,#111722,#0d121b);border-right:1px solid var(--line);padding:18px;overflow:auto}.brand{font-size:18px;font-weight:900}.sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.section{margin-top:18px}.sectionTitle{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#9fb0c8;margin-bottom:8px}.ctrl{padding:10px 11px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:#151d2a}.ctrl.disabled{opacity:.42;pointer-events:none}.h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800}.h output{color:#84ceff;font-variant-numeric:tabular-nums}.ends{display:flex;justify-content:space-between;color:#6f7d92;font-size:9px;margin-top:2px}input[type=range]{width:100%;margin:7px 0 0;accent-color:#79b8ff}.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:#151d2a;font-size:12px;font-weight:800}.toggle input{width:18px;height:18px;accent-color:#79b8ff}.toolbar,.views{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.views{grid-template-columns:repeat(4,1fr)}button{border:1px solid #3a465b;border-radius:10px;background:#20293a;color:#edf3ff;padding:9px 8px;font-size:11px;font-weight:800;cursor:pointer}button.active{background:#355276;border-color:#79b8ff}.stage{position:relative;min-width:0}.stage canvas{display:block;width:100%;height:100%}.badge,.status{position:absolute;left:18px;z-index:4;padding:8px 11px;border:1px solid #303c51;border-radius:11px;background:#111722d9;backdrop-filter:blur(9px);font-size:11px;color:#aebbd0}.badge{top:16px}.status{bottom:16px;max-width:min(800px,calc(100% - 36px))}.status strong{color:#84ceff}@media(max-width:850px){.app{grid-template-columns:310px 1fr}.sidebar{padding:12px}}@media(max-width:680px){.app{display:block}.sidebar{position:absolute;z-index:10;left:8px;top:8px;width:min(340px,calc(100vw - 16px));max-height:48vh;border:1px solid var(--line);border-radius:14px;background:#111722ee}.stage{height:100vh}}
-</style></head><body>
-<div class="app"><aside class="sidebar">
-<div class="brand">Character Engine</div><div class="sub">Anny / MPFB · локальная базовая сетка. Крути персонажа мышкой и меняй параметры слева.</div>
-<div class="section"><div class="sectionTitle">Основное тело</div>
-<div class="ctrl"><div class="h"><span>Пол тела</span><output id="genderVal">Ж 100%</output></div><input id="gender" type="range" min="0" max="1" step="0.01" value="0"><div class="ends"><span>Ж</span><span>М</span></div></div>
-<div class="ctrl"><div class="h"><span>Возраст</span><output id="ageVal">24 года · молодой</output></div><input id="age" type="range" min="0" max="90" step="1" value="24"><div class="ends"><span>0 лет</span><span>90+</span></div></div>
-<div class="ctrl"><div class="h"><span>Рост</span><output id="heightVal">50</output></div><input id="height" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Вес</span><output id="weightVal">50</output></div><input id="weight" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Мышцы</span><output id="muscleVal">50</output></div><input id="muscle" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#090c12;--panel:#111722;--line:#2c374b;--text:#edf3ff;--muted:#8b9bb0;--accent:#75baff}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text)}
+button,input{font:inherit;touch-action:manipulation}
+.app{height:100dvh}
+.stage{position:relative;min-width:0;min-height:0;background:var(--bg)}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.badge,.status{position:absolute;z-index:4;padding:7px 10px;border:1px solid #303c51;border-radius:11px;background:#111722d9;backdrop-filter:blur(9px);font-size:11px;color:#aebbd0;max-width:min(520px,calc(100% - 24px))}
+.badge{left:12px;top:calc(12px + env(safe-area-inset-top))}
+.status{left:12px;bottom:calc(70px + env(safe-area-inset-bottom))}
+.status strong{color:#84ceff}
+.sheet{background:linear-gradient(180deg,#121a26,#0d121b);border-right:1px solid var(--line);overflow:auto;-webkit-overflow-scrolling:touch}
+.grab{display:none;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-bottom:1px solid var(--line);background:#121a26;position:sticky;top:0;z-index:3}
+.grabHandle{width:36px;height:4px;border-radius:99px;background:#3a465b;margin:0 auto 6px}
+.grabBtn,.miniView{min-height:44px;border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;font-size:12px;font-weight:800}
+.grabBtn{flex:1.4}
+.miniView{flex:1}
+.brand{font-size:18px;font-weight:900;padding:16px 16px 0}
+.sub{font-size:11px;color:var(--muted);margin:4px 16px 0;line-height:1.45}
+.section{margin:16px;padding-bottom:4px}
+.sectionTitle{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#9fb0c8;margin-bottom:8px}
+.ctrl,.toggle,.pick{padding:10px 12px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:#151d2a}
+.ctrl.disabled{opacity:.42;pointer-events:none}
+.h,.toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800}
+.h output,.pickName{color:#84ceff;font-variant-numeric:tabular-nums}
+.ends{display:flex;justify-content:space-between;color:#6f7d92;font-size:9px;margin-top:2px}
+input[type=range]{width:100%;height:28px;margin:4px 0 0;accent-color:#79b8ff}
+.toggle input{width:22px;height:22px;accent-color:#79b8ff}
+.pick{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center;padding:6px}
+.pick button{min-height:44px;font-size:18px}
+.pickName{text-align:center;font-size:12px;font-weight:800;color:var(--text)}
+.toolbar,.views,.poses{display:grid;gap:7px}
+.toolbar,.poses{grid-template-columns:1fr 1fr}
+.views{grid-template-columns:repeat(4,1fr)}
+button{border:1px solid #3a465b;border-radius:12px;background:#20293a;color:#edf3ff;padding:11px 8px;font-size:12px;font-weight:800}
+button.active{background:#355276;border-color:#79b8ff}
+@media(min-width:860px){
+  .app{display:grid;grid-template-columns:340px 1fr}
+  .sheet{height:100dvh}
+  .status{bottom:16px}
+}
+@media(max-width:859px){
+  .app{display:block}
+  .stage{height:100dvh}
+  .badge{display:none}
+  .status{left:10px;right:10px;max-width:none}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:8;height:min(62dvh,560px);
+    border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;
+    transform:translateY(calc(100% - 62px - env(safe-area-inset-bottom)));
+    transition:transform .22s ease;box-shadow:0 -12px 40px #0008;
+  }
+  .sheet.open{transform:translateY(0)}
+  .grab{display:flex;flex-wrap:wrap}
+  .brand{padding-top:8px}
+  .status{bottom:calc(72px + env(safe-area-inset-bottom))}
+  .sheet.open ~ .stage .status,.sheet.open + .stage .status{bottom:calc(62dvh + 8px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sheet" id="sheet">
+  <div class="grab">
+    <div style="width:100%"><div class="grabHandle"></div></div>
+    <button class="grabBtn" id="sheetToggle" type="button">Параметры</button>
+    <button class="miniView" data-view="0" type="button">Перед</button>
+    <button class="miniView" data-view="2" type="button">Бок</button>
+    <button class="miniView" data-view="4" type="button">Зад</button>
+  </div>
+  <div class="brand">Character Engine</div>
+  <div class="sub">Морфы, одежда и волосы из этого репозитория. На телефоне открой «Параметры», персонажа крути пальцем.</div>
+
+  <div class="section"><div class="sectionTitle">Одежда и волосы</div>
+    <div class="pick"><button id="topPrev" type="button">◀</button><div class="pickName" id="topName">Без лифчика</div><button id="topNext" type="button">▶</button></div>
+    <div class="pick"><button id="bottomPrev" type="button">◀</button><div class="pickName" id="bottomName">Без трусов</div><button id="bottomNext" type="button">▶</button></div>
+    <div class="pick"><button id="hairPrev" type="button">◀</button><div class="pickName" id="hairName">Без волос</div><button id="hairNext" type="button">▶</button></div>
+  </div>
+
+  <div class="section"><div class="sectionTitle">Поза</div>
+    <div class="poses"><button data-pose="rest" class="active" type="button">Rest</button><button data-pose="tpose" type="button">T-pose</button></div>
+  </div>
+
+  <div class="section"><div class="sectionTitle">Основное тело</div>
+    <div class="ctrl"><div class="h"><span>Пол тела</span><output id="genderVal">Ж 100%</output></div><input id="gender" type="range" min="0" max="1" step="0.01" value="0"><div class="ends"><span>Ж</span><span>М</span></div></div>
+    <div class="ctrl"><div class="h"><span>Возраст</span><output id="ageVal">24 года · молодой</output></div><input id="age" type="range" min="0" max="90" step="1" value="24"><div class="ends"><span>0 лет</span><span>90+</span></div></div>
+    <div class="ctrl"><div class="h"><span>Рост</span><output id="heightVal">50</output></div><input id="height" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Вес</span><output id="weightVal">50</output></div><input id="weight" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Мышцы</span><output id="muscleVal">50</output></div><input id="muscle" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Пропорции</span><output id="proportionsVal">50</output></div><input id="proportions" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+  </div>
+
+  <div class="section"><div class="sectionTitle">Детали</div>
+    <div class="ctrl"><div class="h"><span>Грудь</span><output id="cupVal">50</output></div><input id="cup" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+  </div>
+
+  <div class="section" id="genitalSection"><div class="sectionTitle">Гениталии · взрослые</div>
+    <label class="toggle"><span>Показывать гениталии</span><input id="genitalEnabled" type="checkbox"></label>
+    <div class="ctrl genital"><div class="h"><span>Длина</span><output id="penisLengthVal">50</output></div><input id="penisLength" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl genital"><div class="h"><span>Обхват</span><output id="penisCircVal">50</output></div><input id="penisCirc" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl genital"><div class="h"><span>Яички</span><output id="testiclesVal">50</output></div><input id="testicles" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+  </div>
+
+  <div class="section"><div class="sectionTitle">Просмотр</div>
+    <div class="toolbar"><button id="free" class="active" type="button">Крутить</button><button id="wire" type="button">Сетка</button><button id="technical" type="button">Тех.</button><button id="reset" type="button">Сброс</button></div>
+    <div class="views" style="margin-top:8px">
+      <button data-view="0" type="button">Спереди</button><button data-view="2" type="button">Справа</button>
+      <button data-view="4" type="button">Сзади</button><button data-view="6" type="button">Слева</button>
+      <button data-view="1" type="button">3/4 ↗</button><button data-view="3" type="button">3/4 ↘</button>
+      <button data-view="5" type="button">3/4 ↙</button><button data-view="7" type="button">3/4 ↖</button>
+    </div>
+  </div>
+</aside>
+<main class="stage" id="stage">
+  <div class="badge">локальные MPFB morphs · hm08 · 400 px</div>
+  <div class="status" id="status">Загрузка…</div>
+</main>
 </div>
-<div class="section"><div class="sectionTitle">Детали</div>
-<div class="ctrl"><div class="h"><span>Грудь</span><output id="cupVal">50</output></div><input id="cup" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Упругость груди</span><output id="firmnessVal">50</output></div><input id="firmness" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Ягодицы</span><output id="buttocksVal">50</output></div><input id="buttocks" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Кисти</span><output id="handsVal">50</output></div><input id="hands" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-<div class="ctrl"><div class="h"><span>Стопы</span><output id="feetVal">50</output></div><input id="feet" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-</div>
-<div class="section" id="genitalSection"><div class="sectionTitle">Гениталии · взрослые</div>
-<label class="toggle"><span>Показывать гениталии</span><input id="genitalEnabled" type="checkbox"></label>
-<div class="ctrl genital"><div class="h"><span>Длина</span><output id="penisLengthVal">50</output></div><input id="penisLength" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>
-<div class="ctrl genital"><div class="h"><span>Обхват</span><output id="penisCircVal">50</output></div><input id="penisCirc" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>
-<div class="ctrl genital"><div class="h"><span>Яички</span><output id="testiclesVal">50</output></div><input id="testicles" type="range" min="0" max="1" step="0.01" value="0.5"><div class="ends"><span>−</span><span>+</span></div></div>
-</div>
-<div class="section"><div class="sectionTitle">Просмотр</div><div class="toolbar"><button id="free" class="active">Свободное вращение</button><button id="wire">Сетка</button><button id="technical">Тех. материал</button><button id="reset">Сбросить</button></div></div>
-<div class="section"><div class="views"><button data-view="0">Спереди</button><button data-view="2">Справа</button><button data-view="4">Сзади</button><button data-view="6">Слева</button><button data-view="1">3/4 ↗</button><button data-view="3">3/4 ↘</button><button data-view="5">3/4 ↙</button><button data-view="7">3/4 ↖</button></div></div>
-</aside><main class="stage" id="stage"><div class="badge">Anny base · 400 px character · engine/anny/mpfb2</div><div class="status" id="status">Загрузка модели…</div></main></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'three';import{OrbitControls}from'three/addons/controls/OrbitControls.js';
-const LOCAL='./anny/mpfb2',REMOTE='https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2',BASE=LOCAL+'/3dobjs/base.obj',M=REMOTE+'/targets/macrodetails',B=REMOTE+'/targets/breast',G=REMOTE+'/targets/genitals';
-const $=id=>document.getElementById(id),stage=$('stage'),status=$('status');
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.setPixelRatio(Math.min(devicePixelRatio,2));stage.appendChild(renderer.domElement);
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(30,1,.01,100),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=true;controls.minPolarAngle=.05;controls.maxPolarAngle=Math.PI-.05;scene.background=new THREE.Color(0x090c12);scene.add(new THREE.HemisphereLight(0xe9f1ff,0x17141c,2.3));let dl=new THREE.DirectionalLight(0xffdfca,3.2);dl.position.set(-4,7,5);scene.add(dl);dl=new THREE.DirectionalLight(0x8db6ff,1.7);dl.position.set(5,3,-5);scene.add(dl);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(2.4,64),new THREE.MeshStandardMaterial({color:0x141b28,roughness:1}));floor.rotation.x=-Math.PI/2;scene.add(floor);const grid=new THREE.GridHelper(5,30,0x34425a,0x1c2432);grid.position.y=.004;grid.material.transparent=true;grid.material.opacity=.38;scene.add(grid);
-const CHARACTER_SCREEN_HEIGHT=400;const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,side:THREE.DoubleSide}),techMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.92,side:THREE.DoubleSide});let bodyMesh=null,genitalMesh=null,baseVerts=null,wire=false,technical=false,radius=5,centerY=1,frontOffset=0,buildId=0,timer=0;const cache=new Map();
-function parseOBJ(t){const v=[],groups={body:[],genital:[]};let group='';for(const raw of t.split(/\r?\n/)){const s=raw.trim();if(!s||s[0]==='#')continue;if(s.startsWith('g ')){const n=s.slice(2).trim();group=n==='body'?'body':n==='helper-genital'?'genital':'';continue}if(s.startsWith('v ')){const p=s.split(/\s+/);v.push(+p[1],+p[2],+p[3])}else if(group&&s.startsWith('f ')){const p=s.slice(2).trim().split(/\s+/).map(x=>parseInt(x.split('/')[0])-1);for(let i=1;i<p.length-1;i++)groups[group].push(p[0],p[i],p[i+1])}}return{v:new Float32Array(v),groups}}
-async function gz(url,opt=false){if(cache.has(url))return cache.get(url);const p=(async()=>{const r=await fetch(url,{cache:'force-cache'});if(!r.ok){if(opt&&r.status===404)return null;throw Error(r.status+' '+url.split('/').pop())}return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text()})();cache.set(url,p);return p}
-function add(v,t,w){if(!t||w<=0)return;for(const raw of t.split(/\r?\n/)){const p=raw.trim().split(/\s+/);if(p.length<4||p[0][0]==='#')continue;const i=+p[0]*3;if(i+2>=v.length)continue;v[i]+=+p[1]*w;v[i+1]+=+p[2]*w;v[i+2]+=+p[3]*w}}
-function tri(x,n){return x<=.5?[[n[0],1-x*2],[n[1],x*2]].filter(a=>a[1]>1e-6):[[n[1],2-x*2],[n[2],x*2-1]].filter(a=>a[1]>1e-6)}function bi(x,n){return[[n[0],1-x],[n[1],x]].filter(a=>a[1]>1e-6)}
-function ageBlend(years){const pts=[[1,'baby'],[10,'child'],[25,'young'],[70,'old']];if(years<=pts[0][0])return[[pts[0][1],1]];for(let i=0;i<pts.length-1;i++){const[a,an]=pts[i],[b,bn]=pts[i+1];if(years<=b){const t=(years-a)/(b-a);return[[an,1-t],[bn,t]].filter(q=>q[1]>1e-6)}}return[['old',1]]}
-function ageName(years){if(years<=2)return'младенец';if(years<=12)return'ребёнок';if(years<=17)return'подросток';if(years<=49)return'молодой';if(years<=69)return'зрелый';return'пожилой'}
-function yearsText(n){const d=n%10,d2=n%100;const word=d===1&&d2!==11?'год':d>=2&&d<=4&&(d2<12||d2>14)?'года':'лет';return `${n} ${word}`}
-async function target(url,v,w,opt=false){if(w>1e-6)add(v,await gz(url,opt),w)}
-function genitalEligible(){return +$('age').value>=18}function genitalAllowed(){return genitalEligible()&&$('genitalEnabled').checked}
-function labels(){const g=+$('gender').value,a=+$('age').value;$('genderVal').value=g<.5?`Ж ${Math.round((1-g)*100)}%`:`М ${Math.round(g*100)}%`;$('ageVal').value=`${yearsText(a)} · ${ageName(a)}`;for(const k of['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness','penisLength','penisCirc','testicles'])$(k+'Val').value=Math.round(+$(k).value*100);const eligible=genitalEligible();$('genitalEnabled').disabled=!eligible;if(!eligible)$('genitalEnabled').checked=false;document.querySelectorAll('.genital').forEach(el=>el.classList.toggle('disabled',!genitalAllowed()))}
-async function pair(v,id,folder,stem){const x=+$(id).value,amp=Math.abs(x-.5)*2;if(amp<1e-6)return;await target(`${REMOTE}/targets/${folder}/${stem}-${x<.5?'decr':'incr'}.target.gz`,v,amp,true)}
-async function rebuild(){if(!bodyMesh)return;const id=++buildId;labels();status.textContent='Пересобираю тело…';const v=new Float32Array(baseVerts),gg=bi(+$('gender').value,['female','male']),aa=ageBlend(+$('age').value),mw=tri(+$('muscle').value,['minmuscle','averagemuscle','maxmuscle']),ww=tri(+$('weight').value,['minweight','averageweight','maxweight']),hh=bi(+$('height').value,['minheight','maxheight']),cc=tri(+$('cup').value,['mincup','averagecup','maxcup']),pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']),ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);try{for(const[g,wg]of gg)for(const[a,wa]of aa){const ga=wg*wa;for(const r of['african','asian','caucasian'])await target(`${M}/${r}-${g}-${a}.target.gz`,v,ga/3,true);for(const[m,wm]of mw)for(const[w,wwt]of ww){const q=ga*wm*wwt;await target(`${M}/universal-${g}-${a}-${m}-${w}.target.gz`,v,q,true);for(const[h,wh]of hh)await target(`${M}/height/${g}-${a}-${m}-${w}-${h}.target.gz`,v,q*wh,true);for(const[p,wp]of pp)await target(`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`,v,q*wp,true);if(g==='female'&&(a==='young'||a==='old'))for(const[c,wc]of cc)for(const[f,wf]of ff)await target(`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`,v,q*wc*wf,true)}}await pair(v,'buttocks','buttocks','buttocks-volume');await pair(v,'hands','hands','l-hand-scale');await pair(v,'hands','hands','r-hand-scale');await pair(v,'feet','feet','l-foot-scale');await pair(v,'feet','feet','r-foot-scale');if(genitalAllowed()){await pair(v,'penisLength','genitals','penis-length');await pair(v,'penisCirc','genitals','penis-circ');await pair(v,'testicles','genitals','penis-testicles')}if(id!==buildId)return;for(const m of[bodyMesh,genitalMesh]){m.geometry.attributes.position.array.set(v);m.geometry.attributes.position.needsUpdate=true;m.geometry.computeVertexNormals();m.material=technical?techMat:skinMat;m.material.wireframe=wire}genitalMesh.visible=genitalAllowed();fit(false);const years=+$('age').value;status.innerHTML=`<strong>Готово</strong> · ${yearsText(years)} · ${ageName(years)} · тело ${+$('gender').value<.5?'жен.':'муж.'}${genitalAllowed()?' · гениталии включены':''}`;}catch(e){console.error(e);status.textContent='Ошибка: '+e.message}}
-function screenRadius(worldHeight){const h=Math.max(stage.clientHeight,1),fov=THREE.MathUtils.degToRad(camera.fov);return worldHeight*h/(2*CHARACTER_SCREEN_HEIGHT*Math.tan(fov/2))}function fit(first=false){const oldTarget=controls.target.clone(),oldDir=camera.position.clone().sub(oldTarget);bodyMesh.position.set(0,0,0);genitalMesh.position.set(0,0,0);const b=new THREE.Box3().setFromObject(bodyMesh),size=b.getSize(new THREE.Vector3()),center=b.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-b.min.y,-center.z);bodyMesh.position.copy(offset);genitalMesh.position.copy(offset);centerY=size.y*.5;controls.target.set(0,centerY,0);const footprint=Math.max(size.x,size.z);floor.scale.setScalar(footprint*.75);grid.scale.setScalar(footprint*.75);radius=screenRadius(size.y);controls.minDistance=radius*.35;controls.maxDistance=radius*8;if(first){setView(0);setFree()}else{if(oldDir.lengthSq()<1e-8)oldDir.set(0,0,1);camera.position.copy(controls.target).add(oldDir.normalize().multiplyScalar(radius));controls.update()}}
-function setView(i){controls.enableRotate=false;$('free').classList.remove('active');const a=frontOffset+i*Math.PI/4;camera.position.set(Math.sin(a)*radius,centerY+radius*.025,Math.cos(a)*radius);controls.target.set(0,centerY,0);controls.update();document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',+b.dataset.view===i))}function setFree(){controls.enableRotate=true;$('free').classList.add('active');document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'))}
-async function load(){const r=await fetch(BASE,{cache:'force-cache'});if(!r.ok)throw Error('base '+r.status);const p=parseOBJ(await r.text());baseVerts=new Float32Array(p.v);for(const[name,idx]of[['body',p.groups.body],['genital',p.groups.genital]]){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(baseVerts),3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,skinMat);scene.add(m);if(name==='body')bodyMesh=m;else genitalMesh=m}genitalMesh.visible=false;fit(true);await rebuild()}
-const ids=['gender','age','height','weight','muscle','proportions','cup','firmness','buttocks','hands','feet','penisLength','penisCirc','testicles'];for(const k of ids)$(k).oninput=()=>{clearTimeout(timer);labels();timer=setTimeout(rebuild,70)};$('genitalEnabled').onchange=()=>rebuild();$('free').onclick=setFree;$('wire').onclick=()=>{wire=!wire;$('wire').classList.toggle('active',wire);for(const m of[bodyMesh,genitalMesh])if(m)m.material.wireframe=wire};$('technical').onclick=()=>{technical=!technical;$('technical').classList.toggle('active',technical);for(const m of[bodyMesh,genitalMesh])if(m){m.material=technical?techMat:skinMat;m.material.wireframe=wire}};$('reset').onclick=()=>{const d={gender:0,age:24,height:.5,weight:.5,muscle:.5,proportions:.5,cup:.5,firmness:.5,buttocks:.5,hands:.5,feet:.5,penisLength:.5,penisCirc:.5,testicles:.5};for(const[k,v]of Object.entries(d))$(k).value=v;$('genitalEnabled').checked=false;rebuild()};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(+b.dataset.view));function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(bodyMesh)fit(false)}addEventListener('resize',resize);resize();renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});load().catch(e=>{console.error(e);status.textContent='Ошибка загрузки: '+e.message});
-</script></body></html>
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import * as RT from './mpfb-runtime.js?v=20260815-6';
+
+const T='./anny/mpfb2/targets', BASE='./anny/mpfb2/3dobjs/base.obj';
+const M=T+'/macrodetails', B=T+'/breast';
+const CLOTH='./clothes/underwear', HAIR='./hair';
+const TOPS=[{name:'Без лифчика'},{name:'Plain Bra',id:'joepal_plain_bra'},{name:'Bandeau Bra',id:'punkduck_bandeau_bra'},{name:'Bikini 02 Bra',id:'punkduck_bikini02_bra'}];
+const BOTTOMS=[{name:'Без трусов'},{name:'Bow Panty',id:'elvs_bow_bottom_panty'},{name:'Lace Panty',id:'elvs_lace_panty'},{name:'Bandeau Slip',id:'punkduck_bandeau_bikini_slip'},{name:'Bikini 02 Slip',id:'punkduck_bikini02_slip'}];
+const HAIRS=[{name:'Без волос'},{name:'Bob 01',id:'bob01'},{name:'Long 01',id:'long01'},{name:'Ponytail 01',id:'ponytail01'},{name:'Short 02',id:'short02'},{name:'Braid 01',id:'braid01'}];
+const $=id=>document.getElementById(id), stage=$('stage'), status=$('status'), sheet=$('sheet');
+const CHARACTER_SCREEN_HEIGHT=400;
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.08;
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x090c12);
+const camera=new THREE.PerspectiveCamera(30,1,.01,100);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=.08; controls.enablePan=true; controls.minPolarAngle=.05; controls.maxPolarAngle=Math.PI-.05;
+scene.add(new THREE.HemisphereLight(0xe9f1ff,0x17141c,2.3));
+let dl=new THREE.DirectionalLight(0xffdfca,3.2); dl.position.set(-4,7,5); scene.add(dl);
+dl=new THREE.DirectionalLight(0x8db6ff,1.7); dl.position.set(5,3,-5); scene.add(dl);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(2.4,64), new THREE.MeshStandardMaterial({color:0x141b28,roughness:1}));
+floor.rotation.x=-Math.PI/2; scene.add(floor);
+const grid=new THREE.GridHelper(5,30,0x34425a,0x1c2432); grid.position.y=.004; grid.material.transparent=true; grid.material.opacity=.38; scene.add(grid);
+const skinMat=new THREE.MeshStandardMaterial({color:0xd8a88f,roughness:.88,side:THREE.DoubleSide});
+const techMat=new THREE.MeshStandardMaterial({color:0x8995a8,roughness:.92,side:THREE.DoubleSide});
+
+let baseMesh=null, bodyMesh=null, genitalMesh=null, currentVerts=null;
+let topMesh=null, bottomMesh=null, hairMesh=null, topMeta=null, bottomMeta=null, hairMeta=null;
+let ti=0, bi=0, hi=0, pose='rest', wire=false, technical=false;
+let radius=5, centerY=1, buildId=0, timer=0, rigPack=null;
+const cache=new Map(), assetCache=new Map();
+
+function msg(html){status.innerHTML=html}
+async function txt(url){const r=await fetch(url,{cache:'force-cache'}); if(!r.ok) throw Error(r.status+' '+url.split('/').pop()); return r.text()}
+async function json(url){const r=await fetch(url,{cache:'force-cache'}); if(!r.ok) throw Error(r.status+' '+url.split('/').pop()); return r.json()}
+async function gz(url,opt=false){
+  if(cache.has(url)) return cache.get(url);
+  const p=(async()=>{
+    const r=await fetch(url,{cache:'force-cache'});
+    if(!r.ok){ if(opt&&(r.status===404||r.status===0)) return null; throw Error(r.status+' '+url.split('/').pop()) }
+    return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+  })();
+  cache.set(url,p); return p;
+}
+function add(v,t,w){ if(!t||w<=0) return; for(const raw of t.split(/\r?\n/)){ const p=raw.trim().split(/\s+/); if(p.length<4||p[0][0]==='#') continue; const i=+p[0]*3; if(i+2>=v.length) continue; v[i]+=+p[1]*w; v[i+1]+=+p[2]*w; v[i+2]+=+p[3]*w } }
+function tri(x,n){ return x<=.5?[[n[0],1-x*2],[n[1],x*2]].filter(a=>a[1]>1e-6):[[n[1],2-x*2],[n[2],x*2-1]].filter(a=>a[1]>1e-6) }
+function bi(x,n){ return [[n[0],1-x],[n[1],x]].filter(a=>a[1]>1e-6) }
+function ageBlend(years){ const pts=[[1,'baby'],[10,'child'],[25,'young'],[70,'old']]; if(years<=pts[0][0]) return [[pts[0][1],1]]; for(let i=0;i<pts.length-1;i++){ const[a,an]=pts[i],[b,bn]=pts[i+1]; if(years<=b){ const t=(years-a)/(b-a); return [[an,1-t],[bn,t]].filter(q=>q[1]>1e-6)} } return [['old',1]] }
+function ageName(years){ if(years<=2) return 'младенец'; if(years<=12) return 'ребёнок'; if(years<=17) return 'подросток'; if(years<=49) return 'молодой'; if(years<=69) return 'зрелый'; return 'пожилой' }
+function yearsText(n){ const d=n%10,d2=n%100; const word=d===1&&d2!==11?'год':d>=2&&d<=4&&(d2<12||d2>14)?'года':'лет'; return `${n} ${word}` }
+async function target(url,v,w,opt=false){ if(w>1e-6) add(v, await gz(url,opt), w) }
+function genitalEligible(){ return +$('age').value>=18 }
+function genitalAllowed(){ return genitalEligible() && $('genitalEnabled').checked }
+function labels(){
+  const g=+$('gender').value, a=+$('age').value;
+  $('genderVal').value=g<.5?`Ж ${Math.round((1-g)*100)}%`:`М ${Math.round(g*100)}%`;
+  $('ageVal').value=`${yearsText(a)} · ${ageName(a)}`;
+  for(const k of ['height','weight','muscle','cup','proportions','buttocks','hands','feet','firmness','penisLength','penisCirc','testicles']) $(k+'Val').value=Math.round(+$(k).value*100);
+  const eligible=genitalEligible(); $('genitalEnabled').disabled=!eligible; if(!eligible) $('genitalEnabled').checked=false;
+  document.querySelectorAll('.genital').forEach(el=>el.classList.toggle('disabled', !genitalAllowed()));
+}
+async function pair(v,id,folder,stem){ const x=+$(id).value, amp=Math.abs(x-.5)*2; if(amp<1e-6) return; await target(`${T}/${folder}/${stem}-${x<.5?'decr':'incr'}.target.gz`, v, amp, true) }
+
+function parseClothOBJ(t){
+  const v=[],uv=[],f=[];
+  for(const l of t.split(/\r?\n/)){
+    const s=l.trim(),p=s.split(/\s+/);
+    if(s.startsWith('v ')) v.push([+p[1],+p[2],+p[3]]);
+    else if(s.startsWith('vt ')) uv.push([+p[1],+p[2]]);
+    else if(s.startsWith('f ')){
+      const q=p.slice(1).map(x=>{const a=x.split('/'); return [+a[0]-1, a[1]?+a[1]-1:-1]});
+      for(let i=1;i<q.length-1;i++) f.push([q[0],q[i],q[i+1]]);
+    }
+  }
+  return {v,uv,f};
+}
+async function loadAsset(kind,id){
+  const key=kind+'/'+id; if(assetCache.has(key)) return assetCache.get(key);
+  const p=(async()=>{
+    const root=kind==='hair'?`${HAIR}/${id}`:`${CLOTH}/${kind}/${id}`;
+    const meta=RT.parseMHCLO(await txt(`${root}/${id}.mhclo`));
+    let objText=null, err=[];
+    for(const name of RT.clothObjCandidates(meta,id)){
+      try{ objText=await txt(`${root}/${name}`); break }catch{ err.push(name) }
+    }
+    if(!objText) throw Error('OBJ: '+err.join(', '));
+    return {meta, obj:parseClothOBJ(objText)};
+  })();
+  assetCache.set(key,p); return p;
+}
+function disposeMesh(m){ if(!m) return; scene.remove(m); m.geometry.dispose(); m.material.dispose() }
+function makeFittedMesh(asset, color){
+  const fitted=RT.fitMHCLO(asset.meta, currentVerts);
+  const rtObj={verts:asset.obj.v, faces:asset.obj.f.map(tri=>tri.map(c=>c[0]))};
+  const pos=[], uv=[];
+  for(const tri of asset.obj.f) for(const c of tri){
+    const k=c[0]*3; if(k+2>=fitted.length) continue;
+    pos.push(fitted[k], fitted[k+1], fitted[k+2]); uv.push(...(asset.obj.uv[c[1]]||[0,0]));
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv,2));
+  g.computeVertexNormals();
+  const mat=new THREE.MeshStandardMaterial({color, roughness:.72, side:THREE.DoubleSide, wireframe:wire});
+  const mesh=new THREE.Mesh(g, mat);
+  mesh.userData.meta=asset.meta; mesh.userData.rtObj=rtObj; mesh.userData.rest=new Float32Array(pos);
+  scene.add(mesh); return mesh;
+}
+function refreshBodyFaces(){
+  const hidden=RT.mergeDeleteVerts(topMeta?.deleteVerts, bottomMeta?.deleteVerts, hairMeta?.deleteVerts);
+  bodyMesh.geometry.setIndex(RT.filterFaces(baseMesh.bodyFaces, hidden));
+  bodyMesh.geometry.computeVertexNormals();
+}
+async function rebuildSlot(kind){
+  const list=kind==='top'?TOPS:kind==='bottom'?BOTTOMS:HAIRS;
+  const idx=kind==='top'?ti:kind==='bottom'?bi:hi;
+  const item=list[idx];
+  if(kind==='top'){ disposeMesh(topMesh); topMesh=null; topMeta=null; $('topName').textContent=item.name }
+  else if(kind==='bottom'){ disposeMesh(bottomMesh); bottomMesh=null; bottomMeta=null; $('bottomName').textContent=item.name }
+  else { disposeMesh(hairMesh); hairMesh=null; hairMeta=null; $('hairName').textContent=item.name }
+  if(!item.id || !currentVerts){ refreshBodyFaces(); return }
+  const asset=await loadAsset(kind==='hair'?'hair':kind, item.id);
+  const mesh=makeFittedMesh(asset, kind==='top'?0xc97b9f:kind==='bottom'?0x7396c8:0x2a1b16);
+  if(kind==='top'){ topMesh=mesh; topMeta=asset.meta }
+  else if(kind==='bottom'){ bottomMesh=mesh; bottomMeta=asset.meta }
+  else { hairMesh=mesh; hairMeta=asset.meta }
+  refreshBodyFaces();
+}
+
+async function ensureRig(){
+  if(rigPack) return rigPack;
+  msg('Гружу риг…');
+  const [rig, weights, tpose]=await Promise.all([
+    json('./anny/mpfb2/rigs/standard/rig.game_engine_with_breast.json'),
+    json('./anny/mpfb2/rigs/standard/weights.game_engine_with_breast.json'),
+    json('./poses/official/anny-t-pose.json')
+  ]);
+  rigPack={rig, weights, tpose, influences: RT.buildVertexInfluences(weights, baseMesh.vertices.length/3)};
+  return rigPack;
+}
+
+function applyMaterials(){
+  const mat=technical?techMat:skinMat;
+  for(const m of [bodyMesh, genitalMesh]) if(m){ m.material=mat; m.material.wireframe=wire }
+  for(const m of [topMesh, bottomMesh, hairMesh]) if(m) m.material.wireframe=wire;
+}
+function screenRadius(worldHeight){ const h=Math.max(stage.clientHeight,1), fov=THREE.MathUtils.degToRad(camera.fov); return worldHeight*h/(2*CHARACTER_SCREEN_HEIGHT*Math.tan(fov/2)) }
+function ground(first=false){
+  const meshes=[bodyMesh, genitalMesh, topMesh, bottomMesh, hairMesh].filter(Boolean);
+  for(const m of meshes) m.position.set(0,0,0);
+  const b=new THREE.Box3().setFromObject(bodyMesh), size=b.getSize(new THREE.Vector3()), center=b.getCenter(new THREE.Vector3());
+  const offset=new THREE.Vector3(-center.x, -b.min.y, -center.z);
+  for(const m of meshes) m.position.copy(offset);
+  centerY=size.y*.5; controls.target.set(0,centerY,0);
+  const footprint=Math.max(size.x,size.z); floor.scale.setScalar(footprint*.75); grid.scale.setScalar(footprint*.75);
+  radius=screenRadius(size.y); controls.minDistance=radius*.35; controls.maxDistance=radius*8;
+  if(first) setView(0);
+}
+function setView(i){
+  controls.enableRotate=false; $('free').classList.remove('active');
+  const a=i*Math.PI/4; camera.position.set(Math.sin(a)*radius, centerY+radius*.025, Math.cos(a)*radius);
+  controls.target.set(0,centerY,0); controls.update();
+  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active', +b.dataset.view===i));
+}
+function setFree(){ controls.enableRotate=true; $('free').classList.add('active'); document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active')) }
+
+async function skinCurrent(){
+  const pack=await ensureRig();
+  const bones=RT.buildRig(pack.rig, {vertices: currentVerts, groups: baseMesh.groups});
+  const skin=RT.buildSkinMatrices(bones, pack.tpose);
+  const bodyPos=RT.skinVertices(currentVerts, pack.influences, skin);
+  for(const m of [bodyMesh, genitalMesh]){
+    m.geometry.attributes.position.array.set(bodyPos); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals();
+  }
+  for(const mesh of [topMesh, bottomMesh, hairMesh]){
+    if(!mesh?.userData.meta||!mesh.userData.rtObj) continue;
+    const fitted=RT.fitMHCLO(mesh.userData.meta, currentVerts);
+    const vinf=RT.transferInfluencesToMHCLO(mesh.userData.meta, pack.influences);
+    const expandedRest=RT.expandIndexedCloth(mesh.userData.rtObj, fitted);
+    const expandedInf=RT.expandIndexedInfluences(mesh.userData.rtObj, vinf);
+    const out=RT.skinVertices(expandedRest, expandedInf, skin);
+    mesh.geometry.attributes.position.array.set(out); mesh.geometry.attributes.position.needsUpdate=true; mesh.geometry.computeVertexNormals();
+  }
+}
+
+async function applyPose(){
+  if(pose!=='tpose'){
+    for(const m of [bodyMesh, genitalMesh]){ m.geometry.attributes.position.array.set(currentVerts); m.geometry.attributes.position.needsUpdate=true; m.geometry.computeVertexNormals() }
+    await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
+    ground(false); return;
+  }
+  await skinCurrent();
+  ground(false);
+}
+
+async function rebuild(){
+  if(!bodyMesh) return;
+  const id=++buildId; labels(); msg('Собираю тело из локальных morphs…');
+  const v=new Float32Array(baseMesh.vertices);
+  const gg=bi(+$('gender').value,['female','male']);
+  const aa=ageBlend(+$('age').value);
+  const mw=tri(+$('muscle').value,['minmuscle','averagemuscle','maxmuscle']);
+  const ww=tri(+$('weight').value,['minweight','averageweight','maxweight']);
+  const hh=bi(+$('height').value,['minheight','maxheight']);
+  const cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);
+  const pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']);
+  const ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);
+  try{
+    for(const[g,wg] of gg) for(const[a,wa] of aa){
+      const ga=wg*wa;
+      for(const r of ['african','asian','caucasian']) await target(`${M}/${r}-${g}-${a}.target.gz`, v, ga/3, true);
+      for(const[m,wm] of mw) for(const[w,wwt] of ww){
+        const q=ga*wm*wwt;
+        await target(`${M}/universal-${g}-${a}-${m}-${w}.target.gz`, v, q, true);
+        for(const[h,wh] of hh) await target(`${M}/height/${g}-${a}-${m}-${w}-${h}.target.gz`, v, q*wh, true);
+        for(const[p,wp] of pp) await target(`${M}/proportions/${g}-${a}-${m}-${w}-${p}.target.gz`, v, q*wp, true);
+        if(g==='female'&&(a==='young'||a==='old')) for(const[c,wc] of cc) for(const[f,wf] of ff) await target(`${B}/female-${a}-${m}-${w}-${c}-${f}.target.gz`, v, q*wc*wf, true);
+      }
+    }
+    await pair(v,'buttocks','buttocks','buttocks-volume');
+    await pair(v,'hands','hands','l-hand-scale'); await pair(v,'hands','hands','r-hand-scale');
+    await pair(v,'feet','feet','l-foot-scale'); await pair(v,'feet','feet','r-foot-scale');
+    if(genitalAllowed()){ await pair(v,'penisLength','genitals','penis-length'); await pair(v,'penisCirc','genitals','penis-circ'); await pair(v,'testicles','genitals','penis-testicles') }
+    if(id!==buildId) return;
+    currentVerts=v;
+    bodyMesh.geometry.attributes.position.array.set(v); bodyMesh.geometry.attributes.position.needsUpdate=true;
+    genitalMesh.geometry.attributes.position.array.set(v); genitalMesh.geometry.attributes.position.needsUpdate=true;
+    genitalMesh.visible=genitalAllowed(); applyMaterials();
+    await rebuildSlot('top'); await rebuildSlot('bottom'); await rebuildSlot('hair');
+    if(pose==='tpose') await applyPose(); else { bodyMesh.geometry.computeVertexNormals(); genitalMesh.geometry.computeVertexNormals(); ground(false) }
+    const years=+$('age').value;
+    msg(`<strong>Готово</strong> · локальные morphs · ${yearsText(years)} · ${ageName(years)}`);
+  }catch(e){ console.error(e); status.textContent='Ошибка: '+e.message }
+}
+
+async function load(){
+  msg('Загрузка hm08…');
+  baseMesh=RT.parseBaseOBJ(await txt(BASE));
+  currentVerts=new Float32Array(baseMesh.vertices);
+  for(const [name, idx] of [['body', baseMesh.bodyFaces], ['genital', baseMesh.genitalFaces]]){
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(currentVerts), 3));
+    g.setIndex(idx); g.computeVertexNormals();
+    const m=new THREE.Mesh(g, skinMat); scene.add(m);
+    if(name==='body') bodyMesh=m; else genitalMesh=m;
+  }
+  genitalMesh.visible=false; ground(true); setFree(); await rebuild();
+}
+
+$('sheetToggle').onclick=()=>{
+  sheet.classList.toggle('open');
+  $('sheetToggle').textContent=sheet.classList.contains('open')?'Закрыть':'Параметры';
+};
+for(const k of ['gender','age','height','weight','muscle','proportions','cup','firmness','buttocks','hands','feet','penisLength','penisCirc','testicles']){
+  $(k).oninput=()=>{ clearTimeout(timer); labels(); timer=setTimeout(rebuild, 80) };
+}
+$('genitalEnabled').onchange=()=>rebuild();
+$('topPrev').onclick=async()=>{ ti=(ti-1+TOPS.length)%TOPS.length; await rebuildSlot('top'); if(pose==='tpose') await skinCurrent() };
+$('topNext').onclick=async()=>{ ti=(ti+1)%TOPS.length; await rebuildSlot('top'); if(pose==='tpose') await skinCurrent() };
+$('bottomPrev').onclick=async()=>{ bi=(bi-1+BOTTOMS.length)%BOTTOMS.length; await rebuildSlot('bottom'); if(pose==='tpose') await skinCurrent() };
+$('bottomNext').onclick=async()=>{ bi=(bi+1)%BOTTOMS.length; await rebuildSlot('bottom'); if(pose==='tpose') await skinCurrent() };
+$('hairPrev').onclick=async()=>{ hi=(hi-1+HAIRS.length)%HAIRS.length; await rebuildSlot('hair'); if(pose==='tpose') await skinCurrent() };
+$('hairNext').onclick=async()=>{ hi=(hi+1)%HAIRS.length; await rebuildSlot('hair'); if(pose==='tpose') await skinCurrent() };
+document.querySelectorAll('[data-pose]').forEach(b=>b.onclick=async()=>{
+  pose=b.dataset.pose; document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose===pose));
+  try{ await applyPose() }catch(e){ status.textContent='Ошибка позы: '+e.message }
+});
+$('free').onclick=setFree;
+$('wire').onclick=()=>{ wire=!wire; $('wire').classList.toggle('active', wire); applyMaterials() };
+$('technical').onclick=()=>{ technical=!technical; $('technical').classList.toggle('active', technical); applyMaterials() };
+$('reset').onclick=()=>{
+  const d={gender:0,age:24,height:.5,weight:.5,muscle:.5,proportions:.5,cup:.5,firmness:.5,buttocks:.5,hands:.5,feet:.5,penisLength:.5,penisCirc:.5,testicles:.5};
+  for(const[k,v] of Object.entries(d)) $(k).value=v;
+  $('genitalEnabled').checked=false; ti=0; bi=0; hi=0; pose='rest';
+  document.querySelectorAll('[data-pose]').forEach(x=>x.classList.toggle('active', x.dataset.pose==='rest'));
+  rebuild();
+};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(+b.dataset.view));
+function resize(){ const w=stage.clientWidth, h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/Math.max(h,1); camera.updateProjectionMatrix(); if(bodyMesh) ground(false) }
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(()=>{ controls.update(); renderer.render(scene, camera) });
+load().catch(e=>{ console.error(e); status.textContent='Ошибка загрузки: '+e.message });
+</script>
+</body>
+</html>

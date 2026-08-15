@@ -30,7 +30,7 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';import{OrbitControls}from'three/addons/controls/OrbitControls.js';
-const LOCAL='./anny/mpfb2',REMOTE='https://raw.githubusercontent.com/naver/anny/main/src/anny/data/mpfb2',BASE=LOCAL+'/3dobjs/base.obj',M=REMOTE+'/targets/macrodetails';
+const LOCAL='./anny/mpfb2',REMOTE='./anny/mpfb2',BASE=LOCAL+'/3dobjs/base.obj',M=REMOTE+'/targets/macrodetails';
 const MHX='https://raw.githubusercontent.com/makehumancommunity/mhx2-makehuman-exchange/master/import_runtime_mhx2/data/hm8/genitalia';
 const $=id=>document.getElementById(id),stage=$('stage'),status=$('status');
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.setPixelRatio(Math.min(devicePixelRatio,2));stage.appendChild(renderer.domElement);

@@ -14,7 +14,7 @@ export function objToRigXYZ(x,y,z){return new THREE.Vector3(x*MH_TO_BLENDER_SCAL
 export function rigToObjXYZ(v){return new THREE.Vector3(v.x/MH_TO_BLENDER_SCALE,v.z/MH_TO_BLENDER_SCALE,-v.y/MH_TO_BLENDER_SCALE)}
 
 export function parseBaseOBJ(text){
-  const verts=[]; const bodyFaces=[]; const groups=new Map(); let active=[];
+  const verts=[]; const bodyFaces=[]; const genitalFaces=[]; const groups=new Map(); let active=[];
   const addGroupVert=(name,i)=>{if(!groups.has(name))groups.set(name,new Set());groups.get(name).add(i)};
   for(const raw of text.split(/\r?\n/)){
     const s=raw.trim(); if(!s||s[0]==='#')continue;
@@ -24,9 +24,10 @@ export function parseBaseOBJ(text){
       const q=s.slice(2).trim().split(/\s+/).map(x=>parseInt(x.split('/')[0],10)-1);
       for(const g of active)for(const i of q)addGroupVert(g,i);
       if(active.includes('body'))for(let i=1;i<q.length-1;i++)bodyFaces.push(q[0],q[i],q[i+1]);
+      if(active.includes('helper-genital'))for(let i=1;i<q.length-1;i++)genitalFaces.push(q[0],q[i],q[i+1]);
     }
   }
-  return {vertices:new Float32Array(verts),bodyFaces,groups};
+  return {vertices:new Float32Array(verts),bodyFaces,genitalFaces,groups};
 }
 
 export function parseOBJ(text){
