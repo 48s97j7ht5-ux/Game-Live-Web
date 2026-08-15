@@ -5,6 +5,7 @@ import * as THREE from 'three';
 // - MPFB Rig entity: position strategies CUBE/VERTEX/MEAN/XYZ
 // - MPFB RigService: pose dictionaries / local bone rotations
 // - MPFB ClothesService: MHCLO fitting and transfer of basemesh deformation data
+// - MakeHuman proxy.TMatrix: x/y/z_scale and l_shear/r_shear offset matrices
 // - Blender vec_roll_to_mat3_normalized: bone +Y orientation and roll
 
 const MH_TO_BLENDER_SCALE = 0.1;
@@ -42,16 +43,33 @@ export function parseOBJ(text){
   return {verts,faces};
 }
 
+function parseShear(p){
+  if(p.length<5)return null;
+  return [+p[1],+p[2],+p[3],+p[4]];
+}
+
 export function parseMHCLO(text){
-  const out={verts:[],x:null,y:null,z:null,deleteVerts:new Set(),objFile:null,material:null}; let mode='head';
-  const toks=text.split(/\r?\n/);
-  for(const raw of toks){
+  const out={
+    verts:[],x:null,y:null,z:null,
+    shear:null,lShear:null,rShear:null,
+    deleteVerts:new Set(),objFile:null,material:null
+  };
+  let mode='head';
+  const shearBucket=(side)=>{
+    if(side==='l'){if(!out.lShear)out.lShear={x:null,y:null,z:null};return out.lShear}
+    if(side==='r'){if(!out.rShear)out.rShear={x:null,y:null,z:null};return out.rShear}
+    if(!out.shear)out.shear={x:null,y:null,z:null};return out.shear;
+  };
+  for(const raw of text.split(/\r?\n/)){
     const s=raw.trim(); if(!s||s[0]==='#')continue; const p=s.split(/\s+/);
     if(p[0]==='obj_file'){out.objFile=p.slice(1).join(' ');continue}
     if(p[0]==='material'){out.material=p.slice(1).join(' ');continue}
     if(p[0]==='x_scale'){out.x=[+p[1],+p[2],+p[3]];continue}
     if(p[0]==='y_scale'){out.y=[+p[1],+p[2],+p[3]];continue}
     if(p[0]==='z_scale'){out.z=[+p[1],+p[2],+p[3]];continue}
+    if(p[0]==='shear_x'||p[0]==='l_shear_x'||p[0]==='r_shear_x'){shearBucket(p[0][0]==='l'?'l':p[0][0]==='r'?'r':'').x=parseShear(p);continue}
+    if(p[0]==='shear_y'||p[0]==='l_shear_y'||p[0]==='r_shear_y'){shearBucket(p[0][0]==='l'?'l':p[0][0]==='r'?'r':'').y=parseShear(p);continue}
+    if(p[0]==='shear_z'||p[0]==='l_shear_z'||p[0]==='r_shear_z'){shearBucket(p[0][0]==='l'?'l':p[0][0]==='r'?'r':'').z=parseShear(p);continue}
     if(p[0]==='verts'){mode='verts';continue}
     if(p[0]==='delete_verts'){mode='delete';continue}
     if(mode==='verts'&&/^\d+$/.test(p[0])){
@@ -68,6 +86,14 @@ export function parseMHCLO(text){
     }
   }
   return out;
+}
+
+export function clothObjCandidates(meta, assetId){
+  const names=[];
+  const fromMeta=(meta?.objFile||'').split(/[\\/]/).pop();
+  if(fromMeta)names.push(fromMeta);
+  if(assetId)names.push(`${assetId}.obj`);
+  return [...new Set(names.filter(Boolean))];
 }
 
 function vAtObj(vertices,i){const k=i*3;return new THREE.Vector3(vertices[k],vertices[k+1],vertices[k+2])}
@@ -105,6 +131,7 @@ function boneBasisFromVectorRoll(vec,roll){
 export function buildRig(rigJson,mesh){
   const defs=rigJson.bones||rigJson; const bones={};
   for(const [name,d] of Object.entries(defs)){
+    if(!d||typeof d!=='object'||!d.head||!d.tail)continue;
     const head=strategyPosition(d.head,mesh),tail=strategyPosition(d.tail,mesh); if(!head||!tail)continue;
     const orient=boneBasisFromVectorRoll(tail.clone().sub(head),d.roll||0); orient.setPosition(head);
     bones[name]={name,def:d,head,tail,restWorld:orient,restLocal:null};
@@ -142,7 +169,10 @@ export function buildSkinMatrices(bones,pose=null){
 
 export function buildVertexInfluences(weightsJson,vertexCount){
   const out=Array.from({length:vertexCount},()=>[]),src=weightsJson.weights||weightsJson;
-  for(const [bone,pairs] of Object.entries(src))for(const p of pairs){const i=p[0],w=p[1];if(i>=0&&i<vertexCount&&w>0)out[i].push([bone,w])}
+  for(const [bone,pairs] of Object.entries(src)){
+    if(bone.startsWith('mhmask-'))continue;
+    for(const p of pairs){const i=p[0],w=p[1];if(i>=0&&i<vertexCount&&w>0)out[i].push([bone,w])}
+  }
   return out;
 }
 
@@ -157,12 +187,60 @@ export function skinVertices(restObjVertices,influences,skinMatrices){
   return out;
 }
 
-function scaleFromMhclo(r,axis,base){if(!r)return 1;const a=vAtObj(base,r[0]),b=vAtObj(base,r[1]);return Math.abs((b.getComponent(axis)-a.getComponent(axis))/r[2])}
+function scaleFromMhclo(r,axis,base){
+  if(!r)return 1;
+  const a=r[0]*3+axis,b=r[1]*3+axis;
+  if(a<0||b<0||a+2>=base.length||b+2>=base.length||!r[2])return 1;
+  return Math.abs(base[b]-base[a])/r[2];
+}
+
+function shearAxisScale(entry,axis,base){
+  if(!entry)return 1;
+  const [vn1,vn2,s0,s1]=entry,den=s1-s0;
+  if(Math.abs(den)<1e-8)return 1;
+  const a=vn1*3+axis,b=vn2*3+axis;
+  if(a<0||b<0||a+2>=base.length||b+2>=base.length)return 1;
+  return (base[b]-base[a])/den;
+}
+
+export function mhcloOffsetScale(meta,baseObjVertices){
+  if(meta.x||meta.y||meta.z)return [
+    scaleFromMhclo(meta.x,0,baseObjVertices),
+    scaleFromMhclo(meta.y,1,baseObjVertices),
+    scaleFromMhclo(meta.z,2,baseObjVertices)
+  ];
+  const shear=meta.lShear||meta.shear||meta.rShear;
+  if(shear&&(shear.x||shear.y||shear.z))return [
+    shearAxisScale(shear.x,0,baseObjVertices),
+    shearAxisScale(shear.y,1,baseObjVertices),
+    shearAxisScale(shear.z,2,baseObjVertices)
+  ];
+  return [1,1,1];
+}
+
 export function fitMHCLO(meta,baseObjVertices){
-  const S=[scaleFromMhclo(meta.x,0,baseObjVertices),scaleFromMhclo(meta.y,1,baseObjVertices),scaleFromMhclo(meta.z,2,baseObjVertices)],out=new Float32Array(meta.verts.length*3);
+  const S=mhcloOffsetScale(meta,baseObjVertices),out=new Float32Array(meta.verts.length*3);
   for(let n=0;n<meta.verts.length;n++){
-    const q=meta.verts[n],p=new THREE.Vector3();for(let j=0;j<3;j++){const i=q.i[j],w=q.w[j],k=i*3;if(k+2<baseObjVertices.length)p.addScaledVector(new THREE.Vector3(baseObjVertices[k],baseObjVertices[k+1],baseObjVertices[k+2]),w)}
-    p.x+=q.o[0]*S[0];p.y+=q.o[1]*S[1];p.z+=q.o[2]*S[2];const k=n*3;out[k]=p.x;out[k+1]=p.y;out[k+2]=p.z;
+    const q=meta.verts[n]; let x=0,y=0,z=0;
+    for(let j=0;j<3;j++){const i=q.i[j],w=q.w[j],k=i*3;if(k+2<baseObjVertices.length){x+=baseObjVertices[k]*w;y+=baseObjVertices[k+1]*w;z+=baseObjVertices[k+2]*w}}
+    const k=n*3; out[k]=x+q.o[0]*S[0]; out[k+1]=y+q.o[1]*S[1]; out[k+2]=z+q.o[2]*S[2];
+  }
+  return out;
+}
+
+export function mergeDeleteVerts(...sets){
+  const out=new Set();
+  for(const s of sets)if(s)for(const v of s)out.add(v);
+  return out;
+}
+
+export function filterFaces(index,deleteVerts){
+  if(!deleteVerts||!deleteVerts.size)return index;
+  const src=Array.isArray(index)?index:Array.from(index),out=[];
+  for(let i=0;i<src.length;i+=3){
+    const a=src[i],b=src[i+1],c=src[i+2];
+    if(deleteVerts.has(a)&&deleteVerts.has(b)&&deleteVerts.has(c))continue;
+    out.push(a,b,c);
   }
   return out;
 }
