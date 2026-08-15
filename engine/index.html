@@ -130,7 +130,7 @@ window.addEventListener('unhandledrejection',e=>{const s=document.getElementById
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import * as RT from './mpfb-runtime.js?v=20260815-7';
+import * as RT from './mpfb-runtime.js?v=20260815-8';
 
 const T='./anny/mpfb2/targets', BASE='./anny/mpfb2/3dobjs/base.obj';
 const M=T+'/macrodetails', B=T+'/breast';
@@ -191,7 +191,7 @@ async function gz(url,opt=false){
 }
 function add(v,t,w){ if(!t||w<=0) return; for(const raw of t.split(/\r?\n/)){ const p=raw.trim().split(/\s+/); if(p.length<4||p[0][0]==='#') continue; const i=+p[0]*3; if(i+2>=v.length) continue; v[i]+=+p[1]*w; v[i+1]+=+p[2]*w; v[i+2]+=+p[3]*w } }
 function tri(x,n){ return x<=.5?[[n[0],1-x*2],[n[1],x*2]].filter(a=>a[1]>1e-6):[[n[1],2-x*2],[n[2],x*2-1]].filter(a=>a[1]>1e-6) }
-function bi(x,n){ return [[n[0],1-x],[n[1],x]].filter(a=>a[1]>1e-6) }
+function blend2(x,n){ return [[n[0],1-x],[n[1],x]].filter(a=>a[1]>1e-6) }
 function ageBlend(years){ const pts=[[1,'baby'],[10,'child'],[25,'young'],[70,'old']]; if(years<=pts[0][0]) return [[pts[0][1],1]]; for(let i=0;i<pts.length-1;i++){ const[a,an]=pts[i],[b,bn]=pts[i+1]; if(years<=b){ const t=(years-a)/(b-a); return [[an,1-t],[bn,t]].filter(q=>q[1]>1e-6)} } return [['old',1]] }
 function ageName(years){ if(years<=2) return 'младенец'; if(years<=12) return 'ребёнок'; if(years<=17) return 'подросток'; if(years<=49) return 'молодой'; if(years<=69) return 'зрелый'; return 'пожилой' }
 function yearsText(n){ const d=n%10,d2=n%100; const word=d===1&&d2!==11?'год':d>=2&&d<=4&&(d2<12||d2>14)?'года':'лет'; return `${n} ${word}` }
@@ -350,13 +350,13 @@ async function rebuild(){
   if(!bodyMesh) return;
   const id=++buildId; labels(); msg('Собираю тело из локальных morphs…');
   const v=new Float32Array(baseMesh.vertices);
-  const gg=bi(+$('gender').value,['female','male']);
+  const gg=blend2(+$('gender').value,['female','male']);
   const aa=ageBlend(+$('age').value);
   const mw=tri(+$('muscle').value,['minmuscle','averagemuscle','maxmuscle']);
   const ww=tri(+$('weight').value,['minweight','averageweight','maxweight']);
-  const hh=bi(+$('height').value,['minheight','maxheight']);
+  const hh=blend2(+$('height').value,['minheight','maxheight']);
   const cc=tri(+$('cup').value,['mincup','averagecup','maxcup']);
-  const pp=bi(+$('proportions').value,['uncommonproportions','idealproportions']);
+  const pp=blend2(+$('proportions').value,['uncommonproportions','idealproportions']);
   const ff=tri(+$('firmness').value,['minfirmness','averagefirmness','maxfirmness']);
   try{
     const jobs=[];
